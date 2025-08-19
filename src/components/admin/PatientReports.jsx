@@ -10,11 +10,15 @@ import {
   Plus,
   Filter,
   Search,
-  X
+  X,
+  Loader2,
+  Cloud,
+  UploadCloud
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
+import AWSS3Service from '../../services/awsS3Service';
 
 const PatientReports = ({ onUpdate }) => {
   const [reports, setReports] = useState([]);
@@ -25,6 +29,9 @@ const PatientReports = ({ onUpdate }) => {
   const [selectedPatient, setSelectedPatient] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
 
@@ -70,33 +77,112 @@ const PatientReports = ({ onUpdate }) => {
     }
   };
 
-  const handleUploadReport = (data) => {
-    try {
-      const reportData = {
-        ...data,
-        fileName: data.fileName || `Report_${new Date().getTime()}.pdf`,
-        fileSize: data.fileSize || '2.5MB', // Mock file size
-        fileType: data.fileType || 'PDF',
-        uploadedBy: 'Super Admin' // This would come from auth context
-      };
-      
-      DatabaseService.addReport(reportData);
-      toast.success('Report uploaded successfully');
-      loadData();
-      setShowUploadModal(false);
-      reset();
-      onUpdate?.();
-    } catch (error) {
-      toast.error('Error uploading report');
-      console.error(error);
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        // Validate file
+        AWSS3Service.validateFile(file);
+        setSelectedFile(file);
+        console.log('✅ File selected:', file.name);
+      } catch (error) {
+        toast.error(error.message);
+        setSelectedFile(null);
+      }
     }
   };
 
-  const handleDeleteReport = (reportId) => {
-    if (window.confirm('Are you sure you want to delete this report?')) {
+  const handleUploadReport = async (data) => {
+    if (!selectedFile) {
+      toast.error('Please select a file to upload');
+      return;
+    }
+
+    setUploadingFile(true);
+    setUploadProgress(0);
+
+    try {
+      console.log('🚀 Starting file upload to S3...');
+      
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      // Upload file to S3
+      const uploadResult = await AWSS3Service.uploadFile(
+        selectedFile, 
+        selectedFile.name,
+        {
+          clinicId: data.clinicId,
+          patientId: data.patientId,
+          reportType: data.reportType || 'EEG',
+          uploadedBy: 'Super Admin'
+        }
+      );
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      console.log('✅ File uploaded to S3:', uploadResult);
+
+      // Save report metadata to database
+      const reportData = {
+        ...data,
+        fileName: selectedFile.name,
+        fileSize: (selectedFile.size / (1024 * 1024)).toFixed(2) + ' MB',
+        fileType: selectedFile.type,
+        uploadedBy: 'Super Admin',
+        // AWS S3 specific fields
+        s3Key: uploadResult.key,
+        s3Bucket: uploadResult.bucket,
+        s3Region: uploadResult.region,
+        s3FileName: uploadResult.fileName,
+        s3UploadedAt: uploadResult.uploadedAt,
+        s3ETag: uploadResult.etag,
+        fileUrl: uploadResult.url, // Signed URL for initial access
+        uploadStatus: 'completed',
+        storedInCloud: true
+      };
+      
+      DatabaseService.addReport(reportData);
+      
+      toast.success(`📁 Report uploaded successfully to AWS S3!`);
+      loadData();
+      setShowUploadModal(false);
+      setSelectedFile(null);
+      setUploadProgress(0);
+      reset();
+      onUpdate?.();
+    } catch (error) {
+      console.error('❌ Error uploading report to S3:', error);
+      toast.error(`Upload failed: ${error.message}`);
+      setUploadProgress(0);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (window.confirm('Are you sure you want to delete this report? This will also remove the file from AWS S3.')) {
       try {
+        // Get report data to find S3 key
+        const report = reports.find(r => r.id === reportId);
+        
+        if (report && report.s3Key) {
+          console.log('🗑️ Deleting file from S3:', report.s3Key);
+          try {
+            await AWSS3Service.deleteFile(report.s3Key);
+            console.log('✅ File deleted from S3');
+          } catch (s3Error) {
+            console.warn('⚠️ Could not delete file from S3:', s3Error.message);
+            // Continue with database deletion even if S3 deletion fails
+          }
+        }
+
+        // Delete from database
         DatabaseService.delete('reports', reportId);
-        toast.success('Report deleted successfully');
+        toast.success('Report deleted successfully from database and S3');
         loadData();
         onUpdate?.();
       } catch (error) {
@@ -106,9 +192,32 @@ const PatientReports = ({ onUpdate }) => {
     }
   };
 
-  const handleDownloadReport = (report) => {
-    // Mock download functionality
-    toast.success(`Downloading ${report.fileName}`);
+  const handleDownloadReport = async (report) => {
+    try {
+      if (report.s3Key) {
+        console.log('📥 Generating download URL for S3 file:', report.s3Key);
+        
+        // Generate signed URL for download
+        const downloadUrl = await AWSS3Service.getSignedUrl(report.s3Key, 300); // 5 minutes
+        
+        // Open download URL in new tab
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = report.fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success(`📥 Downloading ${report.fileName} from AWS S3`);
+      } else {
+        // Fallback for legacy reports
+        toast.info(`📄 ${report.fileName} - Legacy report (no S3 storage)`);
+      }
+    } catch (error) {
+      console.error('❌ Error downloading report:', error);
+      toast.error(`Download failed: ${error.message}`);
+    }
   };
 
   const filteredReports = reports.filter(report => {
@@ -251,8 +360,19 @@ const PatientReports = ({ onUpdate }) => {
                     <div className="text-sm text-gray-900">{report.clinicName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{report.fileType || 'PDF'}</div>
+                    <div className="text-sm text-gray-900 flex items-center">
+                      {report.fileType || 'PDF'}
+                      {report.storedInCloud && (
+                        <Cloud className="h-4 w-4 ml-2 text-blue-500" title="Stored in AWS S3" />
+                      )}
+                    </div>
                     <div className="text-sm text-gray-500">{report.fileSize || 'N/A'}</div>
+                    {report.s3Key && (
+                      <div className="text-xs text-blue-600 flex items-center mt-1">
+                        <Cloud className="h-3 w-3 mr-1" />
+                        AWS S3
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -316,7 +436,11 @@ const PatientReports = ({ onUpdate }) => {
       {showUploadModal && (
         <UploadReportModal
           onSubmit={handleUploadReport}
-          onClose={() => setShowUploadModal(false)}
+          onClose={() => {
+            setShowUploadModal(false);
+            setSelectedFile(null);
+            setUploadProgress(0);
+          }}
           clinics={clinics}
           patients={patients}
           register={register}
@@ -324,6 +448,10 @@ const PatientReports = ({ onUpdate }) => {
           reset={reset}
           watch={watch}
           errors={errors}
+          selectedFile={selectedFile}
+          onFileSelect={handleFileSelect}
+          uploadingFile={uploadingFile}
+          uploadProgress={uploadProgress}
         />
       )}
     </div>
@@ -340,7 +468,11 @@ const UploadReportModal = ({
   handleSubmit, 
   reset,
   watch,
-  errors 
+  errors,
+  selectedFile,
+  onFileSelect,
+  uploadingFile,
+  uploadProgress
 }) => {
   const [availablePatients, setAvailablePatients] = useState([]);
   const watchedClinic = watch('clinicId');
@@ -415,49 +547,78 @@ const UploadReportModal = ({
             <input
               type="text"
               {...register('title')}
-              placeholder="e.g., EEG Analysis Report"
+              placeholder={selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "e.g., EEG Analysis Report"}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              File Name *
+            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+              <UploadCloud className="h-4 w-4 mr-2 text-blue-500" />
+              Upload to AWS S3 *
             </label>
-            <input
-              type="text"
-              {...register('fileName', { required: 'File name is required' })}
-              placeholder="report.pdf"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            />
-            {errors.fileName && <p className="text-red-500 text-xs mt-1">{errors.fileName.message}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              File Upload *
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+            <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
+              selectedFile ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}>
               <div className="space-y-1 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="flex text-sm text-gray-600">
-                  <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
-                    <span>Upload a file</span>
-                    <input 
-                      id="file-upload" 
-                      name="file-upload" 
-                      type="file" 
-                      className="sr-only"
-                      accept=".pdf,.edf"
-                      {...register('file', { required: 'Please select a file' })}
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-gray-500">PDF or EDF up to 10MB</p>
+                {selectedFile ? (
+                  <>
+                    <Cloud className="mx-auto h-12 w-12 text-green-500" />
+                    <div className="text-sm text-green-600">
+                      <p className="font-medium">{selectedFile.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type}
+                      </p>
+                    </div>
+                    {uploadingFile && (
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="flex text-sm text-gray-600">
+                      <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
+                        <span>Upload to S3</span>
+                        <input 
+                          id="file-upload" 
+                          name="file-upload" 
+                          type="file" 
+                          className="sr-only"
+                          accept=".pdf,.jpeg,.jpg,.png,.edf"
+                          onChange={onFileSelect}
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                  </>
+                )}
+                <p className="text-xs text-gray-500">
+                  PDF, JPEG, PNG or EDF up to 50MB
+                  {selectedFile && (
+                    <button
+                      type="button"
+                      onClick={() => onFileSelect({ target: { files: [] } })}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </p>
               </div>
             </div>
-            {errors.file && <p className="text-red-500 text-xs mt-1">{errors.file.message}</p>}
+            {!selectedFile && <p className="text-red-500 text-xs mt-1">Please select a file to upload to AWS S3</p>}
+            
+            {/* AWS S3 Status Indicator */}
+            <div className="mt-2 text-xs text-gray-500 flex items-center">
+              <Cloud className="h-3 w-3 mr-1" />
+              Files will be securely stored in AWS S3 with encryption
+            </div>
           </div>
 
           <div>
@@ -482,9 +643,20 @@ const UploadReportModal = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700"
+              disabled={uploadingFile || !selectedFile}
+              className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
             >
-              Upload Report
+              {uploadingFile ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading to S3... ({uploadProgress}%)
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="h-4 w-4 mr-2" />
+                  Upload to AWS S3
+                </>
+              )}
             </button>
           </div>
         </form>

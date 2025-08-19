@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './components/LandingPage';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
@@ -11,16 +12,23 @@ import ResetPasswordForm from './components/auth/ResetPasswordForm';
 import SuperAdminPanel from './components/admin/SuperAdminPanel';
 import ClinicDashboard from './components/clinic/ClinicDashboard';
 import SubscriptionManager from './components/clinic/SubscriptionManager';
-import ErrorBoundary from './utils/errorBoundary';
+import ErrorBoundary from './utils/errorBoundary.jsx';
+import TestPage from './TestPage';
 
 function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Router>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           <div className="App">
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/forgot-password" element={<ForgotPasswordForm />} />
@@ -57,11 +65,11 @@ function App() {
               } 
             />
             
-            {/* Default redirect to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Test page - temporary for debugging */}
+            <Route path="/test" element={<TestPage />} />
             
-            {/* Catch all route - redirect to login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Catch all route - redirect to landing page */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           
           {/* Toast notifications */}

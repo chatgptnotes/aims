@@ -27,7 +27,7 @@ class DatabaseService {
 
     try {
       // Initialize empty data structures
-      const tables = ['clinics', 'patients', 'reports', 'subscriptions', 'usage', 'alerts'];
+      const tables = ['clinics', 'patients', 'reports', 'subscriptions', 'payments', 'usage', 'alerts'];
       
       tables.forEach(table => {
         if (!localStorage.getItem(table)) {

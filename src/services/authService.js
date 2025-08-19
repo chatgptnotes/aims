@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import DatabaseService from './databaseService';
 
 // Base API URL - replace with your actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -88,7 +89,7 @@ export const authService = {
   },
 
   // Email/Password Authentication
-  async loginWithEmail({ email, password }) {
+  async loginWithEmail({ email, password, otp }) {
     console.log('🔐 Attempting login with:', { email, password: password ? 'provided' : 'missing' });
     
     // Input validation
@@ -136,13 +137,155 @@ export const authService = {
           throw new Error('Invalid password');
         }
       } else {
-        console.log('❌ No credentials found for:', normalizedEmail);
-        throw new Error('Invalid email address');
+        // Check database for clinic credentials
+        console.log('🔍 Checking database for clinic credentials...');
+        const databaseCredentials = this.checkDatabaseCredentials(normalizedEmail, password, otp);
+        
+        if (databaseCredentials) {
+          // Check if OTP is required
+          if (databaseCredentials.requiresOTP) {
+            console.log('🔐 OTP required for login');
+            return {
+              success: false,
+              requiresOTP: true,
+              message: databaseCredentials.message,
+              clinicId: databaseCredentials.clinicId
+            };
+          }
+          
+          // Check for errors
+          if (databaseCredentials.error) {
+            console.log('❌ Database credential error:', databaseCredentials.error);
+            throw new Error(databaseCredentials.error);
+          }
+          
+          // Successful login
+          if (databaseCredentials.user) {
+            console.log('✅ Database credentials found and verified');
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const token = `db_token_${Date.now()}`;
+            const response = {
+              success: true,
+              token: token,
+              user: databaseCredentials.user
+            };
+            
+            // Store in localStorage for persistence
+            localStorage.setItem('demoUser', JSON.stringify(databaseCredentials.user));
+            localStorage.setItem('demoToken', token);
+            
+            console.log('✅ Database login successful, user stored');
+            return response;
+          }
+        } else {
+          console.log('❌ No credentials found for:', normalizedEmail);
+          throw new Error('Invalid email address or password');
+        }
       }
       
     } catch (error) {
       console.error('🚨 Login error:', error.message);
       throw error;
+    }
+  },
+
+  // Check database for clinic credentials
+  checkDatabaseCredentials(email, password, otp = null) {
+    try {
+      console.log('🔍 Searching database for email:', email);
+      
+      // Get clinics from database
+      const clinics = DatabaseService.get('clinics');
+      console.log('📊 Found', clinics.length, 'clinics in database');
+      
+      // Find clinic with matching email
+      const clinic = clinics.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
+      console.log('🏥 Clinic found:', !!clinic);
+      
+      if (clinic) {
+        console.log('🔐 Checking password for clinic:', clinic.name);
+        console.log('🔐 Stored password:', clinic.adminPassword);
+        console.log('🔐 Provided password:', password);
+        
+        // Check if password matches (also check legacy 'password' field)
+        const storedPassword = clinic.adminPassword || clinic.password;
+        if (storedPassword === password) {
+          console.log('✅ Password match for clinic:', clinic.name);
+          
+          // Check if clinic needs OTP activation
+          if (clinic.activationOTP && !clinic.isActivated) {
+            console.log('⚠️ Clinic needs OTP activation');
+            
+            if (!otp) {
+              // Return special response indicating OTP is needed
+              return {
+                requiresOTP: true,
+                clinicId: clinic.id,
+                message: 'Please enter the OTP sent to your email to activate your account.'
+              };
+            }
+            
+            // Validate OTP
+            console.log('🔐 Validating OTP:', otp, 'vs stored:', clinic.activationOTP);
+            if (clinic.activationOTP === otp) {
+              // Check if OTP is not expired
+              const otpExpiry = new Date(clinic.otpExpiresAt);
+              const now = new Date();
+              
+              if (now > otpExpiry) {
+                console.log('❌ OTP expired');
+                return {
+                  error: 'OTP has expired. Please contact admin for a new one.'
+                };
+              }
+              
+              console.log('✅ OTP validated, activating clinic');
+              // Activate the clinic
+              DatabaseService.update('clinics', clinic.id, {
+                isActivated: true,
+                activatedAt: new Date().toISOString(),
+                activationOTP: null, // Clear OTP after successful validation
+                otpExpiresAt: null
+              });
+              
+              // Update clinic object for user creation
+              clinic.isActivated = true;
+            } else {
+              console.log('❌ Invalid OTP');
+              return {
+                error: 'Invalid OTP. Please check and try again.'
+              };
+            }
+          }
+          
+          // Create user object for clinic admin
+          const user = {
+            id: clinic.id,
+            name: clinic.contactPerson || clinic.name,
+            email: clinic.email,
+            role: 'clinic_admin',
+            clinicId: clinic.id,
+            clinicName: clinic.name,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic.name)}&background=2563eb&color=fff`,
+            isActivated: clinic.isActivated || true, // Default to activated for now
+            createdAt: clinic.createdAt || new Date().toISOString(),
+          };
+          
+          return { user };
+        } else {
+          console.log('❌ Password mismatch for clinic:', clinic.name);
+          return null;
+        }
+      } else {
+        console.log('❌ No clinic found with email:', email);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error checking database credentials:', error);
+      return null;
     }
   },
 

@@ -46,7 +46,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/clinic' },
         { id: 'patients', label: 'Patient Management', icon: Users, path: '/clinic?tab=patients' },
         { id: 'reports', label: 'Reports & Files', icon: FileText, path: '/clinic?tab=reports' },
-        { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/clinic/subscription' },
+        { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/clinic?tab=subscription' },
         { id: 'usage', label: 'Usage Tracking', icon: Activity, path: '/clinic?tab=usage' },
         { id: 'settings', label: 'Settings', icon: Settings, path: '/clinic?tab=settings' }
       ];

@@ -12,11 +12,15 @@ import {
   Phone,
   AlertTriangle,
   CheckCircle,
-  X
+  X,
+  Key,
+  RefreshCw,
+  Copy
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
+import EmailService from '../../services/emailService';
 
 const ClinicManagement = ({ onUpdate }) => {
   const [clinics, setClinics] = useState([]);
@@ -24,11 +28,19 @@ const ClinicManagement = ({ onUpdate }) => {
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'details'
   const [loading, setLoading] = useState(true);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isManualPassword, setIsManualPassword] = useState(false);
+  const [otp, setOtp] = useState('');
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   useEffect(() => {
     loadClinics();
+    
+    // Configure email service (currently using mock, can be changed to real provider)
+    // EmailService.setProvider('emailjs', { publicKey: 'your_key_here' });
+    // EmailService.setProvider('sendgrid', { apiKey: 'your_key_here' });
   }, []);
 
   const loadClinics = () => {
@@ -45,14 +57,32 @@ const ClinicManagement = ({ onUpdate }) => {
 
   const handleCreateClinic = (data) => {
     try {
+      // Set reports limit based on subscription plan if not manually set
+      let reportsAllowed = data.reportsAllowed || 10;
+      if (data.subscriptionPlan && !data.reportsAllowed) {
+        switch (data.subscriptionPlan) {
+          case 'trial': reportsAllowed = 10; break;
+          case 'basic': reportsAllowed = 50; break;
+          case 'premium': reportsAllowed = 200; break;
+          case 'enterprise': reportsAllowed = -1; break; // Unlimited
+          default: reportsAllowed = 10;
+        }
+      }
+
       const clinicData = {
         ...data,
-        adminPassword: 'clinic123', // Default password
-        contactPerson: data.contactPerson || data.name
+        contactPerson: data.contactPerson || data.name,
+        subscriptionStatus: data.subscriptionPlan || 'trial',
+        reportsAllowed: reportsAllowed,
+        reportsUsed: 0,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        // Remove confirmPassword from stored data
+        confirmPassword: undefined
       };
       
       DatabaseService.createClinic(clinicData);
-      toast.success('Clinic created successfully');
+      toast.success(`Clinic created successfully with ${data.subscriptionPlan || 'trial'} plan`);
       loadClinics();
       setShowModal(false);
       reset();
@@ -128,6 +158,187 @@ const ClinicManagement = ({ onUpdate }) => {
   const viewClinicDetails = (clinic) => {
     setSelectedClinic(clinic);
     setViewMode('details');
+  };
+
+  const generateRandomPassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
+  const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  };
+
+  const handlePasswordReset = (clinic) => {
+    setSelectedClinic(clinic);
+    setNewPassword('');
+    setIsManualPassword(false);
+    setOtp('');
+    setShowPasswordReset(true);
+  };
+
+  const generateNewPassword = () => {
+    const password = generateRandomPassword();
+    setNewPassword(password);
+    setIsManualPassword(false);
+  };
+
+  const handleManualPassword = () => {
+    setIsManualPassword(true);
+    setNewPassword('');
+  };
+
+  const sendCredentialsEmail = async (clinic, password, otp) => {
+    try {
+      console.log(`Sending credentials email to ${clinic.email}...`);
+      
+      const result = await EmailService.sendClinicCredentials(clinic, password, otp);
+      
+      if (result.success) {
+        console.log(`Email sent successfully via ${result.provider}`);
+        return true;
+      } else {
+        throw new Error('Email service returned failure');
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      // Even if email fails, we should log the credentials for admin
+      console.log('=== EMAIL FAILED - MANUAL DELIVERY REQUIRED ===');
+      console.log(`Clinic: ${clinic.name}`);
+      console.log(`Email: ${clinic.email}`);
+      console.log(`Username: ${clinic.email}`);
+      console.log(`Password: ${password}`);
+      console.log(`OTP: ${otp}`);
+      console.log('==============================================');
+      
+      throw error;
+    }
+  };
+
+  const confirmPasswordReset = async () => {
+    if (!newPassword.trim()) {
+      toast.error('Please enter a password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const otpCode = generateOTP();
+      
+      // Update clinic with new password and OTP
+      DatabaseService.update('clinics', selectedClinic.id, { 
+        adminPassword: newPassword,
+        passwordResetAt: new Date().toISOString(),
+        activationOTP: otpCode,
+        isActivated: false,
+        otpExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
+      });
+
+      // Try to send email with credentials and OTP
+      try {
+        console.log('Sending email with credentials:', {
+          clinic: selectedClinic.name,
+          email: selectedClinic.email,
+          username: selectedClinic.email,
+          password: newPassword,
+          otp: otpCode
+        });
+        
+        await sendCredentialsEmail(selectedClinic, newPassword, otpCode);
+        toast.success('✅ Password set successfully! Credentials and activation OTP sent to clinic email.', {
+          duration: 5000
+        });
+      } catch (emailError) {
+        // Email failed, but password was set - show manual delivery option
+        toast.error('⚠️ Password set but email failed. Please manually share credentials with clinic.', {
+          duration: 8000
+        });
+        
+        // Show credentials in a separate modal or alert for manual delivery
+        const credentialsMessage = `
+EMAIL DELIVERY FAILED - MANUAL DELIVERY REQUIRED:
+
+Clinic: ${selectedClinic.name}
+Email: ${selectedClinic.email}
+Username: ${selectedClinic.email}
+Password: ${newPassword}
+OTP: ${otpCode}
+Expires: 15 minutes
+
+Please manually share these credentials with the clinic.`;
+        
+        // Show alert with credentials
+        alert(credentialsMessage);
+        
+        // Also copy to clipboard for easy sharing
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(credentialsMessage);
+            toast.success('📋 Credentials copied to clipboard for manual sharing');
+          } else {
+            // Fallback for non-secure context
+            const textArea = document.createElement('textarea');
+            textArea.value = credentialsMessage;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            toast.success('📋 Credentials copied to clipboard (fallback)');
+          }
+        } catch (clipboardError) {
+          console.warn('Could not copy to clipboard:', clipboardError);
+          toast.info('📝 Please manually copy the credentials from the alert above');
+        }
+      }
+      
+      setShowPasswordReset(false);
+      setNewPassword('');
+      setSelectedClinic(null);
+      setIsManualPassword(false);
+      setOtp('');
+      onUpdate?.();
+    } catch (error) {
+      toast.error('Error setting password');
+      console.error(error);
+    }
+  };
+
+  const copyPasswordToClipboard = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(newPassword);
+        toast.success('Password copied to clipboard!');
+      } else {
+        // Fallback for non-secure context
+        const textArea = document.createElement('textarea');
+        textArea.value = newPassword;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success('Password copied to clipboard!');
+      }
+    } catch (error) {
+      console.warn('Could not copy to clipboard:', error);
+      toast.info('📝 Please manually copy the password');
+    }
   };
 
   if (loading) {
@@ -224,25 +435,34 @@ const ClinicManagement = ({ onUpdate }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      clinic.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {clinic.isActive ? (
-                        <>
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Active
-                        </>
-                      ) : (
-                        <>
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          Inactive
-                        </>
-                      )}
-                    </span>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {clinic.subscriptionStatus || 'trial'}
+                    <div className="flex flex-col space-y-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        clinic.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {clinic.isActive ? (
+                          <>
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Active
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Inactive
+                          </>
+                        )}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        clinic.isActivated
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {clinic.isActivated ? '✓ Activated' : '⏳ Pending OTP'}
+                      </span>
+                      <div className="text-xs text-gray-500">
+                        {clinic.subscriptionStatus || 'trial'}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -253,24 +473,35 @@ const ClinicManagement = ({ onUpdate }) => {
                       <button
                         onClick={() => viewClinicDetails(clinic)}
                         className="text-primary-600 hover:text-primary-900"
+                        title="View Details"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => openModal(clinic)}
                         className="text-gray-600 hover:text-gray-900"
+                        title="Edit Clinic"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
+                        onClick={() => handlePasswordReset(clinic)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Reset Password"
+                      >
+                        <Key className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeactivateClinic(clinic.id)}
                         className={clinic.isActive ? "text-yellow-600 hover:text-yellow-900" : "text-green-600 hover:text-green-900"}
+                        title={clinic.isActive ? "Deactivate" : "Activate"}
                       >
                         {clinic.isActive ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                       </button>
                       <button
                         onClick={() => handleDeleteClinic(clinic.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="Delete Clinic"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -307,15 +538,47 @@ const ClinicManagement = ({ onUpdate }) => {
           errors={errors}
         />
       )}
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && (
+        <PasswordResetModal
+          clinic={selectedClinic}
+          newPassword={newPassword}
+          isManualPassword={isManualPassword}
+          onConfirm={confirmPasswordReset}
+          onClose={() => {
+            setShowPasswordReset(false);
+            setNewPassword('');
+            setSelectedClinic(null);
+            setIsManualPassword(false);
+          }}
+          onCopy={copyPasswordToClipboard}
+          onGeneratePassword={generateNewPassword}
+          onManualPassword={handleManualPassword}
+          onPasswordChange={setNewPassword}
+        />
+      )}
     </div>
   );
 };
 
-// Clinic Modal Component
+// Clinic Modal Component  
 const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors }) => {
+  const [selectedPlan, setSelectedPlan] = React.useState('trial');
+
+  const getReportsLimitForPlan = (plan) => {
+    switch (plan) {
+      case 'trial': return 10;
+      case 'basic': return 50;
+      case 'premium': return 200;
+      case 'enterprise': return 1000; // Show 1000 for unlimited UI
+      default: return 10;
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="relative top-10 mx-auto p-5 border max-w-md w-full shadow-lg rounded-md bg-white">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">
             {clinic ? 'Edit Clinic' : 'Add New Clinic'}
@@ -391,6 +654,80 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
+
+          {!clinic && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Admin Password *
+                </label>
+                <input
+                  type="password"
+                  {...register('adminPassword', { 
+                    required: 'Admin password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters'
+                    }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+                {errors.adminPassword && <p className="text-red-500 text-xs mt-1">{errors.adminPassword.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  {...register('confirmPassword', { 
+                    required: 'Password confirmation is required',
+                    validate: (value, formValues) => 
+                      value === formValues.adminPassword || 'Passwords do not match'
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subscription Plan
+                </label>
+                <select
+                  {...register('subscriptionPlan')}
+                  onChange={(e) => setSelectedPlan(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="trial">Trial (10 reports)</option>
+                  <option value="basic">Basic (50 reports)</option>
+                  <option value="premium">Premium (200 reports)</option>
+                  <option value="enterprise">Enterprise (Unlimited)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Reports Limit
+                  {selectedPlan === 'enterprise' && (
+                    <span className="text-xs text-gray-500 ml-1">(Unlimited)</span>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  {...register('reportsAllowed', { 
+                    min: { value: 1, message: 'Minimum 1 report required' }
+                  })}
+                  defaultValue={getReportsLimitForPlan(selectedPlan)}
+                  key={selectedPlan} // Force re-render when plan changes
+                  disabled={selectedPlan === 'enterprise'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
+                />
+                {errors.reportsAllowed && <p className="text-red-500 text-xs mt-1">{errors.reportsAllowed.message}</p>}
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button
@@ -530,6 +867,146 @@ const ClinicDetails = ({ clinic, onBack }) => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Password Reset Modal Component
+const PasswordResetModal = ({ 
+  clinic, 
+  newPassword, 
+  isManualPassword,
+  onConfirm, 
+  onClose, 
+  onCopy,
+  onGeneratePassword,
+  onManualPassword,
+  onPasswordChange
+}) => {
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-10 mx-auto p-6 border max-w-lg w-full shadow-lg rounded-md bg-white">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Key className="h-5 w-5 text-orange-500" />
+            <h3 className="text-lg font-medium text-gray-900">Set Password & Send Credentials</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="flex items-start space-x-3">
+              <Mail className="h-5 w-5 text-blue-400 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-medium text-blue-800">
+                  Email Notification for {clinic?.name}
+                </h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  Username, password, and activation OTP will be sent to: <strong>{clinic?.email}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Password Input Options */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">
+              Choose Password Method:
+            </label>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={onGeneratePassword}
+                className={`flex-1 p-3 border rounded-md text-sm font-medium transition-colors ${
+                  !isManualPassword 
+                    ? 'border-primary-500 bg-primary-50 text-primary-700' 
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <RefreshCw className="h-4 w-4 mx-auto mb-1" />
+                Generate Random
+              </button>
+              <button
+                onClick={onManualPassword}
+                className={`flex-1 p-3 border rounded-md text-sm font-medium transition-colors ${
+                  isManualPassword 
+                    ? 'border-primary-500 bg-primary-50 text-primary-700' 
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Edit className="h-4 w-4 mx-auto mb-1" />
+                Manual Entry
+              </button>
+            </div>
+          </div>
+
+          {/* Password Input Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {isManualPassword ? 'Enter Password:' : 'Generated Password:'}
+            </label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                readOnly={!isManualPassword}
+                placeholder={isManualPassword ? "Enter password (min 6 characters)" : "Click 'Generate Random' to create password"}
+                className={`flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 ${
+                  !isManualPassword ? 'bg-gray-50 font-mono' : ''
+                }`}
+              />
+              {!isManualPassword && newPassword && (
+                <button
+                  onClick={onCopy}
+                  className="p-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                  title="Copy to clipboard"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {isManualPassword && (
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 6 characters
+              </p>
+            )}
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+            <p className="text-sm text-green-700">
+              <strong>What happens next:</strong>
+              <br />• Username (email) and password will be sent to clinic
+              <br />• 6-digit OTP will be sent for account activation
+              <br />• Clinic must verify OTP to activate their account
+              <br />• OTP expires in 15 minutes
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!newPassword.trim()}
+            className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            <Mail className="h-4 w-4" />
+            <span>Send Credentials & OTP</span>
+          </button>
         </div>
       </div>
     </div>

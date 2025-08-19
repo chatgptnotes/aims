@@ -6,6 +6,7 @@ import DashboardLayout from '../layout/DashboardLayout';
 import PatientManagement from './PatientManagement';
 import ReportViewer from './ReportViewer';
 import OverviewTab from './OverviewTab';
+import SubscriptionTab from './SubscriptionTab';
 
 const ClinicDashboard = () => {
   const { user } = useAuth();
@@ -66,6 +67,8 @@ const ClinicDashboard = () => {
         return <ReportViewer clinicId={clinic?.id} patients={patients} reports={reports} onUpdate={loadClinicData} />;
       case 'usage':
         return <UsageTracking clinic={clinic} usage={usage} />;
+      case 'subscription':
+        return <SubscriptionTab user={user} clinic={clinic} />;
       case 'settings':
         return <ClinicSettings clinic={clinic} />;
       default:
@@ -79,6 +82,7 @@ const ClinicDashboard = () => {
       case 'patients': return 'Patient Management';
       case 'reports': return 'Reports & Files';
       case 'usage': return 'Usage Tracking';
+      case 'subscription': return 'Subscription & Billing';
       case 'settings': return 'Clinic Settings';
       default: return 'Clinic Dashboard';
     }
