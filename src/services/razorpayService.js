@@ -2,22 +2,21 @@ import DatabaseService from './databaseService';
 import toast from 'react-hot-toast';
 
 // Razorpay configuration
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_xhAJH2vAW4eXzu';
-const RAZORPAY_SECRET = import.meta.env.VITE_RAZORPAY_SECRET || 'n5yZEg1JJByd2zdMWOKLpo5r';
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
+const RAZORPAY_SECRET = import.meta.env.VITE_RAZORPAY_KEY_SECRET || null;
 
 class RazorpayService {
   constructor() {
-    this.keyId = RAZORPAY_KEY_ID;
-    this.secret = RAZORPAY_SECRET;
-    // Check if we're in demo mode (no backend available)
-    this.isDemoMode = true; // Always demo mode since no backend is implemented
-    this.hasRealKeys = RAZORPAY_KEY_ID !== 'rzp_test_demo_key' && RAZORPAY_KEY_ID !== undefined && RAZORPAY_KEY_ID;
+    this.keyId = RAZORPAY_KEY_ID || null;
+    this.secret = RAZORPAY_SECRET || null;
+    this.hasRealKeys = RAZORPAY_KEY_ID && RAZORPAY_SECRET && 
+                      RAZORPAY_KEY_ID !== 'rzp_test_demo_key' && 
+                      RAZORPAY_KEY_ID !== 'your_razorpay_key_id';
     
     if (this.hasRealKeys) {
-      console.log('✅ Real Razorpay keys detected:', RAZORPAY_KEY_ID);
-      console.warn('⚠️ Running in mock mode since no backend API is available');
+      console.log('✅ Razorpay keys configured');
     } else {
-      console.warn('⚠️ Razorpay running in demo mode - configure real keys for production');
+      console.warn('⚠️ Razorpay not configured - set VITE_RAZORPAY_KEY_ID and VITE_RAZORPAY_KEY_SECRET');
     }
     
     this.initializeRazorpay();
@@ -186,9 +185,10 @@ class RazorpayService {
 
       console.log('💳 Payment options created:', options);
 
-      // Always use demo mode for now since we have live keys but no backend
-      console.log('🎭 Using demo payment mode');
-      this.showDemoPayment(options, order, onSuccess, onFailure);
+      // Use real Razorpay checkout
+      console.log('💳 Opening Razorpay checkout...');
+      const rzp = new window.Razorpay(options);
+      rzp.open();
       
     } catch (error) {
       console.error('❌ Error processing payment:', error);
@@ -196,54 +196,7 @@ class RazorpayService {
     }
   }
 
-  // Demo payment simulation
-  showDemoPayment(options, order, onSuccess, onFailure) {
-    console.log('🎭 Starting demo payment with options:', options);
-    
-    // Show loading for demo
-    toast.loading('Opening Razorpay checkout...', { duration: 2000 });
-    
-    setTimeout(() => {
-      try {
-        const userConfirmed = confirm(
-          `Demo Razorpay Payment\n\n` +
-          `Merchant: ${options.name}\n` +
-          `Amount: ₹${options.amount / 100}\n` +
-          `Description: ${options.description}\n\n` +
-          `Click OK to simulate successful payment, Cancel to simulate failure.`
-        );
 
-        console.log('🎯 User confirmation result:', userConfirmed);
-
-        if (userConfirmed) {
-          // Simulate successful payment
-          const mockResponse = {
-            razorpay_payment_id: 'pay_demo_' + Date.now(),
-            razorpay_order_id: order.id,
-            razorpay_signature: 'demo_signature_' + Date.now()
-          };
-          console.log('✅ Simulating successful payment:', mockResponse);
-          this.handlePaymentSuccess(mockResponse, order, onSuccess);
-        } else {
-          // Simulate payment failure
-          const mockError = {
-            error: {
-              code: 'PAYMENT_CANCELLED',
-              description: 'Payment cancelled by user (demo)',
-              source: 'demo',
-              step: 'payment_authentication',
-              reason: 'user_cancelled'
-            }
-          };
-          console.log('❌ Simulating payment failure:', mockError);
-          this.handlePaymentFailure(mockError, onFailure);
-        }
-      } catch (error) {
-        console.error('💥 Error in demo payment:', error);
-        onFailure?.(error);
-      }
-    }, 2000);
-  }
 
   // Handle successful payment
   handlePaymentSuccess(response, order, onSuccess) {

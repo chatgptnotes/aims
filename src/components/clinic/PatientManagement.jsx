@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, 
   Edit, 
@@ -18,6 +18,7 @@ import {
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
+import AWSS3Service from '../../services/awsS3Service';
 import UploadReportModal from './UploadReportModal';
 
 const PatientManagement = ({ clinicId, onUpdate }) => {
@@ -30,36 +31,84 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [patientForUpload, setPatientForUpload] = useState(null);
+  const [patientReports, setPatientReports] = useState({});
+  const [showPatientListModal, setShowPatientListModal] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
-  useEffect(() => {
-    if (clinicId) {
-      loadPatients();
-    }
-  }, [clinicId]);
-
-  const loadPatients = () => {
+  const loadPatients = useCallback(async () => {
     try {
-      const patientsData = DatabaseService.getPatientsByClinic(clinicId);
+      console.log('👥 Loading patients for clinic:', clinicId);
+      
+      if (!clinicId) {
+        console.warn('⚠️ No clinicId provided, cannot load patients');
+        setPatients([]);
+        setLoading(false);
+        return;
+      }
+      
+      // First, let's check what patients exist in the database
+      const allPatients = await DatabaseService.get('patients');
+      console.log('📋 All patients in database:', allPatients.length);
+      
+      // Filter patients by clinic ID
+      const patientsData = allPatients.filter(patient => patient.clinicId === clinicId);
+      console.log('👥 Found patients for clinic:', patientsData.length, 'clinicId:', clinicId);
+      console.log('👥 Patient details:', patientsData.map(p => ({ name: p.name, clinicId: p.clinicId })));
+      
       setPatients(patientsData);
+      
+      // Load reports for each patient
+      const reportsMap = {};
+      for (const patient of patientsData) {
+        try {
+          const reports = await DatabaseService.getReportsByPatient(patient.id);
+          console.log(`📋 Found ${reports.length} reports for patient ${patient.name} (${patient.id})`);
+          reportsMap[patient.id] = reports || [];
+        } catch (error) {
+          console.warn(`Failed to load reports for patient ${patient.id}:`, error);
+          reportsMap[patient.id] = [];
+        }
+      }
+      
+      console.log('📊 Total reports loaded:', Object.values(reportsMap).flat().length);
+      setPatientReports(reportsMap);
     } catch (error) {
       toast.error('Error loading patients');
-      console.error(error);
+      console.error('❌ Error in loadPatients:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [clinicId]);
 
-  const handleCreatePatient = (data) => {
+  useEffect(() => {
+    console.log('🔄 PatientManagement useEffect - clinicId:', clinicId);
+    if (clinicId) {
+      loadPatients();
+    } else {
+      console.warn('⚠️ No clinicId provided to PatientManagement');
+      setLoading(false);
+    }
+  }, [clinicId, loadPatients]);
+
+  const handleCreatePatient = async (data) => {
     try {
+      if (!clinicId) {
+        toast.error('No clinic ID found. Please refresh the page.');
+        return;
+      }
+      
       const patientData = {
         ...data,
-        clinicId,
-        age: parseInt(data.age)
+        clinicId: clinicId,
+        age: parseInt(data.age),
+        createdAt: new Date().toISOString()
       };
       
-      DatabaseService.add('patients', patientData);
+      console.log('👥 Creating patient for clinic:', clinicId, patientData);
+      const newPatient = await DatabaseService.add('patients', patientData);
+      console.log('✅ Patient created successfully:', newPatient);
+      
       toast.success('Patient created successfully');
       loadPatients();
       setShowModal(false);
@@ -67,18 +116,18 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
       onUpdate?.();
     } catch (error) {
       toast.error('Error creating patient');
-      console.error(error);
+      console.error('❌ Error creating patient:', error);
     }
   };
 
-  const handleEditPatient = (data) => {
+  const handleEditPatient = async (data) => {
     try {
       const patientData = {
         ...data,
         age: parseInt(data.age)
       };
       
-      DatabaseService.update('patients', selectedPatient.id, patientData);
+      await DatabaseService.update('patients', selectedPatient.id, patientData);
       toast.success('Patient updated successfully');
       loadPatients();
       setShowModal(false);
@@ -91,10 +140,10 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
     }
   };
 
-  const handleDeletePatient = (patientId) => {
+  const handleDeletePatient = async (patientId) => {
     if (window.confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
       try {
-        DatabaseService.delete('patients', patientId);
+        await DatabaseService.delete('patients', patientId);
         toast.success('Patient deleted successfully');
         loadPatients();
         onUpdate?.();
@@ -102,6 +151,34 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
         toast.error('Error deleting patient');
         console.error(error);
       }
+    }
+  };
+
+  const handleDownloadReport = async (report) => {
+    try {
+      if (report.s3Key) {
+        console.log('📥 Generating download URL for S3 file:', report.s3Key);
+        
+        // Generate signed URL for download
+        const downloadUrl = await AWSS3Service.getSignedUrl(report.s3Key, 300); // 5 minutes
+        
+        // Open download URL in new tab
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = report.fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success('📥 Download started!');
+      } else {
+        // Fallback for files not stored in S3
+        toast.error('File not available for download');
+      }
+    } catch (error) {
+      console.error('❌ Error downloading file:', error);
+      toast.error('Failed to download file');
     }
   };
 
@@ -129,6 +206,68 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
   const closeUploadModal = () => {
     setPatientForUpload(null);
     setShowUploadModal(false);
+  };
+
+  const openPatientListModal = () => {
+    setShowPatientListModal(true);
+  };
+
+  const closePatientListModal = () => {
+    setShowPatientListModal(false);
+  };
+
+  const handleBulkAddPatients = async (patientList) => {
+    try {
+      if (!clinicId) {
+        toast.error('No clinic ID found. Please refresh the page.');
+        return;
+      }
+      
+      console.log('👥 Bulk adding patients:', patientList.length, 'for clinic:', clinicId);
+      
+      for (const patientData of patientList) {
+        const patient = {
+          ...patientData,
+          clinicId: clinicId,
+          age: parseInt(patientData.age),
+          createdAt: new Date().toISOString()
+        };
+        
+        const newPatient = await DatabaseService.add('patients', patient);
+        console.log('✅ Added patient:', newPatient.name, 'with clinicId:', newPatient.clinicId);
+      }
+      
+      toast.success(`Successfully added ${patientList.length} patients!`);
+      loadPatients();
+      closePatientListModal();
+      onUpdate?.();
+    } catch (error) {
+      console.error('❌ Error bulk adding patients:', error);
+      toast.error('Error adding patients');
+    }
+  };
+
+  const debugPatientData = async () => {
+    try {
+      console.log('🐛 === DEBUG PATIENT DATA ===');
+      console.log('Current clinicId:', clinicId);
+      
+      const allPatients = await DatabaseService.get('patients');
+      console.log('All patients in database:', allPatients.length);
+      console.log('All patients details:', allPatients);
+      
+      const clinicPatients = allPatients.filter(p => p.clinicId === clinicId);
+      console.log('Patients for this clinic:', clinicPatients.length);
+      console.log('Clinic patients details:', clinicPatients);
+      
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('Current user:', currentUser);
+      
+      toast.success(`Debug info logged to console. Found ${clinicPatients.length} patients for this clinic.`);
+    } catch (error) {
+      console.error('❌ Debug error:', error);
+      toast.error('Debug failed');
+    }
   };
 
   const viewPatientDetails = (patient) => {
@@ -171,13 +310,38 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
           <h2 className="text-2xl font-bold text-gray-900">Patient Management</h2>
           <p className="text-gray-600">Manage your clinic's patient records</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Patient</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => loadPatients()}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+            title="Refresh patients and reports"
+          >
+            <div className="h-4 w-4">🔄</div>
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={() => debugPatientData()}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+            title="Debug patient data"
+          >
+            <div className="h-4 w-4">🐛</div>
+            <span>Debug</span>
+          </button>
+          <button
+            onClick={() => openPatientListModal()}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+          >
+            <Users className="h-4 w-4" />
+            <span>Patient List</span>
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Patient</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -240,10 +404,7 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
                   Demographics
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  EEG Report
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  PDF File
+                  Reports
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Added
@@ -255,9 +416,7 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPatients.map((patient) => {
-                const patientReports = DatabaseService.getReportsByPatient(patient.id);
-                const eegReport = patientReports.find(r => r.fileType && r.fileType.includes('eeg'));
-                const pdfReport = patientReports.find(r => r.fileType && r.fileType.includes('pdf'));
+                const reports = patientReports[patient.id] || [];
                 
                 return (
                   <tr key={patient.id} className="hover:bg-gray-50">
@@ -281,18 +440,25 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
                       <div className="text-sm text-gray-500">{patient.gender}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {eegReport ? (
-                        <a href="#" className="text-sm text-primary-600 hover:underline">{eegReport.fileName}</a>
-                      ) : (
-                        <span className="text-sm text-gray-500">N/A</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {pdfReport ? (
-                        <a href="#" className="text-sm text-primary-600 hover:underline">{pdfReport.fileName}</a>
-                      ) : (
-                        <span className="text-sm text-gray-500">N/A</span>
-                      )}
+                      <div className="space-y-1">
+                        {reports.length > 0 ? (
+                          reports.map((report) => (
+                            <button
+                              key={report.id}
+                              onClick={() => handleDownloadReport(report)}
+                              className="block text-sm text-primary-600 hover:underline cursor-pointer"
+                              title={`Download ${report.title || report.fileName}`}
+                            >
+                              {report.fileName || 'Report'}
+                              {report.storedInCloud && (
+                                <span className="ml-1 text-xs text-green-600">☁️</span>
+                              )}
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-sm text-gray-500">No reports</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(patient.createdAt).toLocaleDateString()}
@@ -378,6 +544,14 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
             onUpdate?.();
           }}
           onClose={closeUploadModal}
+        />
+      )}
+
+      {/* Patient List Modal */}
+      {showPatientListModal && (
+        <PatientListModal
+          onAddPatients={handleBulkAddPatients}
+          onClose={closePatientListModal}
         />
       )}
     </div>
@@ -527,10 +701,19 @@ const PatientDetails = ({ patient, clinicId, onBack }) => {
   const [reports, setReports] = useState([]);
 
   useEffect(() => {
-    if (patient) {
-      const patientReports = DatabaseService.getReportsByPatient(patient.id);
-      setReports(patientReports);
-    }
+    const loadPatientReports = async () => {
+      if (patient) {
+        try {
+          const patientReports = await DatabaseService.getReportsByPatient(patient.id) || [];
+          setReports(patientReports);
+        } catch (error) {
+          console.error('Error loading patient reports:', error);
+          setReports([]);
+        }
+      }
+    };
+    
+    loadPatientReports();
   }, [patient]);
 
   return (
@@ -637,6 +820,255 @@ const PatientDetails = ({ patient, clinicId, onBack }) => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Patient List Modal Component
+const PatientListModal = ({ onAddPatients, onClose }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [previewData, setPreviewData] = useState([]);
+  const [fileName, setFileName] = useState('');
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+        toast.error('Please select a CSV file');
+        return;
+      }
+      
+      setSelectedFile(file);
+      setFileName(file.name);
+      parseCSVFile(file);
+    }
+  };
+
+  const parseCSVFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvContent = e.target.result;
+        const lines = csvContent.split('\n').filter(line => line.trim());
+        const patients = [];
+        
+        // Skip header row if it exists
+        const startIndex = lines[0].toLowerCase().includes('name') ? 1 : 0;
+        
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const parts = line.split(',').map(part => part.trim());
+          if (parts.length < 3) {
+            toast.error(`Line ${i + 1}: Invalid format. Use: name,age,gender,email,phone`);
+            return;
+          }
+          
+          const [name, age, gender, email = '', phone = ''] = parts;
+          
+          if (!name || !age || !gender) {
+            toast.error(`Line ${i + 1}: Name, age, and gender are required`);
+            return;
+          }
+          
+          if (isNaN(age) || age < 0 || age > 120) {
+            toast.error(`Line ${i + 1}: Invalid age`);
+            return;
+          }
+          
+          if (!['Male', 'Female', 'Other'].includes(gender)) {
+            toast.error(`Line ${i + 1}: Gender must be Male, Female, or Other`);
+            return;
+          }
+          
+          patients.push({
+            name,
+            age: parseInt(age),
+            gender,
+            email,
+            phone
+          });
+        }
+        
+        setPreviewData(patients);
+        toast.success(`✅ Found ${patients.length} valid patients in CSV file`);
+        
+      } catch (error) {
+        console.error('Error parsing CSV:', error);
+        toast.error('Error parsing CSV file');
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedFile || previewData.length === 0) {
+      toast.error('Please select a CSV file with valid patient data');
+      return;
+    }
+
+    try {
+      setIsAdding(true);
+      await onAddPatients(previewData);
+      
+    } catch (error) {
+      console.error('Error adding patients:', error);
+      toast.error('Error adding patients');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setFileName('');
+    setPreviewData([]);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-10 mx-auto p-6 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-medium text-gray-900">
+            Add Patient List
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-2">📋 Instructions:</h4>
+          <p className="text-sm text-blue-800 mb-2">
+            Upload a CSV file with patient data. The file should contain:
+          </p>
+          <p className="text-sm text-blue-700 font-mono">
+            name,age,gender,email,phone
+          </p>
+          <p className="text-sm text-blue-700 mt-2">
+            <strong>Example CSV content:</strong><br/>
+            John Doe,25,Male,john@email.com,1234567890<br/>
+            Jane Smith,30,Female,jane@email.com,0987654321
+          </p>
+          <p className="text-sm text-blue-700 mt-2">
+            <strong>Note:</strong> The first row can be a header (name,age,gender,email,phone) and will be automatically skipped.
+          </p>
+          <div className="mt-3">
+            <a 
+              href="/sample-patients.csv" 
+              download
+              className="text-blue-600 hover:text-blue-800 underline text-sm"
+            >
+              📥 Download Sample CSV Template
+            </a>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload CSV File
+            </label>
+            
+            {!selectedFile ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="csvFileInput"
+                  disabled={isAdding}
+                />
+                <label htmlFor="csvFileInput" className="cursor-pointer">
+                  <div className="text-gray-600">
+                    <div className="text-4xl mb-2">📁</div>
+                    <p className="text-lg font-medium">Click to upload CSV file</p>
+                    <p className="text-sm">or drag and drop</p>
+                    <p className="text-xs text-gray-500 mt-2">Supports .csv files only</p>
+                  </div>
+                </label>
+              </div>
+            ) : (
+              <div className="border border-gray-300 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="text-green-600 text-2xl">✅</div>
+                    <div>
+                      <p className="font-medium text-gray-900">{fileName}</p>
+                      <p className="text-sm text-gray-600">
+                        {previewData.length} patients found
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearFile}
+                    className="text-red-600 hover:text-red-800"
+                    disabled={isAdding}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {previewData.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preview ({previewData.length} patients)
+              </label>
+              <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50">
+                {previewData.slice(0, 5).map((patient, index) => (
+                  <div key={index} className="text-sm text-gray-700 mb-1">
+                    <span className="font-medium">{patient.name}</span> - {patient.age} years, {patient.gender}
+                    {patient.email && ` - ${patient.email}`}
+                  </div>
+                ))}
+                {previewData.length > 5 && (
+                  <div className="text-sm text-gray-500 italic">
+                    ... and {previewData.length - 5} more patients
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={isAdding}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium"
+              disabled={isAdding || !selectedFile}
+            >
+              {isAdding ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Adding...</span>
+                </div>
+              ) : (
+                `Add ${previewData.length} Patients`
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

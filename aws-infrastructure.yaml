@@ -1,0 +1,295 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Neuro360 Infrastructure - DynamoDB Tables and S3 Bucket'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'dev'
+    Description: 'Environment name (dev, staging, prod)'
+    AllowedValues: ['dev', 'staging', 'prod']
+
+Resources:
+  # S3 Bucket for file storage
+  Neuro360Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'neuro360-${Environment}-files-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+  # DynamoDB Tables
+  ClinicsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-clinics'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  PatientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-patients'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: clinicId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: clinicId-index
+          KeySchema:
+            - AttributeName: clinicId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  ReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-reports'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: clinicId
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: clinicId-index
+          KeySchema:
+            - AttributeName: clinicId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: patientId-index
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  PaymentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-payments'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: clinicId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: clinicId-index
+          KeySchema:
+            - AttributeName: clinicId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  SuperAdminsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-super-admins'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  SubscriptionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-subscriptions'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: clinicId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: clinicId-index
+          KeySchema:
+            - AttributeName: clinicId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  UsageTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'neuro360-${Environment}-usage'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: clinicId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: clinicId-index
+          KeySchema:
+            - AttributeName: clinicId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # IAM User for application access
+  Neuro360User:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Sub 'neuro360-${Environment}-app-user'
+
+  Neuro360UserPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      UserName: !Ref Neuro360User
+      PolicyName: !Sub 'neuro360-${Environment}-app-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # S3 permissions
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !Sub '${Neuro360Bucket}'
+              - !Sub '${Neuro360Bucket}/*'
+          # DynamoDB permissions
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - !GetAtt ClinicsTable.Arn
+              - !GetAtt PatientsTable.Arn
+              - !GetAtt ReportsTable.Arn
+              - !GetAtt PaymentsTable.Arn
+              - !GetAtt SuperAdminsTable.Arn
+              - !GetAtt SubscriptionsTable.Arn
+              - !GetAtt UsageTable.Arn
+              - !Sub '${ClinicsTable.Arn}/index/*'
+              - !Sub '${PatientsTable.Arn}/index/*'
+              - !Sub '${ReportsTable.Arn}/index/*'
+              - !Sub '${PaymentsTable.Arn}/index/*'
+              - !Sub '${SuperAdminsTable.Arn}/index/*'
+              - !Sub '${SubscriptionsTable.Arn}/index/*'
+              - !Sub '${UsageTable.Arn}/index/*'
+
+Outputs:
+  S3BucketName:
+    Description: 'S3 Bucket for file storage'
+    Value: !Ref Neuro360Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-S3BucketName'
+
+  ClinicsTableName:
+    Description: 'DynamoDB table for clinics'
+    Value: !Ref ClinicsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-ClinicsTableName'
+
+  PatientsTableName:
+    Description: 'DynamoDB table for patients'
+    Value: !Ref PatientsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-PatientsTableName'
+
+  ReportsTableName:
+    Description: 'DynamoDB table for reports'
+    Value: !Ref ReportsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-ReportsTableName'
+
+  PaymentsTableName:
+    Description: 'DynamoDB table for payments'
+    Value: !Ref PaymentsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-PaymentsTableName'
+
+  SuperAdminsTableName:
+    Description: 'DynamoDB table for super admins'
+    Value: !Ref SuperAdminsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-SuperAdminsTableName'
+
+  SubscriptionsTableName:
+    Description: 'DynamoDB table for subscriptions'
+    Value: !Ref SubscriptionsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-SubscriptionsTableName'
+
+  UsageTableName:
+    Description: 'DynamoDB table for usage tracking'
+    Value: !Ref UsageTable
+    Export:
+      Name: !Sub '${AWS::StackName}-UsageTableName'
+
+  IAMUserName:
+    Description: 'IAM User for application access'
+    Value: !Ref Neuro360User
+    Export:
+      Name: !Sub '${AWS::StackName}-IAMUserName'
+
+

@@ -19,8 +19,9 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
 import AWSS3Service from '../../services/awsS3Service';
+import ErrorBoundary from '../ErrorBoundary';
 
-const PatientReports = ({ onUpdate }) => {
+const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) => {
   const [reports, setReports] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -32,31 +33,72 @@ const PatientReports = ({ onUpdate }) => {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      clinicId: '',
+      patientId: '',
+      title: '',
+      reportType: 'EEG',
+      notes: ''
+    }
+  });
 
   const watchedClinic = watch('clinicId');
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [superAdminSelectedClinic]);
 
   useEffect(() => {
     // Load patients when clinic changes in the form
     if (watchedClinic) {
-      const clinicPatients = DatabaseService.getPatientsByClinic(watchedClinic);
-      setPatients(clinicPatients);
+      const loadClinicPatients = async () => {
+        const clinicPatients = await DatabaseService.getPatientsByClinic(watchedClinic);
+        setPatients(clinicPatients);
+      };
+      loadClinicPatients();
     }
   }, [watchedClinic]);
 
-  const loadData = () => {
+  const loadData = async () => {
     try {
-      const reportsData = DatabaseService.get('reports');
-      const clinicsData = DatabaseService.get('clinics');
-      const patientsData = DatabaseService.get('patients');
+      setError(null); // Clear any previous errors
+      setLoading(true);
+      
+      console.log('👑 SuperAdmin loading ALL patient reports from all clinics...');
+      
+      // SuperAdmin can see ALL data from all clinics, or filter by selected clinic
+      const reportsData = await DatabaseService.get('reports') || [];
+      const clinicsData = await DatabaseService.get('clinics') || [];
+      const patientsData = await DatabaseService.get('patients') || [];
+      
+      // Also check localStorage for any reports that might be there
+      const localStorageReports = JSON.parse(localStorage.getItem('reports') || '[]');
+      console.log('📋 Reports in localStorage:', localStorageReports.length);
+      
+      // Combine database and localStorage reports if needed
+      const allReports = [...reportsData, ...localStorageReports];
+      console.log('📋 Total reports available:', allReports.length);
+      
+      console.log('📊 SuperAdmin data loaded:', {
+        reports: reportsData.length,
+        clinics: clinicsData.length,
+        patients: patientsData.length,
+        selectedClinic: superAdminSelectedClinic
+      });
+      
+      // Debug: Log all reports to see what's available
+      console.log('📋 All reports in database:', reportsData);
+      
+      // Filter reports by selected clinic if specified
+      const filteredReportsData = superAdminSelectedClinic 
+        ? allReports.filter(report => report.clinicId === superAdminSelectedClinic)
+        : allReports;
       
       // Enhance reports with clinic and patient names
-      const enhancedReports = reportsData.map(report => {
+      const enhancedReports = filteredReportsData.map(report => {
         const clinic = clinicsData.find(c => c.id === report.clinicId);
         const patient = patientsData.find(p => p.id === report.patientId);
         return {
@@ -64,14 +106,20 @@ const PatientReports = ({ onUpdate }) => {
           clinicName: clinic?.name || 'Unknown Clinic',
           patientName: patient?.name || 'Unknown Patient'
         };
-      });
+      }).sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0));
       
       setReports(enhancedReports);
       setClinics(clinicsData);
-      setPatients(patientsData);
+      
+      // Filter patients by selected clinic if specified
+      const filteredPatientsData = superAdminSelectedClinic 
+        ? patientsData.filter(patient => patient.clinicId === superAdminSelectedClinic)
+        : patientsData;
+      setPatients(filteredPatientsData);
     } catch (error) {
-      toast.error('Error loading data');
-      console.error(error);
+      console.error('❌ Critical error loading admin patient reports:', error);
+      setError(`Failed to load data: ${error.message}`);
+      toast.error('Error loading patient reports data');
     } finally {
       setLoading(false);
     }
@@ -98,11 +146,34 @@ const PatientReports = ({ onUpdate }) => {
       return;
     }
 
+    // Validate required fields
+    if (!data.clinicId) {
+      toast.error('Please select a clinic');
+      return;
+    }
+
+    if (!data.patientId) {
+      toast.error('Please select a patient');
+      return;
+    }
+
+    if (!data.title) {
+      toast.error('Please enter a report title');
+      return;
+    }
+
     setUploadingFile(true);
     setUploadProgress(0);
 
     try {
-      console.log('🚀 Starting file upload to S3...');
+      console.log('🚀 Starting file upload to S3...', {
+        file: selectedFile.name,
+        clinicId: data.clinicId,
+        patientId: data.patientId
+      });
+      
+      // Validate file again before upload
+      AWSS3Service.validateFile(selectedFile);
       
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -145,8 +216,13 @@ const PatientReports = ({ onUpdate }) => {
         storedInCloud: true
       };
       
-      DatabaseService.addReport(reportData);
+      const savedReport = await DatabaseService.addReport(reportData);
       
+      if (!savedReport) {
+        throw new Error('Failed to save report to database');
+      }
+      
+      console.log('✅ Report saved successfully:', savedReport.id);
       toast.success(`📁 Report uploaded successfully to AWS S3!`);
       loadData();
       setShowUploadModal(false);
@@ -155,8 +231,19 @@ const PatientReports = ({ onUpdate }) => {
       reset();
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Error uploading report to S3:', error);
-      toast.error(`Upload failed: ${error.message}`);
+      console.error('❌ Admin Upload Error:', error);
+      console.error('Error context:', {
+        message: error.message,
+        formData: data,
+        file: selectedFile ? {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type
+        } : null
+      });
+      
+      const errorMessage = error.message || 'Unknown error occurred';
+      toast.error(`Upload failed: ${errorMessage}`);
       setUploadProgress(0);
     } finally {
       setUploadingFile(false);
@@ -220,15 +307,44 @@ const PatientReports = ({ onUpdate }) => {
     }
   };
 
-  const filteredReports = reports.filter(report => {
-    const matchesSearch = report.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.clinicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.fileName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClinic = !selectedClinic || report.clinicId === selectedClinic;
-    const matchesPatient = !selectedPatient || report.patientId === selectedPatient;
+  const filteredReports = (reports || []).filter(report => {
+    const matchesSearch = (report?.patientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report?.clinicName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report?.fileName || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesClinic = !selectedClinic || report?.clinicId === selectedClinic;
+    const matchesPatient = !selectedPatient || report?.patientId === selectedPatient;
     
     return matchesSearch && matchesClinic && matchesPatient;
   });
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center max-w-md">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Patient Reports</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="space-x-4">
+            <button
+              onClick={() => {
+                setError(null);
+                loadData();
+              }}
+              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -244,7 +360,12 @@ const PatientReports = ({ onUpdate }) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Patient Reports</h2>
-          <p className="text-gray-600">Upload and manage EEG reports for patients</p>
+          <p className="text-gray-600">
+            {superAdminSelectedClinic 
+              ? `Reports for ${clinics?.find(c => c?.id === superAdminSelectedClinic)?.name || 'Selected Clinic'}`
+              : 'Upload and manage EEG reports for patients'
+            }
+          </p>
         </div>
         <button
           onClick={() => setShowUploadModal(true)}
@@ -275,8 +396,8 @@ const PatientReports = ({ onUpdate }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="">All Clinics</option>
-            {clinics.map(clinic => (
-              <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
+            {(clinics || []).map(clinic => (
+              <option key={clinic?.id || Math.random()} value={clinic?.id || ''}>{clinic?.name || 'Unknown Clinic'}</option>
             ))}
           </select>
           
@@ -286,10 +407,10 @@ const PatientReports = ({ onUpdate }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="">All Patients</option>
-            {patients
-              .filter(patient => !selectedClinic || patient.clinicId === selectedClinic)
+            {(patients || [])
+              .filter(patient => !selectedClinic || patient?.clinicId === selectedClinic)
               .map(patient => (
-                <option key={patient.id} value={patient.id}>{patient.name}</option>
+                <option key={patient?.id || Math.random()} value={patient?.id || ''}>{patient?.name || 'Unknown Patient'}</option>
               ))}
           </select>
           
@@ -340,7 +461,7 @@ const PatientReports = ({ onUpdate }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredReports.map((report) => (
+              {(filteredReports || []).map((report) => (
                 <tr key={report.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -434,25 +555,27 @@ const PatientReports = ({ onUpdate }) => {
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <UploadReportModal
-          onSubmit={handleUploadReport}
-          onClose={() => {
-            setShowUploadModal(false);
-            setSelectedFile(null);
-            setUploadProgress(0);
-          }}
-          clinics={clinics}
-          patients={patients}
-          register={register}
-          handleSubmit={handleSubmit}
-          reset={reset}
-          watch={watch}
-          errors={errors}
-          selectedFile={selectedFile}
-          onFileSelect={handleFileSelect}
-          uploadingFile={uploadingFile}
-          uploadProgress={uploadProgress}
-        />
+        <ErrorBoundary>
+          <UploadReportModal
+            onSubmit={handleUploadReport}
+            onClose={() => {
+              setShowUploadModal(false);
+              setSelectedFile(null);
+              setUploadProgress(0);
+            }}
+            clinics={clinics || []}
+            patients={patients || []}
+            register={register}
+            handleSubmit={handleSubmit}
+            reset={reset}
+            watch={watch}
+            errors={errors || {}}
+            selectedFile={selectedFile}
+            onFileSelect={handleFileSelect}
+            uploadingFile={uploadingFile}
+            uploadProgress={uploadProgress}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );
@@ -474,21 +597,58 @@ const UploadReportModal = ({
   uploadingFile,
   uploadProgress
 }) => {
+  // Safety check to prevent crashes
+  if (!register || !handleSubmit || !watch) {
+    console.error('❌ UploadReportModal: Missing required form props');
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md">
+          <h3 className="text-lg font-bold text-red-600 mb-4">Form Error</h3>
+          <p className="text-gray-700 mb-4">Unable to load upload form. Please refresh the page and try again.</p>
+          <button onClick={onClose} className="bg-red-600 text-white px-4 py-2 rounded">Close</button>
+        </div>
+      </div>
+    );
+  }
   const [availablePatients, setAvailablePatients] = useState([]);
   const watchedClinic = watch('clinicId');
 
   useEffect(() => {
-    if (watchedClinic) {
-      const clinicPatients = DatabaseService.getPatientsByClinic(watchedClinic);
-      setAvailablePatients(clinicPatients);
-    } else {
-      setAvailablePatients([]);
-    }
+    const loadPatients = async () => {
+      if (watchedClinic) {
+        try {
+          const clinicPatients = await DatabaseService.getPatientsByClinic(watchedClinic);
+          setAvailablePatients(clinicPatients || []);
+          console.log('🏥 Loaded patients for clinic:', watchedClinic, 'Count:', clinicPatients?.length || 0);
+        } catch (error) {
+          console.error('❌ Error loading patients for clinic:', error);
+          setAvailablePatients([]);
+        }
+      } else {
+        setAvailablePatients([]);
+      }
+    };
+    
+    loadPatients();
   }, [watchedClinic]);
 
   const handleFormSubmit = (data) => {
-    onSubmit(data);
-    reset();
+    try {
+      console.log('🚀 Admin form submitted with data:', data);
+      console.log('Form validation errors:', Object.keys(errors).length > 0 ? errors : 'No errors');
+      console.log('Available patients count:', availablePatients.length);
+      console.log('Selected file:', selectedFile ? {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type
+      } : 'No file selected');
+      
+      onSubmit(data);
+      reset();
+    } catch (error) {
+      console.error('❌ Form submission error:', error);
+      toast.error(`Form submission failed: ${error.message}`);
+    }
   };
 
   return (
@@ -533,8 +693,8 @@ const UploadReportModal = ({
               <option value="">
                 {!watchedClinic ? 'Select clinic first...' : 'Choose a patient...'}
               </option>
-              {availablePatients.map(patient => (
-                <option key={patient.id} value={patient.id}>{patient.name}</option>
+              {(availablePatients || []).map(patient => (
+                <option key={patient?.id || Math.random()} value={patient?.id || ''}>{patient?.name || 'Unnamed Patient'}</option>
               ))}
             </select>
             {errors.patientId && <p className="text-red-500 text-xs mt-1">{errors.patientId.message}</p>}
@@ -546,10 +706,11 @@ const UploadReportModal = ({
             </label>
             <input
               type="text"
-              {...register('title')}
+              {...register('title', { required: 'Please enter a report title' })}
               placeholder={selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "e.g., EEG Analysis Report"}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
+            {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
           </div>
 
           <div>
@@ -565,9 +726,9 @@ const UploadReportModal = ({
                   <>
                     <Cloud className="mx-auto h-12 w-12 text-green-500" />
                     <div className="text-sm text-green-600">
-                      <p className="font-medium">{selectedFile.name}</p>
+                      <p className="font-medium">{selectedFile.name || 'Unknown file'}</p>
                       <p className="text-xs text-gray-500">
-                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type}
+                        {((selectedFile.size || 0) / (1024 * 1024)).toFixed(2)} MB • {selectedFile.type || 'Unknown type'}
                       </p>
                     </div>
                     {uploadingFile && (

@@ -35,59 +35,6 @@ api.interceptors.response.use(
 );
 
 export const authService = {
-  // Static credentials for demo
-  staticCredentials: {
-    // Super Admin
-    'admin@neurosense360.com': {
-      password: 'admin123',
-      user: {
-        id: 'admin-1',
-        name: 'Super Admin',
-        email: 'admin@neurosense360.com',
-        role: 'super_admin',
-        avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=dc2626&color=fff',
-        createdAt: new Date().toISOString(),
-      }
-    },
-    // Clinic Admin
-    'clinic@demo.com': {
-      password: 'clinic123',
-      user: {
-        id: 'clinic-1',
-        name: 'Demo Clinic Admin',
-        email: 'clinic@demo.com',
-        role: 'clinic_admin',
-        clinicId: 'demo-clinic-id',
-        avatar: 'https://ui-avatars.com/api/?name=Clinic+Admin&background=2563eb&color=fff',
-        createdAt: new Date().toISOString(),
-      }
-    },
-    // Regular User
-    'user@demo.com': {
-      password: 'user123',
-      user: {
-        id: 'user-1',
-        name: 'Demo User',
-        email: 'user@demo.com',
-        role: 'user',
-        avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=059669&color=fff',
-        createdAt: new Date().toISOString(),
-      }
-    },
-    // Alternative entries for testing
-    'test@test.com': {
-      password: 'test123',
-      user: {
-        id: 'test-1',
-        name: 'Test User',
-        email: 'test@test.com',
-        role: 'user',
-        avatar: 'https://ui-avatars.com/api/?name=Test+User&background=ff6b6b&color=fff',
-        createdAt: new Date().toISOString(),
-      }
-    }
-  },
-
   // Email/Password Authentication
   async loginWithEmail({ email, password, otp }) {
     console.log('🔐 Attempting login with:', { email, password: password ? 'provided' : 'missing' });
@@ -105,87 +52,53 @@ export const authService = {
     console.log('📧 Normalized email:', normalizedEmail);
     
     try {
-      // Check static credentials first
-      const staticCred = this.staticCredentials[normalizedEmail];
-      console.log('📝 Static credential found for', normalizedEmail, ':', !!staticCred);
-      console.log('📝 Available emails:', Object.keys(this.staticCredentials));
+      // Check database for credentials
+      console.log('🔍 Checking database for credentials...');
+      const databaseCredentials = await this.checkDatabaseCredentials(normalizedEmail, password, otp);
       
-      if (staticCred) {
-        console.log('🔑 Checking password...');
-        if (staticCred.password === password) {
-          console.log('✅ Password match - proceeding with login');
+      if (databaseCredentials) {
+        // Check if OTP is required
+        if (databaseCredentials.requiresOTP) {
+          console.log('🔐 OTP required for login');
+          return {
+            success: false,
+            requiresOTP: true,
+            message: databaseCredentials.message,
+            clinicId: databaseCredentials.clinicId
+          };
+        }
+        
+        // Check for errors
+        if (databaseCredentials.error) {
+          console.log('❌ Database credential error:', databaseCredentials.error);
+          throw new Error(databaseCredentials.error);
+        }
+        
+        // Successful login
+        if (databaseCredentials.user) {
+          console.log('✅ Database credentials found and verified');
           
           // Simulate API delay
           await new Promise(resolve => setTimeout(resolve, 300));
           
-          const token = `static_token_${Date.now()}`;
+          const token = `db_token_${Date.now()}`;
           const response = {
             success: true,
             token: token,
-            user: staticCred.user
+            user: databaseCredentials.user
           };
           
           // Store in localStorage for persistence
-          localStorage.setItem('demoUser', JSON.stringify(staticCred.user));
-          localStorage.setItem('demoToken', token);
+          localStorage.setItem('user', JSON.stringify(databaseCredentials.user));
+          localStorage.setItem('authToken', token);
           
-          console.log('✅ Login successful, user stored');
+          console.log('✅ Database login successful, user stored');
           return response;
-        } else {
-          console.log('❌ Password mismatch for:', normalizedEmail);
-          console.log('Expected:', staticCred.password, 'Got:', password);
-          throw new Error('Invalid password');
         }
       } else {
-        // Check database for clinic credentials
-        console.log('🔍 Checking database for clinic credentials...');
-        const databaseCredentials = this.checkDatabaseCredentials(normalizedEmail, password, otp);
-        
-        if (databaseCredentials) {
-          // Check if OTP is required
-          if (databaseCredentials.requiresOTP) {
-            console.log('🔐 OTP required for login');
-            return {
-              success: false,
-              requiresOTP: true,
-              message: databaseCredentials.message,
-              clinicId: databaseCredentials.clinicId
-            };
-          }
-          
-          // Check for errors
-          if (databaseCredentials.error) {
-            console.log('❌ Database credential error:', databaseCredentials.error);
-            throw new Error(databaseCredentials.error);
-          }
-          
-          // Successful login
-          if (databaseCredentials.user) {
-            console.log('✅ Database credentials found and verified');
-            
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            const token = `db_token_${Date.now()}`;
-            const response = {
-              success: true,
-              token: token,
-              user: databaseCredentials.user
-            };
-            
-            // Store in localStorage for persistence
-            localStorage.setItem('demoUser', JSON.stringify(databaseCredentials.user));
-            localStorage.setItem('demoToken', token);
-            
-            console.log('✅ Database login successful, user stored');
-            return response;
-          }
-        } else {
-          console.log('❌ No credentials found for:', normalizedEmail);
-          throw new Error('Invalid email address or password');
-        }
+        console.log('❌ No credentials found for:', normalizedEmail);
+        throw new Error('Invalid email address or password');
       }
-      
     } catch (error) {
       console.error('🚨 Login error:', error.message);
       throw error;
@@ -193,17 +106,25 @@ export const authService = {
   },
 
   // Check database for clinic credentials
-  checkDatabaseCredentials(email, password, otp = null) {
+  async checkDatabaseCredentials(email, password, otp = null) {
     try {
       console.log('🔍 Searching database for email:', email);
       
       // Get clinics from database
-      const clinics = DatabaseService.get('clinics');
+      const clinics = await DatabaseService.get('clinics');
       console.log('📊 Found', clinics.length, 'clinics in database');
+      
+      // Get super admins from database
+      const superAdmins = await DatabaseService.get('superAdmins');
+      console.log('👑 Found', superAdmins.length, 'super admins in database');
       
       // Find clinic with matching email
       const clinic = clinics.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
       console.log('🏥 Clinic found:', !!clinic);
+      
+      // Find super admin with matching email
+      const superAdmin = superAdmins.find(sa => sa.email && sa.email.toLowerCase() === email.toLowerCase());
+      console.log('👑 Super admin found:', !!superAdmin);
       
       if (clinic) {
         console.log('🔐 Checking password for clinic:', clinic.name);
@@ -244,7 +165,7 @@ export const authService = {
               
               console.log('✅ OTP validated, activating clinic');
               // Activate the clinic
-              DatabaseService.update('clinics', clinic.id, {
+              await DatabaseService.update('clinics', clinic.id, {
                 isActivated: true,
                 activatedAt: new Date().toISOString(),
                 activationOTP: null, // Clear OTP after successful validation
@@ -279,8 +200,35 @@ export const authService = {
           console.log('❌ Password mismatch for clinic:', clinic.name);
           return null;
         }
+      } else if (superAdmin) {
+        console.log('🔐 Checking password for super admin:', superAdmin.name);
+        console.log('🔐 Stored password:', superAdmin.password);
+        console.log('🔐 Provided password:', password);
+        
+        // Check if password matches
+        if (superAdmin.password === password) {
+          console.log('✅ Password match for super admin:', superAdmin.name);
+          
+          // Create user object for super admin
+          const user = {
+            id: superAdmin.id,
+            name: superAdmin.name,
+            email: superAdmin.email,
+            role: 'super_admin',
+            clinicId: null,
+            clinicName: null,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(superAdmin.name)}&background=dc2626&color=fff`,
+            isActivated: superAdmin.isActivated || true,
+            createdAt: superAdmin.createdAt || new Date().toISOString(),
+          };
+          
+          return { user };
+        } else {
+          console.log('❌ Password mismatch for super admin:', superAdmin.name);
+          return null;
+        }
       } else {
-        console.log('❌ No clinic found with email:', email);
+        console.log('❌ No clinic or super admin found with email:', email);
         return null;
       }
     } catch (error) {
@@ -289,23 +237,124 @@ export const authService = {
     }
   },
 
-  async registerWithEmail({ name, email, password, confirmPassword }) {
+  async registerWithEmail({ name, email, password, confirmPassword, userType = 'clinic' }) {
     try {
+      console.log('🔐 Attempting registration with:', { name, email, userType });
+      console.log('🔍 Registration input validation started...');
+      
+      // Input validation
+      if (!name || name.trim().length < 2) {
+        throw new Error('Name must be at least 2 characters long');
+      }
+      if (!email || !email.includes('@')) {
+        throw new Error('Please enter a valid email address');
+      }
+      if (!password || password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
       if (password !== confirmPassword) {
         throw new Error('Passwords do not match');
       }
-      const response = await api.post('/auth/register', { name, email, password });
-      return response.data;
+      if (!['clinic', 'super_admin'].includes(userType)) {
+        throw new Error('Invalid user type selected');
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('✅ Input validation passed, checking existing users...');
+      
+      // Check if email already exists in both tables
+      console.log('📊 Fetching existing clinics...');
+      const existingClinics = await DatabaseService.get('clinics');
+      console.log('📊 Fetching existing super admins...');
+      const existingSuperAdmins = await DatabaseService.get('superAdmins');
+      console.log('📊 Database fetch completed');
+      
+      const existingClinic = existingClinics.find(c => c.email && c.email.toLowerCase() === normalizedEmail);
+      const existingSuperAdmin = existingSuperAdmins.find(sa => sa.email && sa.email.toLowerCase() === normalizedEmail);
+      
+      if (existingClinic || existingSuperAdmin) {
+        throw new Error('Email already registered. Please use a different email or try logging in.');
+      }
+
+      let newUser;
+      let needsActivation = false;
+
+      if (userType === 'super_admin') {
+        // Create Super Admin - auto-activated for immediate login
+        newUser = await DatabaseService.add('superAdmins', {
+          name: name.trim(),
+          email: normalizedEmail,
+          password: password, // In production, this should be hashed
+          role: 'super_admin',
+          isActive: true, // Auto-activate super admins
+          isActivated: true,
+          createdAt: new Date().toISOString(),
+          status: 'active'
+        });
+        
+        needsActivation = false; // No activation required
+        console.log('✅ Super Admin registration - auto-activated:', newUser.email);
+        
+      } else {
+        // Create Clinic - auto-activated for now, can add email verification later
+        newUser = await DatabaseService.createClinic({
+          name: name.trim(),
+          email: normalizedEmail,
+          password: password, // In production, this should be hashed
+          adminPassword: password, // Add this for login compatibility
+          contactPerson: name.trim(),
+          role: 'clinic_admin',
+          isActive: true,
+          isActivated: true, // Auto-activate clinics for now
+          subscriptionStatus: 'trial',
+          trialStartDate: new Date().toISOString(),
+          trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days trial
+        });
+        
+        console.log('✅ Clinic registration successful:', newUser.name);
+      }
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Create user object for immediate login (both clinics and super admins)
+      const user = {
+        id: newUser.id,
+        name: userType === 'super_admin' ? newUser.name : (newUser.contactPerson || newUser.name),
+        email: newUser.email,
+        role: newUser.role,
+        clinicId: userType === 'clinic' ? newUser.id : null,
+        clinicName: userType === 'clinic' ? newUser.name : null,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(newUser.name)}&background=${userType === 'super_admin' ? 'dc2626' : '2563eb'}&color=fff`,
+        isActivated: newUser.isActivated,
+        userType: userType,
+        subscriptionStatus: newUser.subscriptionStatus || null,
+        createdAt: newUser.createdAt
+      };
+
+      const token = `reg_token_${userType}_${Date.now()}`;
+      
+      // Store user for immediate login
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('authToken', token);
+
+      return {
+        success: true,
+        message: `${userType === 'super_admin' ? 'Super Admin' : 'Clinic'} registration successful! You are now logged in.`,
+        token: token,
+        user: user,
+        userType: userType
+      };
+      
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Registration failed');
+      console.error('❌ Registration error:', error.message);
+      throw new Error(error.message || 'Registration failed');
     }
   },
 
   // Google OAuth
   async loginWithGoogle() {
     try {
-      // In a real app, you would integrate with Google OAuth
-      // For demo purposes, we'll simulate the flow
       const response = await this.simulateOAuthLogin('google');
       return response;
     } catch (error) {
@@ -360,32 +409,18 @@ export const authService = {
     }
   },
 
-  // Simulate OAuth login for demo purposes
+  // OAuth login simulation (placeholder for real implementation)
   async simulateOAuthLogin(provider) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          token: `demo_token_${provider}_${Date.now()}`,
-          user: {
-            id: Math.random().toString(36).substr(2, 9),
-            name: `Demo User (${provider})`,
-            email: `demo@${provider}.com`,
-            avatar: `https://ui-avatars.com/api/?name=Demo+User&background=3b82f6&color=fff`,
-            provider: provider,
-            createdAt: new Date().toISOString(),
-          }
-        });
-      }, 1000); // Simulate network delay
-    });
+    throw new Error(`${provider} OAuth not implemented yet`);
   },
 
   // Get current user
   async getCurrentUser() {
     try {
-      // First try to get from localStorage (for demo)
-      const demoUser = localStorage.getItem('demoUser');
-      if (demoUser) {
-        return JSON.parse(demoUser);
+      // First try to get from localStorage
+      const user = localStorage.getItem('user');
+      if (user) {
+        return JSON.parse(user);
       }
       
       // Fallback to API call
@@ -400,8 +435,8 @@ export const authService = {
   async logout() {
     try {
       // Clear localStorage first
-      localStorage.removeItem('demoUser');
-      localStorage.removeItem('demoToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
       
       // Try API call
       await api.post('/auth/logout');

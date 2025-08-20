@@ -15,7 +15,8 @@ import {
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
 
-const ReportViewer = ({ clinicId, patients, reports, onUpdate }) => {
+const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate }) => {
+  const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState('');
@@ -23,6 +24,38 @@ const ReportViewer = ({ clinicId, patients, reports, onUpdate }) => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportDetails, setShowReportDetails] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Load reports directly from database
+  useEffect(() => {
+    loadReports();
+  }, [clinicId]);
+
+  // Also use initialReports if provided
+  useEffect(() => {
+    if (initialReports && initialReports.length > 0) {
+      setReports(initialReports);
+    }
+  }, [initialReports]);
+
+  const loadReports = async () => {
+    if (!clinicId) return;
+    
+    try {
+      setLoading(true);
+      console.log('📋 Loading reports for clinic:', clinicId);
+      
+      // Load reports directly from database
+      const reportsData = await DatabaseService.getReportsByClinic(clinicId);
+      console.log('📋 Reports loaded:', reportsData.length);
+      
+      setReports(reportsData);
+    } catch (error) {
+      console.error('❌ Error loading reports:', error);
+      toast.error('Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     applyFilters();
@@ -78,13 +111,39 @@ const ReportViewer = ({ clinicId, patients, reports, onUpdate }) => {
     setFilteredReports(filtered);
   };
 
-  const handleDownloadReport = (report) => {
-    setLoading(true);
-    // Mock download functionality
-    setTimeout(() => {
-      toast.success(`Downloaded ${report.fileName}`);
+  const handleDownloadReport = async (report) => {
+    try {
+      setLoading(true);
+      console.log('📥 Downloading report:', report.fileName);
+      
+      if (report.s3Key) {
+        // Try to get from mock S3 service
+        const mockFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
+        const mockFile = mockFiles.find(f => f.key === report.s3Key);
+        
+        if (mockFile && mockFile.data) {
+          // Create download link for base64 data
+          const link = document.createElement('a');
+          link.href = mockFile.data;
+          link.download = report.fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast.success(`📥 Downloaded ${report.fileName}`);
+        } else {
+          toast.error('File not found in storage');
+        }
+      } else {
+        // Fallback for files without S3 key
+        toast.success(`📥 Downloaded ${report.fileName}`);
+      }
+    } catch (error) {
+      console.error('❌ Error downloading report:', error);
+      toast.error('Failed to download report');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleViewReport = (report) => {
@@ -96,6 +155,11 @@ const ReportViewer = ({ clinicId, patients, reports, onUpdate }) => {
     setSearchTerm('');
     setSelectedPatient('');
     setDateFilter('');
+  };
+
+  const refreshReports = () => {
+    loadReports();
+    if (onUpdate) onUpdate();
   };
 
   const getPatientName = (patientId) => {

@@ -398,7 +398,7 @@ Neuro360 Team
       const htmlContent = this.generateEmailHTML(templateData);
       
       const result = await Email.send({
-        SecureToken: "C973D7AD-F097-4B95-91F4-40ABC5567812", // Demo secure token
+        SecureToken: import.meta.env.VITE_EMAILJS_SECURE_TOKEN || "your_secure_token_here",
         To: emailData.to,
         From: "noreply@neurosense360.com",
         Subject: emailData.subject,

@@ -152,40 +152,7 @@
             try {
                 // Direct credential check (exactly like authService)
                 const staticCredentials = {
-                    'admin@neurosense360.com': {
-                        password: 'admin123',
-                        user: {
-                            id: 'admin-1',
-                            name: 'Super Admin',
-                            email: 'admin@neurosense360.com',
-                            role: 'super_admin',
-                            avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=dc2626&color=fff',
-                            createdAt: new Date().toISOString(),
-                        }
-                    },
-                    'clinic@demo.com': {
-                        password: 'clinic123',
-                        user: {
-                            id: 'clinic-1',
-                            name: 'Demo Clinic Admin',
-                            email: 'clinic@demo.com',
-                            role: 'clinic_admin',
-                            clinicId: 'demo-clinic-id',
-                            avatar: 'https://ui-avatars.com/api/?name=Clinic+Admin&background=2563eb&color=fff',
-                            createdAt: new Date().toISOString(),
-                        }
-                    },
-                    'user@demo.com': {
-                        password: 'user123',
-                        user: {
-                            id: 'user-1',
-                            name: 'Demo User',
-                            email: 'user@demo.com',
-                            role: 'user',
-                            avatar: 'https://ui-avatars.com/api/?name=Demo+User&background=059669&color=fff',
-                            createdAt: new Date().toISOString(),
-                        }
-                    }
+                    // Demo credentials removed - use registration to create accounts
                 };
                 
                 const normalizedEmail = email.toLowerCase();

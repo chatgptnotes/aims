@@ -1,51 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, UploadCloud, FileText, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
+import AWSS3Service from '../../services/awsS3Service';
 import { useAuth } from '../../contexts/AuthContext';
+import { logUploadAttempt, logUploadError } from '../../utils/uploadErrorChecker';
 
 const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
   const { user } = useAuth();
-  const { register, handleSubmit, formState: { errors }, watch } = useForm();
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm({
+    defaultValues: {
+      title: '',
+      reportType: '',
+      notes: '',
+      reportFile: null
+    }
+  });
+  
+  // Debug logging when modal opens
+  useEffect(() => {
+    console.log('📂 UploadReportModal opened with:', { 
+      clinicId, 
+      patient: patient ? { id: patient.id, name: patient.name } : null, 
+      user: user ? { name: user.name, role: user.role } : null 
+    });
+    
+    // Validate required props
+    if (!clinicId) {
+      console.error('❌ UploadReportModal: clinicId is required');
+    }
+    if (!patient) {
+      console.error('❌ UploadReportModal: patient is required');
+    }
+    if (!user) {
+      console.warn('⚠️ UploadReportModal: user not loaded yet');
+    }
+  }, [clinicId, patient, user]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const selectedFile = watch('reportFile');
 
   const onSubmit = async (data) => {
     setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
+      const file = data.reportFile[0];
+      
+      // Log upload attempt and check for errors
+      const uploadErrors = logUploadAttempt(clinicId, patient, user, file);
+      if (uploadErrors.length > 0) {
+        throw new Error(`Upload validation failed: ${uploadErrors.join(', ')}`);
+      }
+      
+      // Validate file
+      AWSS3Service.validateFile(file);
+      
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      // Upload file to S3
+      const uploadResult = await AWSS3Service.uploadFile(
+        file, 
+        file.name,
+        {
+          clinicId: clinicId,
+          patientId: patient.id,
+          reportType: data.reportType || 'EEG',
+          uploadedBy: user?.name || 'Unknown User'
+        }
+      );
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      // Save report metadata to database
       const reportData = {
         clinicId,
         patientId: patient.id,
         title: data.title,
         notes: data.notes,
-        fileName: data.reportFile[0].name,
-        fileType: data.reportFile[0].type,
-        fileSize: `${(data.reportFile[0].size / 1024).toFixed(2)} KB`,
+        fileName: file.name,
+        fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        fileType: file.type,
         uploadedBy: user.name,
+        // AWS S3 specific fields
+        s3Key: uploadResult.key,
+        s3Bucket: uploadResult.bucket,
+        s3Region: uploadResult.region,
+        s3FileName: uploadResult.fileName,
+        s3UploadedAt: uploadResult.uploadedAt,
+        s3ETag: uploadResult.etag,
+        fileUrl: uploadResult.url, // Signed URL for initial access
+        uploadStatus: 'completed',
+        storedInCloud: true
       };
 
-      DatabaseService.addReport(reportData);
-      toast.success('Report uploaded successfully');
+      const savedReport = await DatabaseService.addReport(reportData);
+      
+      if (!savedReport) {
+        throw new Error('Failed to save report to database');
+      }
+      
+      toast.success(`📁 Report uploaded successfully! (Development Mode)`);
       onUpload();
       onClose();
+      reset();
     } catch (error) {
-      toast.error('Failed to upload report');
-      console.error(error);
+      logUploadError(error, { clinicId, patient, user, file: data.reportFile?.[0] });
+      toast.error(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
+
+  // Don't render if required props are missing
+  if (!clinicId || !patient) {
+    console.error('UploadReportModal: Missing required props', { clinicId, patient });
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-lg">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Upload New Report for {patient.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Upload New Report for {patient?.name || 'Patient'}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
         </div>
+        
+        {isUploading && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              <span className="text-blue-800 font-medium">Uploading file...</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-blue-600 mt-1">{uploadProgress}% complete</p>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label htmlFor="patientName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -55,7 +159,7 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
               id="patientName"
               type="text"
               disabled
-              value={patient.name}
+              value={patient?.name || ''}
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
             />
           </div>
@@ -74,6 +178,37 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
           </div>
 
           <div>
+            <label htmlFor="reportType" className="block text-sm font-medium text-gray-700 mb-2">
+              Report Type
+            </label>
+            <select
+              id="reportType"
+              {...register('reportType', { required: 'Report type is required' })}
+              className={`w-full px-3 py-2 border ${errors.reportType ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500`}
+            >
+              <option value="">Select report type</option>
+              <option value="EEG">EEG Report</option>
+              <option value="PDF">PDF Report</option>
+              <option value="EDF">EDF File</option>
+              <option value="Other">Other</option>
+            </select>
+            {errors.reportType && <p className="text-red-500 text-sm mt-1">{errors.reportType.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              Notes (Optional)
+            </label>
+            <textarea
+              id="notes"
+              rows={3}
+              {...register('notes')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Add any additional notes about this report..."
+            />
+          </div>
+
+          <div>
             <label htmlFor="reportFile" className="block text-sm font-medium text-gray-700 mb-2">
               Report File
             </label>
@@ -86,49 +221,55 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
                     className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500"
                   >
                     <span>Upload a file</span>
-                    <input id="reportFile" {...register('reportFile', { required: 'File is required' })} type="file" accept=".pdf,.docx,.edf,.csv,.txt,.jpg,.jpeg,.png" className="sr-only" />
+                    <input 
+                      id="reportFile" 
+                      {...register('reportFile', { required: 'File is required' })} 
+                      type="file" 
+                      accept=".pdf,.docx,.edf,.csv,.txt,.jpg,.jpeg,.png" 
+                      className="sr-only" 
+                      disabled={isUploading}
+                    />
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500">PDF, EDF, DOCX, images, etc. up to 10MB</p>
+                <p className="text-xs text-gray-500">PDF, EDF, DOCX, images, etc. up to 200MB</p>
+                <p className="text-xs text-green-600">✅ Files will be stored securely (Development Mode)</p>
               </div>
             </div>
             {selectedFile && selectedFile[0] && (
               <div className="mt-2 flex items-center text-sm text-gray-500">
                 <FileText className="h-5 w-5 text-gray-400 mr-2" />
-                {selectedFile[0].name}
+                {selectedFile[0].name} ({((selectedFile[0].size || 0) / (1024 * 1024)).toFixed(2)} MB)
               </div>
             )}
             {errors.reportFile && <p className="text-red-500 text-sm mt-1">{errors.reportFile.message}</p>}
           </div>
 
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-              Notes (optional)
-            </label>
-            <textarea
-              id="notes"
-              {...register('notes')}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              disabled={isUploading}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isUploading}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
-              {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
-              Upload Report
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="h-4 w-4" />
+                  <span>Upload Report</span>
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import SocialAuthButtons from './SocialAuthButtons';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -75,16 +74,6 @@ const LoginForm = () => {
         <div className="text-center mb-6 sm:mb-8 animate-slide-up">
           <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2 sm:mb-3">Welcome Back</h2>
           <p className="text-gray-600 font-medium text-sm sm:text-base">Sign in to your account</p>
-        </div>
-
-        {/* Social Auth Buttons */}
-        <div className="animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-          <SocialAuthButtons />
-        </div>
-
-        {/* Divider */}
-        <div className="divider animate-fade-in" style={{ animationDelay: '0.4s' }}>
-          <span>Or continue with email</span>
         </div>
 
         {/* Login Form */}

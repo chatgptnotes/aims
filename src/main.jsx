@@ -7,10 +7,10 @@ import './index.css'
 import consoleErrorFixer from './utils/consoleErrorFixer.js'
 import './utils/globalErrorHandler.js'
 
-// Initialize console error suppression in development
-if (import.meta.env.DEV) {
-  consoleErrorFixer.init();
-}
+// Temporarily disable console error suppression to debug registration issues
+// if (import.meta.env.DEV) {
+//   consoleErrorFixer.init();
+// }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   import.meta.env.PROD ? (

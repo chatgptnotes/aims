@@ -377,10 +377,10 @@ const SubscriptionTab = () => {
       {showCheckout && (
         <SimpleRazorpayCheckout
           clinicInfo={{
-            id: user?.clinicId || user?.id || 'demo-clinic-id',
-            name: user?.clinicName || user?.name || 'Demo Clinic',
-            email: user?.email || 'demo@clinic.com',
-            phone: user?.phone || '9999999999'
+            id: user?.clinicId || user?.id,
+                          name: user?.clinicName || user?.name || 'Clinic',
+                          email: user?.email || 'clinic@example.com',
+                          phone: user?.phone || ''
           }}
           onSuccess={handlePaymentSuccess}
           onClose={() => setShowCheckout(false)}

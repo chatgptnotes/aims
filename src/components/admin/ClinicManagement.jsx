@@ -15,7 +15,8 @@ import {
   X,
   Key,
   RefreshCw,
-  Copy
+  Copy,
+  CreditCard
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -38,24 +39,40 @@ const ClinicManagement = ({ onUpdate }) => {
   useEffect(() => {
     loadClinics();
     
-    // Configure email service (currently using mock, can be changed to real provider)
-    // EmailService.setProvider('emailjs', { publicKey: 'your_key_here' });
-    // EmailService.setProvider('sendgrid', { apiKey: 'your_key_here' });
+    // Configure email service with error handling
+    try {
+      // EmailService.setProvider('emailjs', { publicKey: 'your_key_here' });
+      // EmailService.setProvider('sendgrid', { apiKey: 'your_key_here' });
+    } catch (error) {
+      console.warn('Email service configuration failed:', error);
+    }
   }, []);
 
-  const loadClinics = () => {
+  const loadClinics = async () => {
     try {
-      const clinicsData = DatabaseService.get('clinics');
-      setClinics(clinicsData);
+      console.log('👑 SuperAdmin loading all registered clinics...');
+      
+      // SuperAdmin can see ALL clinics
+      const clinicsData = await DatabaseService.get('clinics');
+      console.log('🏥 Found clinics:', clinicsData.length);
+      
+      // Sort by creation date (newest first)
+      const sortedClinics = clinicsData.sort((a, b) => 
+        new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+      
+      setClinics(sortedClinics);
     } catch (error) {
-      toast.error('Error loading clinics');
-      console.error(error);
+      console.error('❌ Error loading clinics:', error);
+      toast.error('Error loading clinics: ' + error.message);
+      // Set empty array to prevent further errors
+      setClinics([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateClinic = (data) => {
+  const handleCreateClinic = async (data) => {
     try {
       // Set reports limit based on subscription plan if not manually set
       let reportsAllowed = data.reportsAllowed || 10;
@@ -81,7 +98,7 @@ const ClinicManagement = ({ onUpdate }) => {
         confirmPassword: undefined
       };
       
-      DatabaseService.createClinic(clinicData);
+      await DatabaseService.add('clinics', clinicData);
       toast.success(`Clinic created successfully with ${data.subscriptionPlan || 'trial'} plan`);
       loadClinics();
       setShowModal(false);
@@ -93,9 +110,9 @@ const ClinicManagement = ({ onUpdate }) => {
     }
   };
 
-  const handleEditClinic = (data) => {
+  const handleEditClinic = async (data) => {
     try {
-      DatabaseService.update('clinics', selectedClinic.id, data);
+      await DatabaseService.update('clinics', selectedClinic.id, data);
       toast.success('Clinic updated successfully');
       loadClinics();
       setShowModal(false);
@@ -108,11 +125,11 @@ const ClinicManagement = ({ onUpdate }) => {
     }
   };
 
-  const handleDeactivateClinic = (clinicId) => {
-    if (window.confirm('Are you sure you want to deactivate this clinic?')) {
+  const handleDeactivateClinic = async (clinicId) => {
+    if (window.confirm('Are you sure you want to change the status of this clinic?')) {
       try {
-        const clinic = DatabaseService.findById('clinics', clinicId);
-        DatabaseService.update('clinics', clinicId, { 
+        const clinic = await DatabaseService.findById('clinics', clinicId);
+        await DatabaseService.update('clinics', clinicId, { 
           isActive: !clinic.isActive 
         });
         toast.success(`Clinic ${clinic.isActive ? 'deactivated' : 'activated'} successfully`);
@@ -125,10 +142,10 @@ const ClinicManagement = ({ onUpdate }) => {
     }
   };
 
-  const handleDeleteClinic = (clinicId) => {
+  const handleDeleteClinic = async (clinicId) => {
     if (window.confirm('Are you sure you want to delete this clinic? This action cannot be undone.')) {
       try {
-        DatabaseService.delete('clinics', clinicId);
+        await DatabaseService.delete('clinics', clinicId);
         toast.success('Clinic deleted successfully');
         loadClinics();
         onUpdate?.();
@@ -174,7 +191,7 @@ const ClinicManagement = ({ onUpdate }) => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
   };
 
-  const handlePasswordReset = (clinic) => {
+  const handlePasswordReset = async (clinic) => {
     setSelectedClinic(clinic);
     setNewPassword('');
     setIsManualPassword(false);
@@ -235,7 +252,7 @@ const ClinicManagement = ({ onUpdate }) => {
       const otpCode = generateOTP();
       
       // Update clinic with new password and OTP
-      DatabaseService.update('clinics', selectedClinic.id, { 
+      await DatabaseService.update('clinics', selectedClinic.id, { 
         adminPassword: newPassword,
         passwordResetAt: new Date().toISOString(),
         activationOTP: otpCode,
@@ -476,6 +493,20 @@ Please manually share these credentials with the clinic.`;
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => window.location.href = `/admin?tab=reports&clinic=${clinic.id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="View Patients & Reports"
+                      >
+                        <Users className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => window.location.href = `/admin?tab=payments&clinic=${clinic.id}`}
+                        className="text-green-600 hover:text-green-900"
+                        title="View Payment History"
+                      >
+                        <CreditCard className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => openModal(clinic)}

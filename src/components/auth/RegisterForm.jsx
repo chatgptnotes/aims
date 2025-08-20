@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Loader2, Shield, Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import SocialAuthButtons from './SocialAuthButtons';
 
 const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userType, setUserType] = useState('clinic'); // Default to clinic
   const { register: registerUser, loading } = useAuth();
   const navigate = useNavigate();
   
@@ -17,16 +17,46 @@ const RegisterForm = () => {
     formState: { errors },
     setError,
     watch,
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      userType: 'clinic'
+    }
+  });
 
   const watchPassword = watch('password');
+  const watchUserType = watch('userType');
 
   const onSubmit = async (data) => {
-    const result = await registerUser(data, 'email');
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError('root', { message: result.error });
+    try {
+      console.log('📝 Form submission started with data:', data);
+      
+      // Include userType in registration data
+      const registrationData = {
+        ...data,
+        userType: data.userType || userType
+      };
+      
+      console.log('📋 Registration data prepared:', registrationData);
+      
+      const result = await registerUser(registrationData, 'email');
+      console.log('📨 Registration result:', result);
+      
+      if (result && result.success) {
+        // Check if account needs activation
+        if (result.needsActivation) {
+          console.log('✅ Registration successful - needs activation');
+          navigate('/activation-pending');
+        } else {
+          console.log('✅ Registration successful - redirecting to dashboard');
+          navigate('/dashboard');
+        }
+      } else {
+        console.log('❌ Registration failed:', result?.error);
+        setError('root', { message: result?.error || 'Registration failed. Please try again.' });
+      }
+    } catch (error) {
+      console.error('🚨 Registration form error:', error);
+      setError('root', { message: 'An unexpected error occurred. Please try again.' });
     }
   };
 
@@ -45,16 +75,6 @@ const RegisterForm = () => {
           <p className="text-gray-600 font-medium text-sm sm:text-base">Join us today and get started</p>
         </div>
 
-        {/* Social Auth Buttons */}
-        <div className="animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-          <SocialAuthButtons isRegister={true} />
-        </div>
-
-        {/* Divider */}
-        <div className="divider animate-fade-in" style={{ animationDelay: '0.4s' }}>
-          <span>Or register with email</span>
-        </div>
-
         {/* Register Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 animate-slide-in-right" style={{ animationDelay: '0.6s' }}>
           {errors.root && (
@@ -63,10 +83,51 @@ const RegisterForm = () => {
             </div>
           )}
 
-          {/* Name Field */}
+          {/* User Type Selection */}
           <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <label htmlFor="userType" className="field-label">
+              Account Type
+            </label>
+            <div className="relative">
+              {watchUserType === 'super_admin' ? (
+                <Shield className={`input-icon ${errors.userType ? 'text-red-400' : 'text-purple-500'}`} />
+              ) : (
+                <Building2 className={`input-icon ${errors.userType ? 'text-red-400' : 'text-blue-500'}`} />
+              )}
+              <select
+                id="userType"
+                className={`auth-input pl-11 ${errors.userType ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
+                {...register('userType', {
+                  required: 'Please select account type',
+                })}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <option value="clinic">🏥 Clinic Administrator</option>
+                <option value="super_admin">👑 Super Administrator</option>
+              </select>
+            </div>
+            {errors.userType && (
+              <p className="error-message">{errors.userType.message}</p>
+            )}
+            <div className="mt-2 text-xs text-gray-500">
+              {watchUserType === 'super_admin' ? (
+                <span className="flex items-center gap-1">
+                  <Shield className="w-3 h-3 text-purple-500" />
+                  Super Admin has full system access and manages all clinics
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-blue-500" />
+                  Clinic Admin manages patients, reports and clinic data
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Name Field */}
+          <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <label htmlFor="name" className="field-label">
-              Full Name
+              {watchUserType === 'super_admin' ? 'Administrator Name' : 'Clinic Name / Contact Person'}
             </label>
             <div className="relative">
               <User className={`input-icon ${errors.name ? 'text-red-400' : ''}`} />
@@ -74,7 +135,7 @@ const RegisterForm = () => {
                 id="name"
                 type="text"
                 className={`auth-input pl-11 ${errors.name ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
-                placeholder="Enter your full name"
+                placeholder={watchUserType === 'super_admin' ? 'Enter administrator name' : 'Enter clinic name or your name'}
                 {...register('name', {
                   required: 'Name is required',
                   minLength: {

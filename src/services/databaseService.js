@@ -1,64 +1,53 @@
 import { v4 as uuidv4 } from 'uuid';
+import DynamoService from './dynamoService';
 
-// Mock database using localStorage
+// Hybrid database service - uses DynamoDB when available, localStorage as fallback
 class DatabaseService {
   constructor() {
+    this.useDynamoDB = false;
     this.initializeData();
+    this.checkDynamoDBAvailability();
+  }
+
+  async checkDynamoDBAvailability() {
+    try {
+      if (DynamoService.isAvailable()) {
+        this.useDynamoDB = true;
+        console.log('🚀 Using AWS DynamoDB for data storage');
+      } else {
+        console.log('💾 Using localStorage for data storage (AWS not configured)');
+      }
+    } catch (error) {
+      console.log('💾 Falling back to localStorage:', error.message);
+    }
   }
 
   initializeData() {
     try {
-      // Initialize with default super admin if doesn't exist
-      if (!localStorage.getItem('superAdmins')) {
-        const defaultAdmin = {
-          id: uuidv4(),
-          email: 'admin@neurosense360.com',
-          password: 'admin123', // In production, this would be hashed
-          name: 'Super Admin',
-          role: 'super_admin',
-          createdAt: new Date().toISOString(),
-          isActive: true
-        };
-        localStorage.setItem('superAdmins', JSON.stringify([defaultAdmin]));
-      }
-    } catch (error) {
-      console.warn('Failed to initialize superAdmins:', error);
-    }
-
-    try {
       // Initialize empty data structures
-      const tables = ['clinics', 'patients', 'reports', 'subscriptions', 'payments', 'usage', 'alerts'];
+      const tables = ['superAdmins', 'clinics', 'patients', 'reports', 'subscriptions', 'payments', 'usage', 'alerts'];
       
       tables.forEach(table => {
         if (!localStorage.getItem(table)) {
           localStorage.setItem(table, JSON.stringify([]));
         }
       });
-
-      // Add a demo clinic if it doesn't exist
-      const clinics = this.get('clinics');
-      if (!clinics.find(c => c.id === 'demo-clinic-id')) {
-        this.add('clinics', {
-          id: 'demo-clinic-id',
-          name: 'Demo Clinic',
-          email: 'clinic@demo.com',
-          password: 'password',
-          role: 'clinic_admin',
-          isActive: true,
-          reportsUsed: 5,
-          reportsAllowed: 10,
-          subscriptionStatus: 'trial',
-          trialStartDate: new Date().toISOString(),
-          trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        });
-      }
     } catch (error) {
       console.warn('Failed to initialize data tables:', error);
     }
   }
 
   // Generic CRUD operations
-  get(table) {
+  async get(table) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.get(table);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
     try {
       const data = localStorage.getItem(table);
       return data ? JSON.parse(data) : [];
@@ -76,16 +65,34 @@ class DatabaseService {
     }
   }
 
-  add(table, item) {
-    const data = this.get(table);
+  async add(table, item) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.add(table, item);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     const newItem = { ...item, id: item.id || uuidv4(), createdAt: item.createdAt || new Date().toISOString() };
     data.push(newItem);
     this.set(table, data);
     return newItem;
   }
 
-  update(table, id, updates) {
-    const data = this.get(table);
+  async update(table, id, updates) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.update(table, id, updates);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     const index = data.findIndex(item => item.id === id);
     if (index !== -1) {
       data[index] = { ...data[index], ...updates, updatedAt: new Date().toISOString() };
@@ -95,25 +102,61 @@ class DatabaseService {
     return null;
   }
 
-  delete(table, id) {
-    const data = this.get(table);
+  async delete(table, id) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.delete(table, id);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     const filteredData = data.filter(item => item.id !== id);
     this.set(table, filteredData);
     return true;
   }
 
-  findById(table, id) {
-    const data = this.get(table);
+  async findById(table, id) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.findById(table, id);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     return data.find(item => item.id === id);
   }
 
-  findBy(table, field, value) {
-    const data = this.get(table);
+  async findBy(table, field, value) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.findBy(table, field, value);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     return data.filter(item => item[field] === value);
   }
 
-  findOne(table, field, value) {
-    const data = this.get(table);
+  async findOne(table, field, value) {
+    if (this.useDynamoDB) {
+      try {
+        return await DynamoService.findOne(table, field, value);
+      } catch (error) {
+        console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
+        this.useDynamoDB = false;
+      }
+    }
+    
+    const data = await this.get(table);
     return data.find(item => item[field] === value);
   }
 
@@ -127,7 +170,7 @@ class DatabaseService {
   }
 
   // Clinic specific methods
-  createClinic(clinicData) {
+  async createClinic(clinicData) {
     const clinic = {
       ...clinicData,
       id: uuidv4(),
@@ -139,12 +182,12 @@ class DatabaseService {
       trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days trial
     };
     
-    return this.add('clinics', clinic);
+    return await this.add('clinics', clinic);
   }
 
-  getClinicUsage(clinicId) {
-    const usage = this.findBy('usage', 'clinicId', clinicId);
-    const reports = this.findBy('reports', 'clinicId', clinicId);
+  async getClinicUsage(clinicId) {
+    const usage = await this.findBy('usage', 'clinicId', clinicId);
+    const reports = await this.findBy('reports', 'clinicId', clinicId);
     
     return {
       totalReports: reports.length,
@@ -158,32 +201,32 @@ class DatabaseService {
   }
 
   // Patient specific methods
-  getPatientsByClinic(clinicId) {
-    return this.findBy('patients', 'clinicId', clinicId);
+  async getPatientsByClinic(clinicId) {
+    return await this.findBy('patients', 'clinicId', clinicId);
   }
 
   // Reports specific methods
-  getReportsByClinic(clinicId) {
-    return this.findBy('reports', 'clinicId', clinicId);
+  async getReportsByClinic(clinicId) {
+    return await this.findBy('reports', 'clinicId', clinicId);
   }
 
-  getReportsByPatient(patientId) {
-    return this.findBy('reports', 'patientId', patientId);
+  async getReportsByPatient(patientId) {
+    return await this.findBy('reports', 'patientId', patientId);
   }
 
-  addReport(reportData) {
-    const report = this.add('reports', reportData);
+  async addReport(reportData) {
+    const report = await this.add('reports', reportData);
     
     // Update clinic usage
-    const clinic = this.findById('clinics', reportData.clinicId);
+    const clinic = await this.findById('clinics', reportData.clinicId);
     if (clinic) {
-      this.update('clinics', clinic.id, { 
+      await this.update('clinics', clinic.id, { 
         reportsUsed: (clinic.reportsUsed || 0) + 1 
       });
     }
     
     // Track usage
-    this.add('usage', {
+    await this.add('usage', {
       clinicId: reportData.clinicId,
       patientId: reportData.patientId,
       reportId: report.id,
@@ -195,20 +238,20 @@ class DatabaseService {
   }
 
   // Subscription methods
-  updateSubscription(clinicId, subscriptionData) {
-    let subscription = this.findOne('subscriptions', 'clinicId', clinicId);
+  async updateSubscription(clinicId, subscriptionData) {
+    let subscription = await this.findOne('subscriptions', 'clinicId', clinicId);
     
     if (subscription) {
-      subscription = this.update('subscriptions', subscription.id, subscriptionData);
+      subscription = await this.update('subscriptions', subscription.id, subscriptionData);
     } else {
-      subscription = this.add('subscriptions', { ...subscriptionData, clinicId });
+      subscription = await this.add('subscriptions', { ...subscriptionData, clinicId });
     }
     
     // Update clinic's report allowance
     if (subscriptionData.reportsAllowed) {
-      const clinic = this.findById('clinics', clinicId);
+      const clinic = await this.findById('clinics', clinicId);
       if (clinic) {
-        this.update('clinics', clinicId, {
+        await this.update('clinics', clinicId, {
           reportsAllowed: clinic.reportsAllowed + subscriptionData.reportsAllowed,
           subscriptionStatus: 'active'
         });
@@ -218,34 +261,34 @@ class DatabaseService {
     return subscription;
   }
 
-  getSubscription(clinicId) {
-    return this.findOne('subscriptions', 'clinicId', clinicId);
+  async getSubscription(clinicId) {
+    return await this.findOne('subscriptions', 'clinicId', clinicId);
   }
 
   // Analytics methods
-  getAnalytics() {
-    const clinics = this.get('clinics');
-    const reports = this.get('reports');
-    const patients = this.get('patients');
+  async getAnalytics() {
+    const clinics = await this.get('clinics');
+    const reports = await this.get('reports');
+    const patients = await this.get('patients');
     
     const activeClinicCount = clinics.filter(c => c.isActive).length;
     const totalReportsCount = reports.length;
     const totalPatientsCount = patients.length;
     
-    const revenueData = clinics.reduce((acc, clinic) => {
-      const subscription = this.findOne('subscriptions', 'clinicId', clinic.id);
-      if (subscription && subscription.amount) {
-        acc += subscription.amount;
-      }
-      return acc;
-    }, 0);
+    const revenueData = await Promise.all(clinics.map(async (clinic) => {
+      const subscription = await this.findOne('subscriptions', 'clinicId', clinic.id);
+      return subscription && subscription.amount ? subscription.amount : 0;
+    }));
+
+    const totalRevenue = revenueData.reduce((acc, amount) => acc + amount, 0);
+    const usage = await this.get('usage');
 
     return {
       activeClinics: activeClinicCount,
       totalReports: totalReportsCount,
       totalPatients: totalPatientsCount,
-      monthlyRevenue: revenueData,
-      recentActivity: this.get('usage').slice(-10).reverse()
+      monthlyRevenue: totalRevenue,
+      recentActivity: usage.slice(-10).reverse()
     };
   }
 }

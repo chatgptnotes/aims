@@ -44,7 +44,7 @@ const RazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
         `Demo Payment Confirmation\n\n` +
         `Package: ${selectedPackage?.name || 'Trial Package'}\n` +
         `Amount: ₹${selectedPackage?.price || 299}\n` +
-        `Clinic: ${clinicInfo?.name || 'Demo Clinic'}\n\n` +
+        `Clinic: ${clinicInfo?.name || 'Clinic'}\n\n` +
         `Click OK to simulate successful payment\n` +
         `Click Cancel to simulate failed payment`
       );
@@ -58,7 +58,7 @@ const RazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
           orderId: 'order_demo_' + Date.now(),
           amount: selectedPackage?.price || 299,
           status: 'success',
-          clinicId: clinicInfo?.id || 'demo-clinic-id',
+          clinicId: clinicInfo?.id,
           packageId: selectedPackage?.id || 'trial_5',
           packageName: selectedPackage?.name || 'Trial Package'
         };

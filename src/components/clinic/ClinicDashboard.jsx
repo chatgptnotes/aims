@@ -26,25 +26,41 @@ const ClinicDashboard = () => {
 
   const loadClinicData = async () => {
     try {
-      // In a real app, this would be based on user authentication
-      // For now, we'll use the first clinic or create a demo clinic
-      let clinics = DatabaseService.get('clinics');
-      let currentClinic = clinics[0];
+      console.log('🏥 Loading clinic data for user:', user);
+      
+      if (!user || !user.clinicId) {
+        console.error('❌ No clinic ID found for user:', user);
+        setLoading(false);
+        return;
+      }
+
+      // Get current user's clinic data only
+      const currentClinic = await DatabaseService.findById('clinics', user.clinicId);
       
       if (!currentClinic) {
-        // Create demo clinic for testing
-        currentClinic = DatabaseService.createClinic({
-          name: 'Demo Clinic',
-          email: 'demo@clinic.com',
-          contactPerson: 'Dr. Demo',
-          phone: '+1234567890',
-          address: '123 Medical St, Health City'
-        });
+        console.error('❌ Clinic not found for ID:', user.clinicId);
+        setLoading(false);
+        return;
       }
+
+      console.log('✅ Found clinic:', currentClinic.name, 'for user:', user.name);
       
-      const clinicPatients = DatabaseService.getPatientsByClinic(currentClinic.id);
-      const clinicReports = DatabaseService.getReportsByClinic(currentClinic.id);
-      const clinicUsage = DatabaseService.getClinicUsage(currentClinic.id);
+      // Get ONLY this clinic's patients and reports
+      const clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
+      const clinicReports = await DatabaseService.getReportsByClinic(currentClinic.id);
+      
+      // Calculate clinic usage
+      const clinicUsage = {
+        totalReports: clinicReports.length,
+        reportsUsed: currentClinic.reportsUsed || 0,
+        reportsAllowed: currentClinic.reportsAllowed || 10
+      };
+      
+      console.log('📊 Clinic data loaded:', {
+        clinic: currentClinic.name,
+        patients: clinicPatients.length,
+        reports: clinicReports.length
+      });
       
       setClinic(currentClinic);
       setPatients(clinicPatients);
@@ -62,6 +78,7 @@ const ClinicDashboard = () => {
       case 'overview':
         return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={loadClinicData} />;
       case 'patients':
+        console.log('🏥 Rendering PatientManagement with clinicId:', clinic?.id);
         return <PatientManagement clinicId={clinic?.id} onUpdate={loadClinicData} />;
       case 'reports':
         return <ReportViewer clinicId={clinic?.id} patients={patients} reports={reports} onUpdate={loadClinicData} />;

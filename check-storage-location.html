@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check File Storage Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .section.localStorage {
+            border-left-color: #4caf50;
+            background: #f1f8e9;
+        }
+        .section.aws {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        .file-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .file-name {
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .file-details {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .refresh-btn {
+            background: #4caf50;
+        }
+        .refresh-btn:hover {
+            background: #388e3c;
+        }
+        .clear-btn {
+            background: #f44336;
+        }
+        .clear-btn:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Check File Storage Location</h1>
+        <p>This page will check where your uploaded files are stored - in localStorage or AWS S3 bucket.</p>
+        
+        <div class="status info">
+            <strong>ℹ️ Storage Check</strong><br>
+            Click "Check Storage" to see where your files are located.
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="checkStorage()" class="refresh-btn">🔄 Check Storage</button>
+            <button onclick="clearLocalStorage()" class="clear-btn">🗑️ Clear localStorage</button>
+        </div>
+
+        <div id="localStorageSection" class="section localStorage" style="display: none;">
+            <h2>📱 Local Storage Files</h2>
+            <p>Files stored in your browser's localStorage:</p>
+            <div id="localStorageFiles"></div>
+        </div>
+
+        <div id="awsSection" class="section aws" style="display: none;">
+            <h2>☁️ AWS S3 Bucket Files</h2>
+            <p>Files stored in AWS S3 bucket (if configured):</p>
+            <div id="awsFiles"></div>
+        </div>
+
+        <div id="databaseSection" class="section" style="display: none;">
+            <h2>🗄️ Database Records</h2>
+            <p>File records stored in the database:</p>
+            <div id="databaseFiles"></div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function checkStorage() {
+            console.log('🔍 Checking storage locations...');
+            
+            // Check localStorage
+            checkLocalStorage();
+            
+            // Check database records
+            checkDatabaseRecords();
+            
+            // Check AWS S3 (mock - would need real AWS credentials)
+            checkAWSS3();
+            
+            // Show summary
+            showSummary();
+        }
+
+        function checkLocalStorage() {
+            const localStorageSection = document.getElementById('localStorageSection');
+            const localStorageFiles = document.getElementById('localStorageFiles');
+            
+            // Check for S3 mock files
+            const s3MockFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
+            
+            // Check for reports in database
+            const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+            
+            // Check for patients
+            const patients = JSON.parse(localStorage.getItem('patients') || '[]');
+            
+            if (s3MockFiles.length > 0 || reports.length > 0) {
+                localStorageSection.style.display = 'block';
+                localStorageFiles.innerHTML = '';
+                
+                // Show S3 mock files
+                if (s3MockFiles.length > 0) {
+                    localStorageFiles.innerHTML += '<h3>📁 S3 Mock Files:</h3>';
+                    s3MockFiles.forEach(file => {
+                        localStorageFiles.innerHTML += `
+                            <div class="file-item">
+                                <div class="file-name">${file.fileName}</div>
+                                <div class="file-details">
+                                    <strong>Key:</strong> ${file.key}<br>
+                                    <strong>Size:</strong> ${(file.size / (1024 * 1024)).toFixed(2)} MB<br>
+                                    <strong>Type:</strong> ${file.type}<br>
+                                    <strong>Uploaded:</strong> ${new Date(file.uploadedAt).toLocaleString()}<br>
+                                    <strong>Bucket:</strong> ${file.bucket} (Mock)
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Show reports
+                if (reports.length > 0) {
+                    localStorageFiles.innerHTML += '<h3>📋 Report Records:</h3>';
+                    reports.forEach(report => {
+                        localStorageFiles.innerHTML += `
+                            <div class="file-item">
+                                <div class="file-name">${report.fileName || report.title}</div>
+                                <div class="file-details">
+                                    <strong>Patient ID:</strong> ${report.patientId}<br>
+                                    <strong>Clinic ID:</strong> ${report.clinicId}<br>
+                                    <strong>Type:</strong> ${report.fileType || 'Unknown'}<br>
+                                    <strong>Size:</strong> ${report.fileSize || 'Unknown'}<br>
+                                    <strong>Uploaded By:</strong> ${report.uploadedBy}<br>
+                                    <strong>S3 Key:</strong> ${report.s3Key || 'Not in S3'}<br>
+                                    <strong>Stored in Cloud:</strong> ${report.storedInCloud ? 'Yes' : 'No'}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Show patients with reports
+                if (patients.length > 0) {
+                    localStorageFiles.innerHTML += '<h3>👥 Patients with Reports:</h3>';
+                    patients.forEach(patient => {
+                        const patientReports = reports.filter(r => r.patientId === patient.id);
+                        if (patientReports.length > 0) {
+                            localStorageFiles.innerHTML += `
+                                <div class="file-item">
+                                    <div class="file-name">${patient.name} (ID: ${patient.id})</div>
+                                    <div class="file-details">
+                                        <strong>Reports:</strong> ${patientReports.length}<br>
+                                        <strong>Email:</strong> ${patient.email}<br>
+                                        <strong>Phone:</strong> ${patient.phone}<br>
+                                        <strong>Age:</strong> ${patient.age} years<br>
+                                        <strong>Gender:</strong> ${patient.gender}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            } else {
+                localStorageSection.style.display = 'none';
+            }
+        }
+
+        function checkDatabaseRecords() {
+            const databaseSection = document.getElementById('databaseSection');
+            const databaseFiles = document.getElementById('databaseFiles');
+            
+            // Check for clinics
+            const clinics = JSON.parse(localStorage.getItem('clinics') || '[]');
+            
+            if (clinics.length > 0) {
+                databaseSection.style.display = 'block';
+                databaseFiles.innerHTML = `
+                    <h3>🏥 Clinics:</h3>
+                    <p>Found ${clinics.length} clinics in database</p>
+                    ${clinics.map(clinic => `
+                        <div class="file-item">
+                            <div class="file-name">${clinic.name}</div>
+                            <div class="file-details">
+                                <strong>Email:</strong> ${clinic.email}<br>
+                                <strong>Phone:</strong> ${clinic.phone}<br>
+                                <strong>Address:</strong> ${clinic.address}<br>
+                                <strong>Status:</strong> ${clinic.status}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                databaseSection.style.display = 'none';
+            }
+        }
+
+        function checkAWSS3() {
+            const awsSection = document.getElementById('awsSection');
+            const awsFiles = document.getElementById('awsFiles');
+            
+            // Since we're using mock service, show this info
+            awsSection.style.display = 'block';
+            awsFiles.innerHTML = `
+                <div class="status warning">
+                    <strong>⚠️ AWS S3 Status</strong><br>
+                    Currently using Mock S3 Service for development.<br>
+                    Files are stored in localStorage instead of real AWS S3 bucket.<br>
+                    <strong>Bucket:</strong> neuro360-reports-demo (Mock)<br>
+                    <strong>Region:</strong> ap-south-1 (Mock)
+                </div>
+                <p><em>To use real AWS S3, you would need to configure AWS credentials in your environment variables.</em></p>
+            `;
+        }
+
+        function showSummary() {
+            const results = document.getElementById('results');
+            
+            const s3MockFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
+            const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+            const patients = JSON.parse(localStorage.getItem('patients') || '[]');
+            const clinics = JSON.parse(localStorage.getItem('clinics') || '[]');
+            
+            let summary = '<div class="status success"><h3>📊 Storage Summary:</h3>';
+            summary += `<p><strong>📁 S3 Mock Files:</strong> ${s3MockFiles.length}</p>`;
+            summary += `<p><strong>📋 Report Records:</strong> ${reports.length}</p>`;
+            summary += `<p><strong>👥 Patients:</strong> ${patients.length}</p>`;
+            summary += `<p><strong>🏥 Clinics:</strong> ${clinics.length}</p>`;
+            
+            if (s3MockFiles.length > 0) {
+                summary += '<p><strong>✅ Conclusion:</strong> Your files are stored in localStorage (Mock S3 Service)</p>';
+            } else if (reports.length > 0) {
+                summary += '<p><strong>✅ Conclusion:</strong> Your files are stored in localStorage (Database records)</p>';
+            } else {
+                summary += '<p><strong>❌ Conclusion:</strong> No files found in storage</p>';
+            }
+            
+            summary += '</div>';
+            
+            results.innerHTML = summary;
+        }
+
+        function clearLocalStorage() {
+            if (confirm('Are you sure you want to clear all localStorage data? This will delete all files and records.')) {
+                localStorage.clear();
+                alert('localStorage cleared!');
+                checkStorage();
+            }
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', function() {
+            checkStorage();
+        });
+    </script>
+</body>
+</html>

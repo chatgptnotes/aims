@@ -109,13 +109,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData, method = 'email') => {
+    console.log('🚀 AuthContext: Starting registration process');
+    
     try {
       setLoading(true);
       let response;
       
+      console.log('📧 Registration method:', method);
+      console.log('📝 User data:', { 
+        name: userData.name, 
+        email: userData.email, 
+        userType: userData.userType,
+        hasPassword: !!userData.password,
+        hasConfirmPassword: !!userData.confirmPassword 
+      });
+      
       switch (method) {
         case 'email':
+          console.log('🔄 Calling authService.registerWithEmail...');
           response = await authService.registerWithEmail(userData);
+          console.log('📦 AuthService response:', response);
           break;
         case 'google':
           response = await authService.registerWithGoogle();
@@ -130,12 +143,31 @@ export const AuthProvider = ({ children }) => {
           throw new Error('Invalid registration method');
       }
 
-      if (response.token) {
-        Cookies.set('authToken', response.token, { expires: 7 });
-        setUser(response.user);
-        setIsAuthenticated(true);
-        toast.success('Registration successful!');
-        return { success: true };
+      console.log('✅ AuthContext: Registration response received', response);
+
+      if (response && response.success) {
+        if (response.needsActivation) {
+          // Super admin needs activation - don't login automatically
+          toast.success(response.message || 'Registration submitted for approval!');
+          console.log('✅ AuthContext: Registration completed - needs activation');
+          return { success: true, needsActivation: true };
+        } else if (response.token) {
+          // Normal registration with immediate login
+          Cookies.set('authToken', response.token, { expires: 7 });
+          setUser(response.user);
+          setIsAuthenticated(true);
+          toast.success(response.message || 'Registration successful!');
+          console.log('✅ AuthContext: Registration completed successfully');
+          return { success: true };
+        } else {
+          console.log('❌ AuthContext: Registration success but no token provided');
+          return { success: false, error: 'Registration completed but login failed' };
+        }
+      } else {
+        // Handle case where response doesn't have success field or is falsy
+        console.log('❌ AuthContext: Invalid registration response format:', response);
+        const errorMessage = response?.error || response?.message || 'Registration failed with unknown error';
+        return { success: false, error: errorMessage };
       }
     } catch (error) {
       console.error('Registration failed:', error);

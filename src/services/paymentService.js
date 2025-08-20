@@ -16,18 +16,18 @@ class PaymentService {
       // In production, you would load the real Stripe instance
       // this.stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
       
-      // For demo purposes, we'll mock the Stripe instance
+      // Mock Stripe instance for development
       this.stripe = {
         redirectToCheckout: this.mockRedirectToCheckout.bind(this),
         confirmCardPayment: this.mockConfirmCardPayment.bind(this)
       };
-      console.log('Mock Stripe initialized for demo');
+      console.log('Mock Stripe initialized for development');
     } catch (error) {
       console.error('Error initializing Stripe:', error);
     }
   }
 
-  // Mock Stripe checkout redirect for demo
+  // Mock Stripe checkout redirect for development
   async mockRedirectToCheckout({ sessionId }) {
     // Simulate payment processing
     toast.loading('Redirecting to payment...', { duration: 2000 });
@@ -38,7 +38,7 @@ class PaymentService {
     }, 2000);
   }
 
-  // Mock card payment confirmation for demo
+  // Mock card payment confirmation for development
   async mockConfirmCardPayment() {
     // Simulate payment confirmation
     return new Promise((resolve) => {
@@ -79,7 +79,7 @@ class PaymentService {
     // Store session data for later reference
     this.storeSessionData(sessionId, sessionData);
 
-    // For demo, directly redirect to mock checkout
+    // For development, directly redirect to mock checkout
     this.stripe.redirectToCheckout({ sessionId });
     
     return sessionId;

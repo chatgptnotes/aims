@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Building2, 
@@ -9,79 +9,174 @@ import {
   CheckCircle,
   Activity,
   Clock,
-  Eye
+  Eye,
+  Shield,
+  Database
 } from 'lucide-react';
+import DatabaseService from '../../services/databaseService';
 
 const AdminDashboard = ({ analytics = {}, onRefresh }) => {
+  const [realTimeData, setRealTimeData] = useState({});
+  const [allClinics, setAllClinics] = useState([]);
+  const [allReports, setAllReports] = useState([]);
+  const [allPayments, setAllPayments] = useState([]);
+
+  useEffect(() => {
+    loadRealTimeData();
+  }, []);
+
+  const loadRealTimeData = async () => {
+    try {
+      console.log('👑 SuperAdmin loading all system data...');
+      
+      // Get all data from DatabaseService - SuperAdmin can see everything
+      const clinics = await DatabaseService.get('clinics');
+      const patients = await DatabaseService.get('patients');
+      const reports = await DatabaseService.get('reports');
+      const payments = await DatabaseService.get('payments');
+      const superAdmins = await DatabaseService.get('superAdmins');
+
+      console.log('📊 SuperAdmin system overview:', {
+        clinics: clinics.length,
+        patients: patients.length,
+        reports: reports.length,
+        payments: payments.length,
+        superAdmins: superAdmins.length
+      });
+
+      setAllClinics(clinics);
+      setAllReports(reports);
+      setAllPayments(payments);
+
+      // Calculate real-time analytics
+      const activeClinicCount = clinics.filter(c => c.isActive).length;
+      const totalPatientsCount = patients.length;
+      const totalReportsCount = reports.length;
+      const totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+      setRealTimeData({
+        totalClinics: activeClinicCount,
+        totalPatients: totalPatientsCount,
+        totalReports: totalReportsCount,
+        monthlyRevenue: totalRevenue,
+        pendingActivations: superAdmins.filter(sa => !sa.isActivated).length
+      });
+
+    } catch (error) {
+      console.error('Error loading real-time data:', error);
+    }
+  };
+
   const stats = [
     {
-      name: 'Total Clinics',
-      value: analytics.totalClinics || 12,
+      name: 'Active Clinics',
+      value: realTimeData.totalClinics || 0,
       change: '+4.75%',
       changeType: 'increase',
       icon: Building2,
-      color: 'blue'
+      color: 'blue',
+      subtitle: `${allClinics.length} total registered`
     },
     {
-      name: 'Active Patients',
-      value: analytics.totalPatients || 248,
+      name: 'Total Patients',
+      value: realTimeData.totalPatients || 0,
       change: '+54.02%',
       changeType: 'increase',
       icon: Users,
-      color: 'green'
+      color: 'green',
+      subtitle: 'Across all clinics'
     },
     {
       name: 'Reports Generated',
-      value: analytics.totalReports || 1340,
+      value: realTimeData.totalReports || 0,
       change: '+12.35%',
       changeType: 'increase',
       icon: FileText,
-      color: 'purple'
+      color: 'purple',
+      subtitle: 'Total system reports'
     },
     {
-      name: 'Monthly Revenue',
-      value: `$${analytics.monthlyRevenue || 45200}`,
+      name: 'Total Revenue',
+      value: `₹${realTimeData.monthlyRevenue || 0}`,
       change: '+8.12%',
       changeType: 'increase',
       icon: DollarSign,
-      color: 'yellow'
+      color: 'yellow',
+      subtitle: 'All time earnings'
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'clinic',
-      message: 'New clinic "NeuroCenter Plus" registered',
-      time: '2 hours ago',
-      icon: Building2,
-      color: 'blue'
-    },
-    {
-      id: 2,
-      type: 'report',
-      message: '15 new EEG reports uploaded',
-      time: '4 hours ago',
-      icon: FileText,
-      color: 'green'
-    },
-    {
-      id: 3,
-      type: 'alert',
-      message: 'Clinic "BrainWave Medical" approaching report limit',
-      time: '6 hours ago',
-      icon: AlertTriangle,
-      color: 'yellow'
-    },
-    {
-      id: 4,
-      type: 'payment',
-      message: 'Payment of $299 received from MedNeuro Clinic',
-      time: '8 hours ago',
-      icon: DollarSign,
-      color: 'purple'
-    }
-  ];
+  // Add pending activations if any
+  if (realTimeData.pendingActivations > 0) {
+    stats.unshift({
+      name: 'Pending Activations',
+      value: realTimeData.pendingActivations,
+      change: 'Needs attention',
+      changeType: 'warning',
+      icon: Shield,
+      color: 'red',
+      subtitle: 'Super Admin requests'
+    });
+  }
+
+  // Generate real-time activities from actual data
+  const generateRecentActivities = () => {
+    const activities = [];
+    
+    // Recent clinics
+    const recentClinics = allClinics
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 3);
+    
+    recentClinics.forEach((clinic, index) => {
+      activities.push({
+        id: `clinic-${clinic.id}`,
+        type: 'clinic',
+        message: `New clinic "${clinic.name}" registered`,
+        time: `${index + 1} ${index === 0 ? 'hour' : 'hours'} ago`,
+        icon: Building2,
+        color: 'blue'
+      });
+    });
+
+    // Recent reports
+    const recentReports = allReports
+      .sort((a, b) => new Date(b.createdAt || b.uploadedAt) - new Date(a.createdAt || a.uploadedAt))
+      .slice(0, 2);
+    
+    recentReports.forEach((report, index) => {
+      const clinic = allClinics.find(c => c.id === report.clinicId);
+      activities.push({
+        id: `report-${report.id}`,
+        type: 'report',
+        message: `New report uploaded by ${clinic ? clinic.name : 'Unknown Clinic'}`,
+        time: `${index + 2} hours ago`,
+        icon: FileText,
+        color: 'green'
+      });
+    });
+
+    // Recent payments
+    const recentPayments = allPayments
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 2);
+    
+    recentPayments.forEach((payment, index) => {
+      const clinic = allClinics.find(c => c.id === payment.clinicId);
+      activities.push({
+        id: `payment-${payment.id}`,
+        type: 'payment',
+        message: `Payment of ₹${payment.amount} received from ${clinic ? clinic.name : 'Unknown Clinic'}`,
+        time: `${index + 3} hours ago`,
+        icon: DollarSign,
+        color: 'purple'
+      });
+    });
+
+    return activities.slice(0, 6); // Show only last 6 activities
+  };
+
+  const recentActivities = generateRecentActivities();
 
   const getIconColor = (color) => {
     const colors = {
@@ -114,20 +209,33 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.name} className="bg-white rounded-lg border border-gray-200 p-6">
+            <div key={stat.name} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.name}</p>
                   <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  {stat.subtitle && (
+                    <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+                  )}
                 </div>
                 <div className={`p-3 rounded-full ${getIconColor(stat.color)}`}>
                   <Icon className="h-6 w-6 text-white" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm font-medium text-green-600">{stat.change}</span>
-                <span className="text-sm text-gray-500 ml-2">vs last month</span>
+                {stat.changeType === 'warning' ? (
+                  <AlertTriangle className="h-4 w-4 text-red-500 mr-1" />
+                ) : (
+                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                )}
+                <span className={`text-sm font-medium ${
+                  stat.changeType === 'warning' ? 'text-red-600' : 'text-green-600'
+                }`}>
+                  {stat.change}
+                </span>
+                {stat.changeType !== 'warning' && (
+                  <span className="text-sm text-gray-500 ml-2">vs last month</span>
+                )}
               </div>
             </div>
           );

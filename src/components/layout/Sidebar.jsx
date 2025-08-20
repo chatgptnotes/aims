@@ -37,6 +37,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
         { id: 'clinics', label: 'Clinic Management', icon: Building2, path: '/admin?tab=clinics' },
         { id: 'reports', label: 'Patient Reports', icon: FileText, path: '/admin?tab=reports' },
+        { id: 'payments', label: 'Payment History', icon: CreditCard, path: '/admin?tab=payments' },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/admin?tab=analytics' },
         { id: 'alerts', label: 'Alerts & Monitoring', icon: Bell, path: '/admin?tab=alerts' },
         { id: 'settings', label: 'System Settings', icon: Settings, path: '/admin?tab=settings' }

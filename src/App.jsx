@@ -8,14 +8,37 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
 import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import ActivationPending from './components/auth/ActivationPending';
 
 import SuperAdminPanel from './components/admin/SuperAdminPanel';
 import ClinicDashboard from './components/clinic/ClinicDashboard';
 import SubscriptionManager from './components/clinic/SubscriptionManager';
-import ErrorBoundary from './utils/errorBoundary.jsx';
-import TestPage from './TestPage';
+import DashboardRouter from './components/DashboardRouter';
+import ErrorBoundary from './components/ErrorBoundary';
+
 
 function App() {
+  console.log('🚀 App component loading...');
+  
+  // Add global error handler
+  React.useEffect(() => {
+    const handleError = (event) => {
+      console.error('🚨 Global error caught:', event.error);
+    };
+    
+    const handleUnhandledRejection = (event) => {
+      console.error('🚨 Unhandled promise rejection:', event.reason);
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+  
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -31,6 +54,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/activation-pending" element={<ActivationPending />} />
             <Route path="/forgot-password" element={<ForgotPasswordForm />} />
             <Route path="/reset-password" element={<ResetPasswordForm />} />
             
@@ -60,13 +84,22 @@ function App() {
               path="/clinic/subscription" 
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <SubscriptionManager clinicId="demo-clinic-id" />
+                  <SubscriptionManager />
                 </ProtectedRoute>
               } 
             />
             
-            {/* Test page - temporary for debugging */}
-            <Route path="/test" element={<TestPage />} />
+            {/* Smart Dashboard Route - redirects based on user role */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardRouter />
+                </ProtectedRoute>
+              } 
+            />
+            
+
             
             {/* Catch all route - redirect to landing page */}
             <Route path="*" element={<Navigate to="/" replace />} />

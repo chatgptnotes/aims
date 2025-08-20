@@ -12,10 +12,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 import PaymentService from '../../services/paymentService';
 import DatabaseService from '../../services/databaseService';
 
-const SubscriptionManager = ({ clinicId }) => {
+const SubscriptionManager = () => {
+  const { user } = useAuth();
+  const clinicId = user?.clinicId;
   const [clinic, setClinic] = useState(null);
   const [packages, setPackages] = useState([]);
   const [usageStats, setUsageStats] = useState({});

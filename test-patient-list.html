@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Patient List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            background: #f8f9fa;
+        }
+        .patient-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .patient-name {
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .patient-details {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .green {
+            background: #28a745;
+        }
+        .green:hover {
+            background: #218838;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .example-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Test Patient List</h1>
+        <p>This page helps you test the patient list functionality and create sample patients.</p>
+        
+        <div id="status" class="section info">
+            <strong>ℹ️ Patient List Testing</strong><br>
+            Use this page to create sample patients and test the bulk addition feature.
+        </div>
+
+        <div class="section">
+            <h2>📋 Sample Patient Data</h2>
+            <p>Copy this sample data to test the Patient List feature:</p>
+            <div class="example-data">
+John Doe,25,Male,john.doe@email.com,1234567890
+Jane Smith,30,Female,jane.smith@email.com,0987654321
+Mike Johnson,35,Male,mike.johnson@email.com,5551234567
+Sarah Wilson,28,Female,sarah.wilson@email.com,5559876543
+David Brown,42,Male,david.brown@email.com,5555555555
+Lisa Davis,33,Female,lisa.davis@email.com,5551112222
+Robert Miller,29,Male,robert.miller@email.com,5553334444
+Emily Taylor,31,Female,emily.taylor@email.com,5556667777
+James Anderson,38,Male,james.anderson@email.com,5558889999
+Maria Garcia,27,Female,maria.garcia@email.com,5550001111
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>➕ Create Test Patients</h2>
+            <p>Upload a CSV file or enter patient data manually:</p>
+            
+            <div style="margin-bottom: 15px;">
+                <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display: none;" onchange="handleCSVUpload(event)">
+                <button onclick="document.getElementById('csvFileInput').click()" class="green">📁 Upload CSV File</button>
+                <a href="/sample-patients.csv" download class="green" style="text-decoration: none; display: inline-block; padding: 10px 20px; margin: 5px;">📥 Download Template</a>
+            </div>
+            
+            <textarea id="patientData" placeholder="Or enter patient data manually in CSV format: name,age,gender,email,phone"></textarea>
+            
+            <div style="margin-top: 10px;">
+                <button onclick="addSampleData()" class="green">📋 Load Sample Data</button>
+                <button onclick="addPatientsToDatabase()" class="green">➕ Add to Database</button>
+                <button onclick="clearPatientData()">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Current Patients</h2>
+            <p>Patients currently in the database:</p>
+            <button onclick="loadPatients()">🔄 Refresh Patients</button>
+            <button onclick="clearAllPatients()" style="background: #dc3545;">🗑️ Clear All Patients</button>
+            <div id="currentPatients"></div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Current Reports</h2>
+            <p>Reports currently in the database:</p>
+            <button onclick="loadReports()">🔄 Refresh Reports</button>
+            <div id="currentReports"></div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+                    showStatus('❌ Please select a CSV file', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvContent = e.target.result;
+                    document.getElementById('patientData').value = csvContent;
+                    showStatus(`✅ CSV file "${file.name}" loaded successfully!`, 'success');
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function addSampleData() {
+            const sampleData = `John Doe,25,Male,john.doe@email.com,1234567890
+Jane Smith,30,Female,jane.smith@email.com,0987654321
+Mike Johnson,35,Male,mike.johnson@email.com,5551234567
+Sarah Wilson,28,Female,sarah.wilson@email.com,5559876543
+David Brown,42,Male,david.brown@email.com,5555555555
+Lisa Davis,33,Female,lisa.davis@email.com,5551112222
+Robert Miller,29,Male,robert.miller@email.com,5553334444
+Emily Taylor,31,Female,emily.taylor@email.com,5556667777
+James Anderson,38,Male,james.anderson@email.com,5558889999
+Maria Garcia,27,Female,maria.garcia@email.com,5550001111`;
+            
+            document.getElementById('patientData').value = sampleData;
+            showStatus('✅ Sample data loaded!', 'success');
+        }
+
+        function addPatientsToDatabase() {
+            const patientData = document.getElementById('patientData').value.trim();
+            
+            if (!patientData) {
+                showStatus('❌ Please enter patient data', 'error');
+                return;
+            }
+
+            try {
+                const lines = patientData.split('\n');
+                const patients = [];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',').map(part => part.trim());
+                    if (parts.length < 3) {
+                        showStatus(`❌ Line ${i + 1}: Invalid format. Use: name,age,gender,email,phone`, 'error');
+                        return;
+                    }
+                    
+                    const [name, age, gender, email = '', phone = ''] = parts;
+                    
+                    if (!name || !age || !gender) {
+                        showStatus(`❌ Line ${i + 1}: Name, age, and gender are required`, 'error');
+                        return;
+                    }
+                    
+                    if (isNaN(age) || age < 0 || age > 120) {
+                        showStatus(`❌ Line ${i + 1}: Invalid age`, 'error');
+                        return;
+                    }
+                    
+                    if (!['Male', 'Female', 'Other'].includes(gender)) {
+                        showStatus(`❌ Line ${i + 1}: Gender must be Male, Female, or Other`, 'error');
+                        return;
+                    }
+                    
+                    patients.push({
+                        id: 'patient_' + Date.now() + '_' + i,
+                        name,
+                        age: parseInt(age),
+                        gender,
+                        email,
+                        phone,
+                        clinicId: 'test_clinic_1',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
+                if (patients.length === 0) {
+                    showStatus('❌ No valid patients found', 'error');
+                    return;
+                }
+                
+                // Save to localStorage
+                const existingPatients = JSON.parse(localStorage.getItem('patients') || '[]');
+                existingPatients.push(...patients);
+                localStorage.setItem('patients', JSON.stringify(existingPatients));
+                
+                showStatus(`✅ Successfully added ${patients.length} patients!`, 'success');
+                loadPatients();
+                
+            } catch (error) {
+                console.error('Error adding patients:', error);
+                showStatus('❌ Error adding patients', 'error');
+            }
+        }
+
+        function loadPatients() {
+            const patients = JSON.parse(localStorage.getItem('patients') || '[]');
+            const element = document.getElementById('currentPatients');
+            
+            if (patients.length === 0) {
+                element.innerHTML = '<p><em>No patients found in database</em></p>';
+                return;
+            }
+            
+            let html = `<p><strong>Found ${patients.length} patients:</strong></p>`;
+            
+            patients.forEach((patient, index) => {
+                html += `
+                    <div class="patient-item">
+                        <div class="patient-name">${patient.name}</div>
+                        <div class="patient-details">
+                            <strong>Age:</strong> ${patient.age} years<br>
+                            <strong>Gender:</strong> ${patient.gender}<br>
+                            <strong>Email:</strong> ${patient.email || 'N/A'}<br>
+                            <strong>Phone:</strong> ${patient.phone || 'N/A'}<br>
+                            <strong>Clinic ID:</strong> ${patient.clinicId}<br>
+                            <strong>Created:</strong> ${new Date(patient.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            element.innerHTML = html;
+        }
+
+        function loadReports() {
+            const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+            const element = document.getElementById('currentReports');
+            
+            if (reports.length === 0) {
+                element.innerHTML = '<p><em>No reports found in database</em></p>';
+                return;
+            }
+            
+            let html = `<p><strong>Found ${reports.length} reports:</strong></p>`;
+            
+            reports.forEach((report, index) => {
+                html += `
+                    <div class="patient-item">
+                        <div class="patient-name">${report.fileName || report.title || `Report ${index + 1}`}</div>
+                        <div class="patient-details">
+                            <strong>Patient ID:</strong> ${report.patientId || 'N/A'}<br>
+                            <strong>Clinic ID:</strong> ${report.clinicId || 'N/A'}<br>
+                            <strong>Type:</strong> ${report.fileType || 'Unknown'}<br>
+                            <strong>Size:</strong> ${report.fileSize || 'Unknown'}<br>
+                            <strong>Uploaded By:</strong> ${report.uploadedBy || 'Unknown'}<br>
+                            <strong>Created:</strong> ${new Date(report.createdAt || report.uploadedAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            element.innerHTML = html;
+        }
+
+        function clearPatientData() {
+            document.getElementById('patientData').value = '';
+            showStatus('✅ Patient data cleared!', 'success');
+        }
+
+        function clearAllPatients() {
+            if (confirm('Are you sure you want to clear all patients? This will delete all patient data.')) {
+                localStorage.removeItem('patients');
+                localStorage.removeItem('reports');
+                localStorage.removeItem('s3MockFiles');
+                showStatus('✅ All patients and reports cleared!', 'success');
+                loadPatients();
+                loadReports();
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = `section ${type}`;
+            status.innerHTML = `<strong>${message}</strong>`;
+            setTimeout(() => {
+                status.className = 'section info';
+                status.innerHTML = '<strong>ℹ️ Patient List Testing</strong><br>Use this page to create sample patients and test the bulk addition feature.';
+            }, 3000);
+        }
+
+        // Auto-load on page load
+        window.addEventListener('load', function() {
+            loadPatients();
+            loadReports();
+        });
+    </script>
+</body>
+</html>

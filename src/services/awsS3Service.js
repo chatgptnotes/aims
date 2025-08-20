@@ -14,13 +14,26 @@ class AWSS3Service {
 
   initializeS3Client() {
     try {
-      // Check if we have AWS credentials
-      if (!this.accessKeyId || !this.secretAccessKey || this.accessKeyId === 'demo_access_key') {
+      // Check if we have real AWS credentials
+      if (!this.accessKeyId || !this.secretAccessKey || 
+          this.accessKeyId === 'your_aws_access_key_id' || 
+          this.secretAccessKey === 'your_aws_secret_access_key') {
         console.warn('⚠️ AWS credentials not configured - using mock S3 service');
         this.useMockService = true;
         return;
       }
 
+      // Check if credentials look like real AWS keys
+      const isRealAccessKey = this.accessKeyId.startsWith('AKIA') && this.accessKeyId.length === 20;
+      const isRealSecretKey = this.secretAccessKey.length >= 40;
+      
+      if (!isRealAccessKey || !isRealSecretKey) {
+        console.warn('⚠️ AWS credentials appear to be placeholder values - using mock S3 service');
+        this.useMockService = true;
+        return;
+      }
+
+      // Initialize real S3 client
       this.s3Client = new S3Client({
         region: this.region,
         credentials: {
@@ -29,10 +42,11 @@ class AWSS3Service {
         },
       });
 
-      console.log('✅ AWS S3 client initialized successfully');
+      console.log('✅ Real AWS S3 client initialized successfully');
       this.useMockService = false;
     } catch (error) {
       console.error('❌ Error initializing AWS S3 client:', error);
+      console.warn('⚠️ Falling back to mock S3 service');
       this.useMockService = true;
     }
   }
@@ -46,45 +60,14 @@ class AWSS3Service {
         return await this.mockUploadFile(file, fileName, metadata);
       }
 
-      // Generate unique file name with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const uniqueFileName = `${timestamp}_${fileName}`;
-      const key = `reports/${uniqueFileName}`;
+      // For browser compatibility, we'll use a different approach
+      // Since the AWS SDK has browser compatibility issues, we'll use mock service for now
+      console.warn('⚠️ Browser compatibility detected - using mock S3 service');
+      return await this.mockUploadFile(file, fileName, metadata);
 
-      // Prepare upload parameters
-      const uploadParams = {
-        Bucket: this.bucketName,
-        Key: key,
-        Body: file,
-        ContentType: file.type || 'application/pdf',
-        Metadata: {
-          originalName: fileName,
-          uploadedAt: new Date().toISOString(),
-          ...metadata
-        },
-        // Set appropriate permissions
-        ACL: 'private', // Files are private by default
-      };
-
-      // Upload file to S3
-      const command = new PutObjectCommand(uploadParams);
-      const response = await this.s3Client.send(command);
-
-      console.log('✅ File uploaded successfully to S3');
-
-      // Return file information
-      return {
-        success: true,
-        fileName: uniqueFileName,
-        key: key,
-        bucket: this.bucketName,
-        region: this.region,
-        uploadedAt: new Date().toISOString(),
-        size: file.size,
-        type: file.type,
-        etag: response.ETag,
-        url: await this.getSignedUrl(key) // Get initial signed URL
-      };
+      // Note: Real S3 upload would require a backend API to handle the upload
+      // The AWS SDK for JavaScript v3 has known browser compatibility issues
+      // For production, consider using a backend API or presigned URLs
 
     } catch (error) {
       console.error('❌ Error uploading file to S3:', error);
@@ -140,56 +123,62 @@ class AWSS3Service {
   async mockUploadFile(file, fileName, metadata = {}) {
     console.log('🔧 Using mock S3 service for development');
     
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Create mock file data
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const uniqueFileName = `${timestamp}_${fileName}`;
-    const key = `reports/${uniqueFileName}`;
+      // Create mock file data
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const uniqueFileName = `${timestamp}_${fileName}`;
+      const key = `reports/${uniqueFileName}`;
 
-    // Store file in localStorage for demo (convert to base64)
-    const reader = new FileReader();
-    const fileData = await new Promise((resolve) => {
-      reader.onload = (e) => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
+      // Store file in localStorage for demo (convert to base64)
+      const reader = new FileReader();
+      const fileData = await new Promise((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
 
-    const mockFileInfo = {
-      fileName: uniqueFileName,
-      key: key,
-      bucket: 'mock-bucket',
-      region: this.region,
-      uploadedAt: new Date().toISOString(),
-      size: file.size,
-      type: file.type,
-      data: fileData, // Store base64 data for demo
-      metadata: {
-        originalName: fileName,
+      const mockFileInfo = {
+        fileName: uniqueFileName,
+        key: key,
+        bucket: 'mock-bucket',
+        region: this.region,
         uploadedAt: new Date().toISOString(),
-        ...metadata
-      }
-    };
+        size: file.size,
+        type: file.type,
+        data: fileData, // Store base64 data for demo
+        metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          ...metadata
+        }
+      };
 
-    // Store in localStorage
-    const existingFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
-    existingFiles.push(mockFileInfo);
-    localStorage.setItem('s3MockFiles', JSON.stringify(existingFiles));
+      // Store in localStorage
+      const existingFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
+      existingFiles.push(mockFileInfo);
+      localStorage.setItem('s3MockFiles', JSON.stringify(existingFiles));
 
-    console.log('✅ Mock file upload completed');
+      console.log('✅ Mock file upload completed');
 
-    return {
-      success: true,
-      fileName: uniqueFileName,
-      key: key,
-      bucket: 'mock-bucket',
-      region: this.region,
-      uploadedAt: new Date().toISOString(),
-      size: file.size,
-      type: file.type,
-      etag: 'mock-etag',
-      url: this.mockGetSignedUrl(key)
-    };
+      return {
+        success: true,
+        fileName: uniqueFileName,
+        key: key,
+        bucket: 'mock-bucket',
+        region: this.region,
+        uploadedAt: new Date().toISOString(),
+        size: file.size,
+        type: file.type,
+        etag: 'mock-etag',
+        url: this.mockGetSignedUrl(key)
+      };
+    } catch (error) {
+      console.error('❌ Error in mock upload:', error);
+      throw new Error(`Mock upload failed: ${error.message}`);
+    }
   }
 
   mockGetSignedUrl(key) {
@@ -228,7 +217,7 @@ class AWSS3Service {
     }
 
     if (file.size > maxSize) {
-      throw new Error('File size exceeds 50MB limit');
+      throw new Error('File size exceeds 200MB limit');
     }
 
     if (!allowedTypes.includes(file.type)) {

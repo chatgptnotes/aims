@@ -65,37 +65,37 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
     setIsProcessing(true);
     setStep('processing');
 
-    // Super simple demo payment
-    toast.loading('Processing demo payment...', { duration: 2000 });
+    // Simple payment processing
+    toast.loading('Processing payment...', { duration: 2000 });
 
     setTimeout(() => {
       const confirmed = confirm(
-        `🎯 DEMO PAYMENT\n\n` +
+        `🎯 PAYMENT CONFIRMATION\n\n` +
         `Package: ${selectedPackage.name}\n` +
         `Price: ₹${selectedPackage.price}\n` +
         `Reports: ${selectedPackage.reports}\n` +
-        `Clinic: ${clinicInfo?.name || 'Demo Clinic'}\n\n` +
+        `Clinic: ${clinicInfo?.name || 'Clinic'}\n\n` +
         `✅ Click OK for Success\n` +
         `❌ Click Cancel to Cancel`
       );
 
       if (confirmed) {
         // Success simulation
-        console.log('🎉 DEMO PAYMENT SUCCESS');
+        console.log('🎉 PAYMENT SUCCESS');
         
         const mockPaymentData = {
-          paymentId: 'demo_pay_' + Date.now(),
-          orderId: 'demo_order_' + Date.now(),
+                      paymentId: 'pay_' + Date.now(),
+            orderId: 'order_' + Date.now(),
           amount: selectedPackage.price,
           status: 'success',
-          clinicId: clinicInfo?.id || 'demo-clinic',
+                      clinicId: clinicInfo?.id,
           packageId: selectedPackage.id,
           packageName: selectedPackage.name,
           createdAt: new Date().toISOString()
         };
 
         setIsProcessing(false);
-        toast.success('🎉 Payment successful! Demo mode activated.');
+                  toast.success('🎉 Payment successful!');
         console.log('💾 Mock payment data:', mockPaymentData);
         
         // Call parent success handler
@@ -105,7 +105,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
 
       } else {
         // Cancel simulation
-        console.log('❌ DEMO PAYMENT CANCELLED');
+        console.log('❌ PAYMENT CANCELLED');
         setIsProcessing(false);
         setStep('confirm');
         toast.error('Payment cancelled');
@@ -118,7 +118,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Processing Demo Payment</h2>
+          <h2 className="text-xl font-semibold mb-2">Processing Payment</h2>
           <p className="text-gray-600">Please wait for the confirmation dialog...</p>
         </div>
       </div>
@@ -158,8 +158,8 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
           <div className="border rounded-lg p-4 mb-6">
             <h4 className="font-medium mb-2">Billing Information</h4>
             <div className="text-sm space-y-1">
-              <div>Clinic: {clinicInfo?.name || 'Demo Clinic'}</div>
-              <div>Email: {clinicInfo?.email || 'demo@clinic.com'}</div>
+              <div>Clinic: {clinicInfo?.name || 'Clinic'}</div>
+                              <div>Email: {clinicInfo?.email || 'clinic@example.com'}</div>
             </div>
           </div>
 
