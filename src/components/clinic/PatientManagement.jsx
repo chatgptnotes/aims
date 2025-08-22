@@ -38,23 +38,14 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
 
   const loadPatients = useCallback(async () => {
     try {
-      console.log('👥 Loading patients for clinic:', clinicId);
-      
       if (!clinicId) {
-        console.warn('⚠️ No clinicId provided, cannot load patients');
         setPatients([]);
         setLoading(false);
         return;
       }
       
-      // First, let's check what patients exist in the database
       const allPatients = await DatabaseService.get('patients');
-      console.log('📋 All patients in database:', allPatients.length);
-      
-      // Filter patients by clinic ID
       const patientsData = allPatients.filter(patient => patient.clinicId === clinicId);
-      console.log('👥 Found patients for clinic:', patientsData.length, 'clinicId:', clinicId);
-      console.log('👥 Patient details:', patientsData.map(p => ({ name: p.name, clinicId: p.clinicId })));
       
       setPatients(patientsData);
       
@@ -63,30 +54,24 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
       for (const patient of patientsData) {
         try {
           const reports = await DatabaseService.getReportsByPatient(patient.id);
-          console.log(`📋 Found ${reports.length} reports for patient ${patient.name} (${patient.id})`);
           reportsMap[patient.id] = reports || [];
         } catch (error) {
-          console.warn(`Failed to load reports for patient ${patient.id}:`, error);
           reportsMap[patient.id] = [];
         }
       }
       
-      console.log('📊 Total reports loaded:', Object.values(reportsMap).flat().length);
       setPatientReports(reportsMap);
     } catch (error) {
       toast.error('Error loading patients');
-      console.error('❌ Error in loadPatients:', error);
     } finally {
       setLoading(false);
     }
   }, [clinicId]);
 
   useEffect(() => {
-    console.log('🔄 PatientManagement useEffect - clinicId:', clinicId);
     if (clinicId) {
       loadPatients();
     } else {
-      console.warn('⚠️ No clinicId provided to PatientManagement');
       setLoading(false);
     }
   }, [clinicId, loadPatients]);
@@ -105,10 +90,7 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
         createdAt: new Date().toISOString()
       };
       
-      console.log('👥 Creating patient for clinic:', clinicId, patientData);
-      const newPatient = await DatabaseService.add('patients', patientData);
-      console.log('✅ Patient created successfully:', newPatient);
-      
+      await DatabaseService.add('patients', patientData);
       toast.success('Patient created successfully');
       loadPatients();
       setShowModal(false);
@@ -116,7 +98,6 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
       onUpdate?.();
     } catch (error) {
       toast.error('Error creating patient');
-      console.error('❌ Error creating patient:', error);
     }
   };
 
@@ -223,8 +204,6 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
         return;
       }
       
-      console.log('👥 Bulk adding patients:', patientList.length, 'for clinic:', clinicId);
-      
       for (const patientData of patientList) {
         const patient = {
           ...patientData,
@@ -233,8 +212,7 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
           createdAt: new Date().toISOString()
         };
         
-        const newPatient = await DatabaseService.add('patients', patient);
-        console.log('✅ Added patient:', newPatient.name, 'with clinicId:', newPatient.clinicId);
+        await DatabaseService.add('patients', patient);
       }
       
       toast.success(`Successfully added ${patientList.length} patients!`);
@@ -242,33 +220,11 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
       closePatientListModal();
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Error bulk adding patients:', error);
       toast.error('Error adding patients');
     }
   };
 
-  const debugPatientData = async () => {
-    try {
-      console.log('🐛 === DEBUG PATIENT DATA ===');
-      console.log('Current clinicId:', clinicId);
-      
-      const allPatients = await DatabaseService.get('patients');
-      console.log('All patients in database:', allPatients.length);
-      console.log('All patients details:', allPatients);
-      
-      const clinicPatients = allPatients.filter(p => p.clinicId === clinicId);
-      console.log('Patients for this clinic:', clinicPatients.length);
-      console.log('Clinic patients details:', clinicPatients);
-      
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      console.log('Current user:', currentUser);
-      
-      toast.success(`Debug info logged to console. Found ${clinicPatients.length} patients for this clinic.`);
-    } catch (error) {
-      console.error('❌ Debug error:', error);
-      toast.error('Debug failed');
-    }
-  };
+
 
   const viewPatientDetails = (patient) => {
     setSelectedPatient(patient);
@@ -319,14 +275,7 @@ const PatientManagement = ({ clinicId, onUpdate }) => {
             <div className="h-4 w-4">🔄</div>
             <span>Refresh</span>
           </button>
-          <button
-            onClick={() => debugPatientData()}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
-            title="Debug patient data"
-          >
-            <div className="h-4 w-4">🐛</div>
-            <span>Debug</span>
-          </button>
+
           <button
             onClick={() => openPatientListModal()}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"

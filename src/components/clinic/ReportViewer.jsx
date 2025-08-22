@@ -10,12 +10,16 @@ import {
   Upload,
   X,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 import DatabaseService from '../../services/databaseService';
+import SubscriptionPopup from '../admin/SubscriptionPopup';
 
 const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate }) => {
+  const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +28,17 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportDetails, setShowReportDetails] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Error boundary-like error handling
+  const handleError = (error, context) => {
+    console.error(`❌ ReportViewer Error in ${context}:`, error);
+    const errorMessage = error?.message || 'Unknown error occurred';
+    setError(`Error in ${context}: ${errorMessage}`);
+    toast.error(`Failed to ${context}. Please try again.`);
+  };
 
   // Load reports directly from database
   useEffect(() => {
@@ -38,20 +53,36 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
   }, [initialReports]);
 
   const loadReports = async () => {
-    if (!clinicId) return;
+    if (!clinicId) {
+      console.warn('⚠️ No clinicId provided to loadReports');
+      return;
+    }
     
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
       console.log('📋 Loading reports for clinic:', clinicId);
       
-      // Load reports directly from database
+      // Load reports from database (async to handle both DynamoDB and localStorage)
       const reportsData = await DatabaseService.getReportsByClinic(clinicId);
-      console.log('📋 Reports loaded:', reportsData.length);
+      console.log('📋 Reports loaded:', reportsData?.length || 0);
       
-      setReports(reportsData);
+      // Load subscription data (async)
+      const subscriptions = await DatabaseService.get('subscriptions') || [];
+      const clinicSubscription = subscriptions.find(sub => sub.clinicId === clinicId);
+      setSubscription(clinicSubscription);
+      
+      // Ensure reportsData is an array
+      const validReports = Array.isArray(reportsData) ? reportsData : [];
+      setReports(validReports);
+      
+      if (validReports.length === 0) {
+        console.log('📋 No reports found for clinic:', clinicId);
+      }
     } catch (error) {
       console.error('❌ Error loading reports:', error);
-      toast.error('Failed to load reports');
+      handleError(error, 'load reports');
+      setReports([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -111,36 +142,111 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
     setFilteredReports(filtered);
   };
 
+  // Check if clinic has reached report limit
+  const checkReportLimit = () => {
+    if (subscription && subscription.status === 'active') {
+      // Paid subscription - check against plan limit
+      return reports.length >= subscription.reportsAllowed;
+    } else {
+      // Trial subscription - 10 report limit
+      return reports.length >= 10;
+    }
+  };
+
+  // Get clinic's current usage info
+  const getClinicUsageInfo = () => {
+    if (subscription && subscription.status === 'active') {
+      return {
+        used: reports.length,
+        allowed: subscription.reportsAllowed,
+        remaining: subscription.reportsAllowed - reports.length,
+        isTrial: false,
+        planName: subscription.planName
+      };
+    } else {
+      return {
+        used: reports.length,
+        allowed: 10,
+        remaining: 10 - reports.length,
+        isTrial: true,
+        planName: 'Trial Plan'
+      };
+    }
+  };
+
   const handleDownloadReport = async (report) => {
     try {
+      // Validate report object
+      if (!report) {
+        toast.error('Invalid report data');
+        return;
+      }
+
+      // Check if clinic has reached report limit
+      if (checkReportLimit()) {
+        setShowSubscriptionPopup(true);
+        toast.error('Report limit reached. Please upgrade your plan to continue downloading reports.');
+        return;
+      }
+
       setLoading(true);
-      console.log('📥 Downloading report:', report.fileName);
+      const fileName = report.fileName || 'report.pdf';
+      console.log('📥 Downloading report:', fileName);
       
+      let downloadSuccess = false;
+
+      // Try multiple download methods
       if (report.s3Key) {
-        // Try to get from mock S3 service
-        const mockFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
-        const mockFile = mockFiles.find(f => f.key === report.s3Key);
-        
-        if (mockFile && mockFile.data) {
-          // Create download link for base64 data
+        // Try to get from mock S3 service first
+        try {
+          const mockFiles = JSON.parse(localStorage.getItem('s3MockFiles') || '[]');
+          const mockFile = mockFiles.find(f => f.key === report.s3Key);
+          
+          if (mockFile && mockFile.data) {
+            // Create download link for base64 data
+            const link = document.createElement('a');
+            link.href = mockFile.data;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast.success(`📥 Downloaded ${fileName}`);
+            downloadSuccess = true;
+          }
+        } catch (mockError) {
+          console.warn('⚠️ Mock S3 download failed:', mockError);
+        }
+      }
+
+      // Try file URL if available
+      if (!downloadSuccess && report.fileUrl) {
+        try {
           const link = document.createElement('a');
-          link.href = mockFile.data;
-          link.download = report.fileName;
+          link.href = report.fileUrl;
+          link.download = fileName;
+          link.target = '_blank';
+          link.style.display = 'none';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           
-          toast.success(`📥 Downloaded ${report.fileName}`);
-        } else {
-          toast.error('File not found in storage');
+          toast.success(`📥 Downloaded ${fileName}`);
+          downloadSuccess = true;
+        } catch (urlError) {
+          console.warn('⚠️ URL download failed:', urlError);
         }
-      } else {
-        // Fallback for files without S3 key
-        toast.success(`📥 Downloaded ${report.fileName}`);
+      }
+
+      // Final fallback
+      if (!downloadSuccess) {
+        console.warn('⚠️ No valid download method found for report:', report.id);
+        toast.error(`File not found in storage. Report: ${fileName}`);
       }
     } catch (error) {
       console.error('❌ Error downloading report:', error);
-      toast.error('Failed to download report');
+      toast.error(`Failed to download report: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -157,14 +263,85 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
     setDateFilter('');
   };
 
-  const refreshReports = () => {
-    loadReports();
-    if (onUpdate) onUpdate();
+  const refreshReports = async () => {
+    try {
+      setError(null);
+      await loadReports();
+      if (onUpdate) onUpdate();
+      toast.success('Reports refreshed successfully');
+    } catch (error) {
+      console.error('❌ Error refreshing reports:', error);
+      handleError(error, 'refresh reports');
+    }
+  };
+
+  const repairDataAndReload = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Validate and repair data
+      const result = await DatabaseService.validateAndRepairData();
+      if (result.success) {
+        toast.success(`Data validation complete${result.repairCount > 0 ? ` (repaired ${result.repairCount} issues)` : ''}`);
+      }
+      
+      // Refresh connection
+      await DatabaseService.refreshConnection();
+      
+      // Reload reports
+      await loadReports();
+      
+      toast.success('Data repair and reload completed successfully');
+    } catch (error) {
+      console.error('❌ Error during data repair:', error);
+      handleError(error, 'repair data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubscription = (subscriptionData) => {
+    try {
+      // Save subscription to database (synchronous)
+      DatabaseService.add('subscriptions', subscriptionData);
+      
+      // Update clinic's subscription status (synchronous)
+      DatabaseService.update('clinics', subscriptionData.clinicId, {
+        subscriptionStatus: 'active',
+        reportsAllowed: subscriptionData.reportsAllowed
+      });
+      
+      // Reload data to reflect changes
+      loadReports();
+      
+      toast.success('Subscription updated successfully!');
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast.error('Failed to update subscription');
+    }
   };
 
   const getPatientName = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
-    return patient?.name || 'Unknown Patient';
+    
+    if (!patient) {
+      console.log(`⚠️ Patient lookup failed for ID: ${patientId}`);
+      console.log('🔍 Available patients:', patients.map(p => ({ id: p.id, name: p.name })));
+      
+      // Try to find in localStorage as fallback
+      const localStoragePatients = JSON.parse(localStorage.getItem('patients') || '[]');
+      const fallbackPatient = localStoragePatients.find(p => p.id === patientId);
+      
+      if (fallbackPatient) {
+        console.log(`✅ Found patient in localStorage fallback: ${fallbackPatient.name}`);
+        return fallbackPatient.name;
+      }
+      
+      return 'Unknown Patient';
+    }
+    
+    return patient.name;
   };
 
   if (showReportDetails && selectedReport) {
@@ -192,6 +369,60 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
         <div className="text-right">
           <div className="text-sm text-gray-600">
             Total Reports: <span className="font-semibold">{reports.length}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Usage Summary */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-blue-900">Your Usage Summary</h3>
+            {(() => {
+              const usageInfo = getClinicUsageInfo();
+              return (
+                <div className="mt-2 space-y-1">
+                  <p className="text-blue-700">
+                    <strong>Plan:</strong> {usageInfo.planName}
+                  </p>
+                  <p className="text-blue-700">
+                    <strong>Usage:</strong> {usageInfo.used}/{usageInfo.allowed} reports
+                  </p>
+                  <p className="text-blue-700">
+                    <strong>Remaining:</strong> {usageInfo.remaining} reports
+                  </p>
+                  {usageInfo.remaining <= 2 && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      <span className="text-orange-700 text-sm font-medium">
+                        {usageInfo.remaining === 0 ? 'Report limit reached!' : 'Approaching report limit'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+          <div className="text-right">
+            {(() => {
+              const usageInfo = getClinicUsageInfo();
+              const percentage = (usageInfo.used / usageInfo.allowed) * 100;
+              return (
+                <div>
+                  <div className="text-2xl font-bold text-blue-900">{usageInfo.used}</div>
+                  <div className="text-sm text-blue-700">Reports Used</div>
+                  <div className="w-24 h-2 bg-blue-200 rounded-full mt-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        percentage >= 90 ? 'bg-red-500' : 
+                        percentage >= 75 ? 'bg-orange-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -307,14 +538,24 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      <button
-                        onClick={() => handleDownloadReport(report)}
-                        disabled={loading}
-                        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
-                        title="Download Report"
-                      >
-                        <Download className="h-5 w-5" />
-                      </button>
+                      {checkReportLimit() ? (
+                        <button
+                          onClick={() => setShowSubscriptionPopup(true)}
+                          className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="Upgrade required to download"
+                        >
+                          <Lock className="h-5 w-5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleDownloadReport(report)}
+                          disabled={loading}
+                          className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="Download Report"
+                        >
+                          <Download className="h-5 w-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -325,25 +566,47 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm || selectedPatient || dateFilter 
-                ? 'No reports match your filters' 
-                : 'No reports available'
-              }
+              {error ? 'Failed to load reports' : (
+                searchTerm || selectedPatient || dateFilter 
+                  ? 'No reports match your filters' 
+                  : 'No reports available'
+              )}
             </h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || selectedPatient || dateFilter
-                ? 'Try adjusting your search criteria'
-                : 'Reports will appear here once they are uploaded by your administrator'
-              }
+              {error ? error : (
+                searchTerm || selectedPatient || dateFilter
+                  ? 'Try adjusting your search criteria'
+                  : 'Reports will appear here once they are uploaded by your administrator'
+              )}
             </p>
-            {(searchTerm || selectedPatient || dateFilter) && (
-              <button
-                onClick={clearFilters}
-                className="text-primary-600 hover:text-primary-800 font-medium"
-              >
-                Clear all filters
-              </button>
-            )}
+            <div className="space-x-4">
+              {(searchTerm || selectedPatient || dateFilter) && !error && (
+                <button
+                  onClick={clearFilters}
+                  className="text-primary-600 hover:text-primary-800 font-medium"
+                >
+                  Clear all filters
+                </button>
+              )}
+              {error && (
+                <>
+                  <button
+                    onClick={refreshReports}
+                    disabled={loading}
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+                  >
+                    {loading ? 'Refreshing...' : 'Try Again'}
+                  </button>
+                  <button
+                    onClick={repairDataAndReload}
+                    disabled={loading}
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+                  >
+                    {loading ? 'Repairing...' : 'Repair & Reload'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -369,6 +632,20 @@ const ReportViewer = ({ clinicId, patients, reports: initialReports, onUpdate })
           </div>
         </div>
       </div>
+
+      {/* Subscription Popup */}
+      <SubscriptionPopup
+        isOpen={showSubscriptionPopup}
+        onClose={() => setShowSubscriptionPopup(false)}
+        clinicId={clinicId}
+        currentUsage={reports.length}
+        onSubscribe={handleSubscription}
+        clinicInfo={{
+          name: user?.clinicName || user?.name || 'Clinic',
+          email: user?.email || '',
+          phone: user?.phone || ''
+        }}
+      />
     </div>
   );
 };

@@ -18,7 +18,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
-import PaymentService from '../../services/paymentService';
+import DynamoService from '../../services/dynamoService';
+import RazorpayService from '../../services/razorpayService';
+import PaymentHistoryModal from '../payment/PaymentHistoryModal';
 
 const PaymentHistory = ({ selectedClinic }) => {
   const [payments, setPayments] = useState([]);
@@ -36,18 +38,32 @@ const PaymentHistory = ({ selectedClinic }) => {
 
   const loadData = async () => {
     try {
-      console.log('💰 Loading payment history...');
+      console.log('💰 SUPER ADMIN: Loading all clinics payment history...');
       
-      // Load all payments and clinics
-      const paymentsData = DatabaseService.get('payments');
-      const subscriptionsData = DatabaseService.get('subscriptions');
-      const clinicsData = DatabaseService.get('clinics');
+      let allPayments = [];
+      let clinicsData = [];
       
-      // Combine payments and subscriptions
-      const allPayments = [
-        ...paymentsData.map(p => ({ ...p, type: 'payment' })),
-        ...subscriptionsData.map(s => ({ ...s, type: 'subscription' }))
-      ];
+      try {
+        // Try to load from DynamoDB first
+        console.log('💾 Loading from DynamoDB...');
+        allPayments = await DynamoService.get('payments');
+        clinicsData = await DynamoService.get('clinics');
+        console.log('✅ DynamoDB: Loaded', allPayments.length, 'payments from', clinicsData.length, 'clinics');
+      } catch (dynamoError) {
+        console.warn('⚠️ DynamoDB failed, using localStorage fallback:', dynamoError.message);
+        
+        // Fallback to localStorage
+        const paymentsData = DatabaseService.get('payments');
+        const subscriptionsData = DatabaseService.get('subscriptions');
+        clinicsData = DatabaseService.get('clinics');
+        
+        // Combine payments and subscriptions for backward compatibility
+        allPayments = [
+          ...paymentsData.map(p => ({ ...p, type: 'payment' })),
+          ...subscriptionsData.map(s => ({ ...s, type: 'subscription' }))
+        ];
+        console.log('✅ LocalStorage: Loaded', allPayments.length, 'payments from', clinicsData.length, 'clinics');
+      }
       
       // Filter by selected clinic if specified
       const filteredPayments = selectedClinic 
@@ -60,47 +76,68 @@ const PaymentHistory = ({ selectedClinic }) => {
         return {
           ...payment,
           clinicName: clinic?.name || 'Unknown Clinic',
-          clinicEmail: clinic?.email || 'Unknown Email'
+          clinicEmail: clinic?.email || 'Unknown Email',
+          clinicPhone: clinic?.phone || 'N/A'
         };
       }).sort((a, b) => new Date(b.createdAt || b.timestamp || 0) - new Date(a.createdAt || a.timestamp || 0));
       
       setPayments(enhancedPayments);
       setClinics(clinicsData);
+      
+      console.log('📊 SUPER ADMIN: Final processed payments:', enhancedPayments.length);
     } catch (error) {
-      toast.error('Error loading payment data');
-      console.error(error);
+      console.error('❌ SUPER ADMIN: Error loading payment data:', error);
+      toast.error('Error loading payment data: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const getPaymentStatus = (payment) => {
-    if (payment.status === 'completed' || payment.status === 'succeeded') {
-      return { status: 'success', text: 'Completed', icon: CheckCircle };
-    } else if (payment.status === 'pending' || payment.status === 'processing') {
+    const status = payment.status?.toLowerCase() || 'unknown';
+    
+    if (status === 'captured' || status === 'completed' || status === 'succeeded') {
+      return { status: 'success', text: 'Captured', icon: CheckCircle };
+    } else if (status === 'pending' || status === 'processing' || status === 'created') {
       return { status: 'pending', text: 'Pending', icon: Clock };
-    } else if (payment.status === 'failed' || payment.status === 'cancelled') {
+    } else if (status === 'failed' || status === 'cancelled' || status === 'error') {
       return { status: 'failed', text: 'Failed', icon: AlertCircle };
     }
     return { status: 'unknown', text: 'Unknown', icon: AlertCircle };
   };
 
   const getPaymentType = (payment) => {
+    // Check for enhanced plan details first
+    if (payment.planDetails?.name) {
+      return payment.planDetails.name;
+    }
+    // Fallback to legacy fields
     if (payment.type === 'subscription') {
       return 'Subscription';
     } else if (payment.packageName) {
-      return `Report Package: ${payment.packageName}`;
+      return payment.packageName;
     } else if (payment.reportType) {
-      return `Report Purchase: ${payment.reportType}`;
+      return `Report: ${payment.reportType}`;
     }
     return 'Payment';
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR'
     }).format(amount || 0);
+  };
+
+  const handleViewPaymentDetails = (payment) => {
+    console.log('📋 SUPER ADMIN: Viewing payment details:', payment.paymentId);
+    setSelectedPayment(payment);
+    setShowPaymentDetails(true);
+  };
+
+  const handleClosePaymentDetails = () => {
+    setShowPaymentDetails(false);
+    setSelectedPayment(null);
   };
 
   const filteredPayments = payments.filter(payment => {
@@ -360,11 +397,11 @@ const PaymentHistory = ({ selectedClinic }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => viewPaymentDetails(payment)}
-                          className="text-primary-600 hover:text-primary-900"
-                          title="View Details"
+                          onClick={() => handleViewPaymentDetails(payment)}
+                          className="text-primary-600 hover:text-primary-900 transition-colors"
+                          title="View Payment Details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <FileText className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => {
@@ -398,153 +435,17 @@ const PaymentHistory = ({ selectedClinic }) => {
         </div>
       </div>
 
-      {/* Payment Details Modal */}
-      {showPaymentDetails && selectedPayment && (
-        <PaymentDetailsModal
-          payment={selectedPayment}
-          onClose={() => {
-            setShowPaymentDetails(false);
-            setSelectedPayment(null);
-          }}
-        />
-      )}
+      {/* Enhanced Payment History Modal */}
+      <PaymentHistoryModal
+        isOpen={showPaymentDetails}
+        payment={selectedPayment}
+        onClose={handleClosePaymentDetails}
+      />
     </div>
   );
 };
 
-// Payment Details Modal Component
-const PaymentDetailsModal = ({ payment, onClose }) => {
-  const statusInfo = getPaymentStatus(payment);
-  const StatusIcon = statusInfo.icon;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-6 border max-w-2xl w-full shadow-lg rounded-md bg-white">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <CreditCard className="h-6 w-6 text-primary-600" />
-            <h3 className="text-lg font-medium text-gray-900">Payment Details</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {/* Payment Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Transaction ID</p>
-                <p className="text-sm text-gray-900">{payment.paymentId || payment.id}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Amount</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                  }).format(payment.amount || 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Status</p>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  statusInfo.status === 'success' ? 'bg-green-100 text-green-800' :
-                  statusInfo.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  <StatusIcon className="h-3 w-3 mr-1" />
-                  {statusInfo.text}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Date</p>
-                <p className="text-sm text-gray-900">
-                  {new Date(payment.createdAt || payment.timestamp).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Clinic Information */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3">Clinic Information</h4>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Clinic Name</p>
-                  <p className="text-sm text-gray-900">{payment.clinicName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Email</p>
-                  <p className="text-sm text-gray-900">{payment.clinicEmail}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Details */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3">Payment Information</h4>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Payment Type</p>
-                  <p className="text-sm text-gray-900">{getPaymentType(payment)}</p>
-                </div>
-                {payment.packageName && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Package</p>
-                    <p className="text-sm text-gray-900">{payment.packageName}</p>
-                  </div>
-                )}
-                {payment.reportsAllowed && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Reports Included</p>
-                    <p className="text-sm text-gray-900">{payment.reportsAllowed} reports</p>
-                  </div>
-                )}
-                {payment.paymentMethod && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Payment Method</p>
-                    <p className="text-sm text-gray-900 capitalize">{payment.paymentMethod}</p>
-                  </div>
-                )}
-                {payment.notes && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Notes</p>
-                    <p className="text-sm text-gray-900">{payment.notes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-3 pt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Close
-          </button>
-          <button
-            onClick={() => {
-              toast.success('Receipt downloaded');
-            }}
-            className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 flex items-center space-x-2"
-          >
-            <Download className="h-4 w-4" />
-            <span>Download Receipt</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Super Admin enhanced with comprehensive payment tracking
+// Now includes DynamoDB integration, professional invoices, and detailed transaction history
 
 export default PaymentHistory;

@@ -11,14 +11,34 @@ class DatabaseService {
 
   async checkDynamoDBAvailability() {
     try {
+      console.log('🔧 Checking DynamoDB availability...');
+      
       if (DynamoService.isAvailable()) {
-        this.useDynamoDB = true;
-        console.log('🚀 Using AWS DynamoDB for data storage');
+        console.log('✅ DynamoService reports it is available');
+        
+        // Test actual connection with timeout
+        try {
+          const connectionPromise = DynamoService.testConnection();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('DynamoDB connection timeout')), 5000)
+          );
+          
+          await Promise.race([connectionPromise, timeoutPromise]);
+          this.useDynamoDB = true;
+          console.log('🚀 Using AWS DynamoDB for data storage');
+        } catch (testError) {
+          console.error('❌ DynamoDB test connection failed:', testError);
+          console.log('💾 Falling back to localStorage due to connection test failure');
+          this.useDynamoDB = false;
+        }
       } else {
         console.log('💾 Using localStorage for data storage (AWS not configured)');
+        this.useDynamoDB = false;
       }
     } catch (error) {
+      console.error('❌ Error checking DynamoDB availability:', error);
       console.log('💾 Falling back to localStorage:', error.message);
+      this.useDynamoDB = false;
     }
   }
 
@@ -207,11 +227,35 @@ class DatabaseService {
 
   // Reports specific methods
   async getReportsByClinic(clinicId) {
-    return await this.findBy('reports', 'clinicId', clinicId);
+    try {
+      if (!clinicId) {
+        console.warn('⚠️ getReportsByClinic: No clinicId provided');
+        return [];
+      }
+      
+      const reports = await this.findBy('reports', 'clinicId', clinicId);
+      console.log(`📋 Found ${reports?.length || 0} reports for clinic ${clinicId}`);
+      return reports || [];
+    } catch (error) {
+      console.error(`❌ Error getting reports for clinic ${clinicId}:`, error);
+      return [];
+    }
   }
 
   async getReportsByPatient(patientId) {
-    return await this.findBy('reports', 'patientId', patientId);
+    try {
+      if (!patientId) {
+        console.warn('⚠️ getReportsByPatient: No patientId provided');
+        return [];
+      }
+      
+      const reports = await this.findBy('reports', 'patientId', patientId);
+      console.log(`📋 Found ${reports?.length || 0} reports for patient ${patientId}`);
+      return reports || [];
+    } catch (error) {
+      console.error(`❌ Error getting reports for patient ${patientId}:`, error);
+      return [];
+    }
   }
 
   async addReport(reportData) {
@@ -263,6 +307,56 @@ class DatabaseService {
 
   async getSubscription(clinicId) {
     return await this.findOne('subscriptions', 'clinicId', clinicId);
+  }
+
+  // Data recovery and validation methods
+  async validateAndRepairData() {
+    try {
+      console.log('🔧 Starting data validation and repair...');
+      
+      // Check and repair localStorage data
+      const tables = ['superAdmins', 'clinics', 'patients', 'reports', 'subscriptions', 'payments', 'usage', 'alerts'];
+      let repairCount = 0;
+      
+      for (const table of tables) {
+        try {
+          const data = localStorage.getItem(table);
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (!Array.isArray(parsed)) {
+              console.warn(`⚠️ Repairing corrupted ${table} data`);
+              localStorage.setItem(table, JSON.stringify([]));
+              repairCount++;
+            }
+          } else {
+            localStorage.setItem(table, JSON.stringify([]));
+          }
+        } catch (parseError) {
+          console.warn(`⚠️ Repairing corrupted ${table} data:`, parseError);
+          localStorage.setItem(table, JSON.stringify([]));
+          repairCount++;
+        }
+      }
+      
+      if (repairCount > 0) {
+        console.log(`🔧 Repaired ${repairCount} corrupted data tables`);
+      } else {
+        console.log('✅ Data validation passed');
+      }
+      
+      return { success: true, repairCount };
+    } catch (error) {
+      console.error('❌ Error during data validation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Force refresh data connection
+  async refreshConnection() {
+    console.log('🔄 Refreshing database connection...');
+    this.useDynamoDB = false;
+    await this.checkDynamoDBAvailability();
+    await this.validateAndRepairData();
   }
 
   // Analytics methods

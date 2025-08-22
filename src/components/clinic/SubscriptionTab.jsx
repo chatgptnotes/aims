@@ -35,16 +35,27 @@ const SubscriptionTab = () => {
     }
   }, [user]);
 
-  const loadUsageStats = () => {
+  const loadUsageStats = async () => {
     try {
       if (user?.clinicId) {
-        const stats = RazorpayService.getUsageStats(user.clinicId);
+        console.log('📊 CLINIC: Loading usage stats for clinic:', user.clinicId);
+        const stats = await RazorpayService.getUsageStats(user.clinicId);
+        console.log('✅ CLINIC: Usage stats loaded:', stats);
         setUsageStats(stats);
       } else {
         console.warn('No clinicId found for user:', user);
       }
     } catch (error) {
-      console.error('Error loading usage stats:', error);
+      console.error('❌ CLINIC: Error loading usage stats:', error);
+      // Set default stats on error to prevent crash
+      setUsageStats({
+        clinic: null,
+        reportsUsed: 0,
+        reportsAllowed: 10,
+        reportsRemaining: 10,
+        totalSpent: 0,
+        paymentHistory: []
+      });
     } finally {
       setLoading(false);
     }

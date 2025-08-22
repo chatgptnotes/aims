@@ -1,50 +1,101 @@
 import React, { useState } from 'react';
 import { CreditCard, X, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import RazorpayService from '../../services/razorpayService';
+import PaymentSuccessModal from './PaymentSuccessModal';
 
 const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState('select');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successPaymentData, setSuccessPaymentData] = useState(null);
+  const [successPackageInfo, setSuccessPackageInfo] = useState(null);
+
+  // Enhanced close handler with cleanup
+  const handleClose = () => {
+    console.log('🔄 DASHBOARD: Closing payment modal - cleanup states');
+    
+    // Reset all states
+    setIsProcessing(false);
+    setStep('select');
+    setSelectedPackage(null);
+    setShowSuccessModal(false);
+    setSuccessPaymentData(null);
+    setSuccessPackageInfo(null);
+    
+    // Call parent close handler
+    onClose?.();
+  };
+
+  // Handle success modal close
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    setSuccessPaymentData(null);
+    setSuccessPackageInfo(null);
+    // Close the entire payment modal after success
+    setTimeout(() => {
+      handleClose();
+    }, 500);
+  };
+
+  // Handle invoice download
+  const handleDownloadInvoice = (paymentData) => {
+    const invoiceData = {
+      paymentId: paymentData.paymentId,
+      orderId: paymentData.orderId,
+      amount: paymentData.amount,
+      packageName: paymentData.packageName || paymentData.planDetails?.name,
+      reports: paymentData.reports || paymentData.planDetails?.reportsIncluded,
+      date: new Date(paymentData.createdAt).toLocaleDateString(),
+      time: new Date(paymentData.createdAt).toLocaleTimeString(),
+      clinicInfo: clinicInfo
+    };
+
+    const invoiceContent = `
+INVOICE - NeuroSense360
+========================
+
+Payment ID: ${invoiceData.paymentId}
+Order ID: ${invoiceData.orderId}
+Date: ${invoiceData.date} ${invoiceData.time}
+
+Bill To:
+Clinic: ${invoiceData.clinicInfo?.name || 'N/A'}
+Email: ${invoiceData.clinicInfo?.email || 'N/A'}
+
+Package Details:
+Package: ${invoiceData.packageName}
+Reports: ${invoiceData.reports}
+Amount: ₹${invoiceData.amount?.toLocaleString()}
+
+Payment Method: Razorpay
+Status: Completed
+
+Thank you for your business!
+
+--- NeuroSense360 EEG Management Platform ---
+    `;
+
+    const dataBlob = new Blob([invoiceContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `invoice-${invoiceData.paymentId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Invoice downloaded successfully!');
+  };
 
   // Debug log to confirm this component is being used
   console.log('✅ SIMPLE RAZORPAY CHECKOUT LOADED - NO MORE ERRORS!');
   console.log('🎯 Component loaded with props:', { clinicInfo, onSuccess, onClose });
 
-  // Simple static packages
-  const packages = [
-    {
-      id: 'trial_5',
-      name: 'Trial Package',
-      reports: 5,
-      price: 299,
-      originalPrice: 499,
-      description: '5 EEG reports - Perfect for trying our service',
-      savings: '40% OFF',
-      features: ['5 EEG Report Analysis', '24/7 Support', 'PDF Download']
-    },
-    {
-      id: 'basic_10',
-      name: 'Basic Package',
-      reports: 10,
-      price: 999,
-      originalPrice: 1499,
-      description: '10 EEG reports - Great for small clinics',
-      savings: '33% OFF',
-      features: ['10 EEG Report Analysis', '24/7 Support', 'PDF Download', 'Email Support']
-    },
-    {
-      id: 'standard_25',
-      name: 'Standard Package',
-      reports: 25,
-      price: 1999,
-      originalPrice: 2999,
-      description: '25 EEG reports - Most popular choice',
-      popular: true,
-      savings: '33% OFF',
-      features: ['25 EEG Report Analysis', '24/7 Support', 'PDF Download', 'Priority Support']
-    }
-  ];
+  // Use real Razorpay packages
+  const packages = RazorpayService.getReportPackages();
 
   const handlePackageSelect = (packageInfo) => {
     console.log('📦 Package selected:', packageInfo);
@@ -52,8 +103,8 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
     setStep('confirm');
   };
 
-  const handleSimplePayment = () => {
-    console.log('💳 ULTRA SIMPLE PAYMENT - START');
+  const handleSimplePayment = async () => {
+    console.log('💳 DASHBOARD: Starting real Razorpay payment');
     console.log('📋 Package:', selectedPackage);
     console.log('🏥 Clinic:', clinicInfo);
 
@@ -62,64 +113,107 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
       return;
     }
 
-    setIsProcessing(true);
-    setStep('processing');
+    // Validation
+    if (!clinicInfo?.id) {
+      toast.error('Clinic information missing. Please refresh and try again.');
+      console.error('❌ DASHBOARD: Missing clinic ID');
+      return;
+    }
 
-    // Simple payment processing
-    toast.loading('Processing payment...', { duration: 2000 });
+    try {
+      setIsProcessing(true);
+      setStep('processing');
 
-    setTimeout(() => {
-      const confirmed = confirm(
-        `🎯 PAYMENT CONFIRMATION\n\n` +
-        `Package: ${selectedPackage.name}\n` +
-        `Price: ₹${selectedPackage.price}\n` +
-        `Reports: ${selectedPackage.reports}\n` +
-        `Clinic: ${clinicInfo?.name || 'Clinic'}\n\n` +
-        `✅ Click OK for Success\n` +
-        `❌ Click Cancel to Cancel`
-      );
-
-      if (confirmed) {
-        // Success simulation
-        console.log('🎉 PAYMENT SUCCESS');
-        
-        const mockPaymentData = {
-                      paymentId: 'pay_' + Date.now(),
-            orderId: 'order_' + Date.now(),
-          amount: selectedPackage.price,
-          status: 'success',
-                      clinicId: clinicInfo?.id,
-          packageId: selectedPackage.id,
-          packageName: selectedPackage.name,
-          createdAt: new Date().toISOString()
-        };
-
-        setIsProcessing(false);
-                  toast.success('🎉 Payment successful!');
-        console.log('💾 Mock payment data:', mockPaymentData);
-        
-        // Call parent success handler
-        setTimeout(() => {
-          onSuccess?.(mockPaymentData, selectedPackage);
-        }, 500);
-
-      } else {
-        // Cancel simulation
-        console.log('❌ PAYMENT CANCELLED');
+      // Add timeout to prevent infinite loading
+      const paymentTimeout = setTimeout(() => {
+        console.log('⏰ DASHBOARD: Payment timeout - resetting state');
         setIsProcessing(false);
         setStep('confirm');
-        toast.error('Payment cancelled');
+        toast.error('Payment timeout. Please try again.');
+      }, 30000); // 30 seconds timeout
+
+      // Create order data for Razorpay
+      const orderData = {
+        clinicId: clinicInfo.id,
+        packageInfo: selectedPackage,
+        clinicInfo: clinicInfo
+      };
+
+      console.log('🔄 DASHBOARD: Creating order with data:', orderData);
+
+      // Create Razorpay order
+      const order = await RazorpayService.createOrder(orderData);
+      console.log('✅ DASHBOARD: Razorpay order created:', order.id);
+
+      // Process payment with real Razorpay
+      RazorpayService.processPayment(
+        order,
+        clinicInfo,
+        async (paymentData, packageInfo) => {
+          console.log('✅ DASHBOARD: Payment successful:', paymentData);
+          
+          clearTimeout(paymentTimeout); // Clear timeout on success
+          setIsProcessing(false);
+          
+          // Store payment data for success modal
+          setSuccessPaymentData(paymentData);
+          setSuccessPackageInfo(packageInfo);
+          setShowSuccessModal(true);
+          
+          // Call parent success callback
+          onSuccess?.(paymentData, packageInfo);
+        },
+        (error) => {
+          console.error('❌ DASHBOARD: Payment failed:', error);
+          
+          clearTimeout(paymentTimeout); // Clear timeout on failure
+          setIsProcessing(false);
+          setStep('confirm'); // Go back to confirm step
+          toast.error(`Payment failed: ${error.message || 'Please try again.'}`);
+        }
+      );
+      
+    } catch (error) {
+      console.error('❌ DASHBOARD: Payment error:', error);
+      setIsProcessing(false);
+      setStep('confirm'); // Go back to confirm step
+      
+      // Show user-friendly error message
+      if (error.message.includes('not configured')) {
+        toast.error('Payment system not configured. Please contact support.');
+      } else if (error.message.includes('Invalid payment request')) {
+        toast.error('Invalid payment request. Please try again.');
+      } else {
+        toast.error(`Payment failed: ${error.message || 'Please try again.'}`);
       }
-    }, 2500);
+    }
   };
 
   if (step === 'processing') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-8 text-center">
+        <div className="bg-white rounded-xl p-8 text-center max-w-md w-full">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Processing Payment</h2>
-          <p className="text-gray-600">Please wait for the confirmation dialog...</p>
+          <h2 className="text-xl font-semibold mb-2">Opening Payment Gateway</h2>
+          <p className="text-gray-600 mb-6">Please complete payment in the Razorpay window...</p>
+          
+          {/* Cancel button */}
+          <button
+            onClick={() => {
+              console.log('🔄 DASHBOARD: User cancelled payment from loader');
+              setIsProcessing(false);
+              setStep('confirm');
+              toast.info('Payment cancelled');
+            }}
+            className="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors"
+          >
+            Cancel Payment
+          </button>
+          
+          {/* Auto-cancel timer display */}
+          <p className="text-xs text-gray-500 mt-3">
+            Payment will auto-cancel in 30 seconds if not completed
+          </p>
         </div>
       </div>
     );
@@ -131,7 +225,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
         <div className="bg-white rounded-xl max-w-lg w-full p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-xl font-semibold">Confirm Purchase</h1>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
               <X className="h-6 w-6" />
             </button>
           </div>
@@ -189,7 +283,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
       <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Choose Your Plan</h1>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -254,6 +348,17 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
           </div>
         </div>
       </div>
+      
+      {/* Payment Success Modal */}
+      {showSuccessModal && (
+        <PaymentSuccessModal
+          isOpen={showSuccessModal}
+          paymentData={successPaymentData}
+          packageInfo={successPackageInfo}
+          onClose={handleSuccessModalClose}
+          onDownloadInvoice={handleDownloadInvoice}
+        />
+      )}
     </div>
   );
 };

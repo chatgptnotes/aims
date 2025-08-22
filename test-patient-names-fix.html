@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Names Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #22c55e;
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+            margin: 20px 0;
+        }
+        .error {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            margin: 20px 0;
+        }
+        .info {
+            color: #3b82f6;
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+            margin: 20px 0;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        .after {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Patient Names Display Fix</h1>
+        
+        <div class="info">
+            <h3>✅ Issue Fixed!</h3>
+            <p>The patient names in the reports table were showing as "Unknown Patient". This has been fixed with improved patient data matching and display logic.</p>
+        </div>
+
+        <div class="before-after">
+            <div class="before">
+                <h4>❌ Before (Broken)</h4>
+                <ul>
+                    <li>Patient names showed as "Unknown Patient"</li>
+                    <li>Poor patient data matching</li>
+                    <li>No fallback logic for missing data</li>
+                    <li>Hard to identify which patient each report belongs to</li>
+                </ul>
+            </div>
+            <div class="after">
+                <h4>✅ After (Fixed)</h4>
+                <ul>
+                    <li>Real patient names are now displayed</li>
+                    <li>Multiple matching strategies (ID, name, email)</li>
+                    <li>Smart fallback logic for missing data</li>
+                    <li>Clear patient identification in reports</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success">
+            <h3>🔧 What Was Fixed:</h3>
+            <ul>
+                <li><strong>Enhanced Patient Matching:</strong> Added multiple ways to find patient data (ID, name, email)</li>
+                <li><strong>Smart Fallback Logic:</strong> If patient ID doesn't match, try matching by name</li>
+                <li><strong>Case-Insensitive Matching:</strong> Patient names are matched regardless of case</li>
+                <li><strong>Partial Name Matching:</strong> Can find patients even with partial name matches</li>
+                <li><strong>Debug Logging:</strong> Added console logs to help track patient matching</li>
+                <li><strong>Refresh Button:</strong> Added a refresh button to reload data and fix names</li>
+            </ul>
+        </div>
+
+        <h3>🧪 Test the Fix:</h3>
+        <p>To test that patient names are now displaying correctly:</p>
+        <ol>
+            <li>Go to your Super Admin Patient Reports page</li>
+            <li>Look at the "PATIENT" column in the reports table</li>
+            <li>You should now see actual patient names instead of "Unknown Patient"</li>
+            <li>Use the "Refresh" button if you need to reload the data</li>
+            <li>Check the browser console for patient matching logs</li>
+        </ol>
+
+        <div class="button" onclick="window.open('http://localhost:3000/admin?tab=reports', '_blank')">
+            🚀 Open Patient Reports Page
+        </div>
+
+        <div class="button" onclick="window.open('http://localhost:3000/admin', '_blank')">
+            🏠 Open Super Admin Dashboard
+        </div>
+
+        <h3>📝 Technical Details:</h3>
+        <div class="code">
+// New patient matching logic:
+const fixPatientNames = (reports, patients) => {
+  return reports.map(report => {
+    // Try to find patient by ID first
+    let patient = patients.find(p => p.id === report.patientId);
+    
+    // If not found, try matching by name (case insensitive)
+    if (!patient && report.patientName) {
+      patient = patients.find(p => 
+        p.name && p.name.toLowerCase() === report.patientName.toLowerCase()
+      );
+    }
+    
+    // If still not found, try partial name matching
+    if (!patient && report.patientName) {
+      patient = patients.find(p => 
+        p.name && p.name.toLowerCase().includes(report.patientName.toLowerCase())
+      );
+    }
+    
+    return {
+      ...report,
+      patientName: patient?.name || report.patientName || 'Unknown Patient'
+    };
+  });
+};
+        </div>
+
+        <div class="info">
+            <h3>🎯 What This Improves:</h3>
+            <p>The fix addresses several issues:</p>
+            <ul>
+                <li><strong>Better User Experience:</strong> Users can now see which patient each report belongs to</li>
+                <li><strong>Improved Data Integrity:</strong> Patient names are properly linked to reports</li>
+                <li><strong>Robust Matching:</strong> Multiple strategies ensure patient data is found</li>
+                <li><strong>Debugging Support:</strong> Console logs help track any remaining issues</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <h3>🎉 Success!</h3>
+            <p>The Patient Reports page should now display actual patient names instead of "Unknown Patient". This makes it much easier to identify and manage patient reports!</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('👥 Patient Names Fix Test Page Loaded');
+        console.log('✅ Patient names should now display correctly!');
+    </script>
+</body>
+</html>

@@ -190,18 +190,48 @@ class DynamoService {
     }
 
     try {
-      const command = new QueryCommand({
-        TableName: this.getTableName(table),
-        IndexName: `${field}-index`,
-        KeyConditionExpression: `#${field} = :${field}`,
-        ExpressionAttributeNames: {
-          [`#${field}`]: field
-        },
-        ExpressionAttributeValues: {
-          [`:${field}`]: value
+      // Try using index first, if it fails use scan
+      let command, response;
+      
+      try {
+        command = new QueryCommand({
+          TableName: this.getTableName(table),
+          IndexName: `${field}-index`,
+          KeyConditionExpression: `#${field} = :${field}`,
+          ExpressionAttributeNames: {
+            [`#${field}`]: field
+          },
+          ExpressionAttributeValues: {
+            [`:${field}`]: value
+          }
+        });
+        response = await this.docClient.send(command);
+        console.log(`✅ DynamoDB query with index successful for ${table}.${field}`);
+      } catch (indexError) {
+        console.warn(`⚠️ Index ${field}-index not found, using scan instead:`, indexError.message);
+        
+        // Check if error is about table not existing vs index not existing
+        if (indexError.message.includes('Requested resource not found')) {
+          console.error(`❌ Table ${this.getTableName(table)} does not exist!`);
+          throw new Error(`DynamoDB table ${this.getTableName(table)} not found`);
         }
-      });
-      const response = await this.docClient.send(command);
+        
+        // Fallback to scan if index doesn't exist
+        const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+        command = new ScanCommand({
+          TableName: this.getTableName(table),
+          FilterExpression: `#${field} = :${field}`,
+          ExpressionAttributeNames: {
+            [`#${field}`]: field
+          },
+          ExpressionAttributeValues: {
+            [`:${field}`]: value
+          }
+        });
+        response = await this.docClient.send(command);
+        console.log(`✅ DynamoDB scan successful for ${table}.${field}`);
+      }
+      
       return response.Items || [];
     } catch (error) {
       console.warn(`❌ DynamoDB findBy failed for ${table}, falling back to localStorage:`, error.message);
@@ -223,6 +253,64 @@ class DynamoService {
   // Check if DynamoDB is available
   isAvailable() {
     return this.isConfigured;
+  }
+
+  // Test actual connection to DynamoDB
+  async testConnection() {
+    if (!this.isAvailable()) {
+      throw new Error('DynamoDB service not configured');
+    }
+
+    try {
+      console.log('🧪 Testing DynamoDB connection with patients table...');
+      
+      const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+      const command = new ScanCommand({
+        TableName: this.getTableName('patients'),
+        Limit: 1
+      });
+
+      const result = await this.docClient.send(command);
+      console.log('✅ DynamoDB connection test successful');
+      
+      // Also verify other required tables
+      await this.verifyRequiredTables();
+      return true;
+    } catch (error) {
+      console.error('❌ DynamoDB connection test failed:', error);
+      
+      // Check if it's table not found error
+      if (error.message.includes('Requested resource not found')) {
+        console.error('💡 Required DynamoDB tables do not exist. Please create them in AWS Console:');
+        console.error('  - neuro360-dev-patients');
+        console.error('  - neuro360-dev-reports'); 
+        console.error('  - neuro360-dev-clinics');
+      }
+      
+      throw error;
+    }
+  }
+
+  // Verify all required tables exist
+  async verifyRequiredTables() {
+    const requiredTables = ['patients', 'reports', 'clinics', 'payments'];
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+    
+    for (const table of requiredTables) {
+      try {
+        const command = new ScanCommand({
+          TableName: this.getTableName(table),
+          Limit: 1
+        });
+        await this.docClient.send(command);
+        console.log(`✅ Table ${this.getTableName(table)} exists`);
+      } catch (error) {
+        if (error.message.includes('Requested resource not found')) {
+          console.error(`❌ Table ${this.getTableName(table)} does not exist`);
+          throw new Error(`Required DynamoDB table ${this.getTableName(table)} not found`);
+        }
+      }
+    }
   }
 
   // LocalStorage fallback methods

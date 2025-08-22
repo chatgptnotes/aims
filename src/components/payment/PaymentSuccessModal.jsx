@@ -9,11 +9,13 @@ import {
 } from 'lucide-react';
 
 const PaymentSuccessModal = ({ 
+  isOpen = true,
   paymentData, 
   packageInfo, 
   onClose, 
   onDownloadInvoice 
 }) => {
+  if (!isOpen || !paymentData) return null;
   const handleDownloadInvoice = () => {
     if (onDownloadInvoice) {
       onDownloadInvoice(paymentData);

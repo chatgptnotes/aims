@@ -16,13 +16,26 @@ const ClinicDashboard = () => {
   const [reports, setReports] = useState([]);
   const [usage, setUsage] = useState({});
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Get active tab from URL params or default to overview
   const activeTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
-    loadClinicData();
-  }, [user]);
+    console.log('🔄 ClinicDashboard useEffect - user:', user?.name, 'clinicId:', user?.clinicId, 'dataLoaded:', dataLoaded);
+    if (user && user.clinicId && !dataLoaded) {
+      console.log('📊 Loading clinic data for the first time...');
+      loadClinicData();
+    } else if (user && !user.clinicId) {
+      console.warn('⚠️ User loaded but no clinicId found:', user);
+      setLoading(false);
+    } else if (user && user.clinicId && dataLoaded) {
+      console.log('✅ Data already loaded, skipping reload');
+      setLoading(false);
+    } else {
+      console.log('⏳ Waiting for user data to load...');
+    }
+  }, [user, dataLoaded]);
 
   const loadClinicData = async () => {
     try {
@@ -35,19 +48,95 @@ const ClinicDashboard = () => {
       }
 
       // Get current user's clinic data only
-      const currentClinic = await DatabaseService.findById('clinics', user.clinicId);
+      let currentClinic = await DatabaseService.findById('clinics', user.clinicId);
       
       if (!currentClinic) {
-        console.error('❌ Clinic not found for ID:', user.clinicId);
-        setLoading(false);
-        return;
+        console.warn('⚠️ Clinic not found for ID:', user.clinicId, '- Creating new clinic record');
+        
+        // Create clinic record in DynamoDB
+        try {
+          const newClinic = {
+            id: user.clinicId,
+            name: user.clinicName || 'Sai Clinic',
+            email: user.email,
+            adminName: user.name,
+            createdAt: new Date().toISOString(),
+            reportsUsed: 0,
+            reportsAllowed: 50, // Default allowance
+            subscriptionStatus: 'trial'
+          };
+          
+          currentClinic = await DatabaseService.add('clinics', newClinic);
+          console.log('✅ Created new clinic record:', currentClinic.name);
+        } catch (error) {
+          console.error('❌ Failed to create clinic record:', error);
+          setLoading(false);
+          return;
+        }
       }
 
       console.log('✅ Found clinic:', currentClinic.name, 'for user:', user.name);
       
       // Get ONLY this clinic's patients and reports
-      const clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
-      const clinicReports = await DatabaseService.getReportsByClinic(currentClinic.id);
+      let clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
+      let clinicReports = await DatabaseService.getReportsByClinic(currentClinic.id);
+      
+      // If no patients in DynamoDB but exist in localStorage, migrate them
+      if (clinicPatients.length === 0) {
+        console.log('🔄 No patients in DynamoDB, checking localStorage for migration...');
+        
+        const localStoragePatients = JSON.parse(localStorage.getItem('patients') || '[]');
+        const localStorageReports = JSON.parse(localStorage.getItem('reports') || '[]');
+        
+        const clinicPatientsFromLocal = localStoragePatients.filter(p => 
+          p.clinicId === currentClinic.id || 
+          p.clinicId == currentClinic.id || // eslint-disable-line eqeqeq
+          String(p.clinicId) === String(currentClinic.id)
+        );
+        
+        if (clinicPatientsFromLocal.length > 0) {
+          console.log(`🚀 Migrating ${clinicPatientsFromLocal.length} patients to DynamoDB...`);
+          
+          // Migrate patients
+          for (const patient of clinicPatientsFromLocal) {
+            try {
+              await DatabaseService.add('patients', patient);
+              console.log(`✅ Migrated patient: ${patient.name}`);
+            } catch (error) {
+              console.error(`❌ Failed to migrate patient ${patient.name}:`, error);
+            }
+          }
+          
+          // Migrate reports
+          const clinicReportsFromLocal = localStorageReports.filter(r => 
+            r.clinicId === currentClinic.id || 
+            r.clinicId == currentClinic.id || // eslint-disable-line eqeqeq
+            String(r.clinicId) === String(currentClinic.id)
+          );
+          
+          for (const report of clinicReportsFromLocal) {
+            try {
+              // Ensure report has required fields
+              const reportToMigrate = {
+                ...report,
+                id: report.id || `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                createdAt: report.createdAt || new Date().toISOString()
+              };
+              
+              await DatabaseService.add('reports', reportToMigrate);
+              console.log(`✅ Migrated report: ${report.fileName}`);
+            } catch (error) {
+              console.error(`❌ Failed to migrate report ${report.fileName}:`, error);
+            }
+          }
+          
+          // Reload data after migration
+          clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
+          clinicReports = await DatabaseService.getReportsByClinic(currentClinic.id);
+          
+          console.log(`✅ Migration complete! Patients: ${clinicPatients.length}, Reports: ${clinicReports.length}`);
+        }
+      }
       
       // Calculate clinic usage
       const clinicUsage = {
@@ -66,6 +155,7 @@ const ClinicDashboard = () => {
       setPatients(clinicPatients);
       setReports(clinicReports);
       setUsage(clinicUsage);
+      setDataLoaded(true); // Mark data as loaded
     } catch (error) {
       console.error('Error loading clinic data:', error);
     } finally {
@@ -73,15 +163,22 @@ const ClinicDashboard = () => {
     }
   };
 
+  // Separate refresh function that forces a reload
+  const refreshClinicData = async () => {
+    console.log('🔄 Force refreshing clinic data...');
+    setDataLoaded(false); // This will trigger a reload
+    await loadClinicData();
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={loadClinicData} />;
+        return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={refreshClinicData} />;
       case 'patients':
         console.log('🏥 Rendering PatientManagement with clinicId:', clinic?.id);
-        return <PatientManagement clinicId={clinic?.id} onUpdate={loadClinicData} />;
+        return <PatientManagement key={`patients-${clinic?.id}`} clinicId={clinic?.id} onUpdate={refreshClinicData} />;
       case 'reports':
-        return <ReportViewer clinicId={clinic?.id} patients={patients} reports={reports} onUpdate={loadClinicData} />;
+        return <ReportViewer clinicId={clinic?.id} patients={patients} reports={reports} onUpdate={refreshClinicData} />;
       case 'usage':
         return <UsageTracking clinic={clinic} usage={usage} />;
       case 'subscription':
@@ -89,7 +186,7 @@ const ClinicDashboard = () => {
       case 'settings':
         return <ClinicSettings clinic={clinic} />;
       default:
-        return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={loadClinicData} />;
+        return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={refreshClinicData} />;
     }
   };
 

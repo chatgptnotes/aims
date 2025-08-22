@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import RazorpayService from '../../services/razorpayService';
+import PaymentHistoryModal from './PaymentHistoryModal';
 
 const PaymentHistory = ({ clinicId }) => {
   const [payments, setPayments] = useState([]);
@@ -21,6 +22,8 @@ const PaymentHistory = ({ clinicId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('all');
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     loadPaymentHistory();
@@ -30,12 +33,15 @@ const PaymentHistory = ({ clinicId }) => {
     filterPayments();
   }, [payments, searchTerm, statusFilter, dateRange]);
 
-  const loadPaymentHistory = () => {
+  const loadPaymentHistory = async () => {
     try {
-      const paymentHistory = RazorpayService.getPaymentHistory(clinicId);
+      console.log('📋 Loading payment history for clinic:', clinicId);
+      const paymentHistory = await RazorpayService.getPaymentHistory(clinicId);
+      console.log('✅ Payment history loaded:', paymentHistory.length, 'payments');
       setPayments(paymentHistory);
     } catch (error) {
-      console.error('Error loading payment history:', error);
+      console.error('❌ Error loading payment history:', error);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -117,27 +123,17 @@ const PaymentHistory = ({ clinicId }) => {
     }
   };
 
-  const downloadInvoice = (payment) => {
-    // In a real application, this would download an actual invoice
-    const invoiceData = {
-      paymentId: payment.paymentId,
-      orderId: payment.orderId,
-      amount: payment.amount,
-      packageName: payment.packageName,
-      date: new Date(payment.createdAt).toLocaleDateString(),
-      clinic: payment.clinicId
-    };
+  // Handle viewing detailed transaction history
+  const handleViewHistory = (payment) => {
+    console.log('📋 Viewing history for payment:', payment.paymentId);
+    setSelectedPayment(payment);
+    setShowHistoryModal(true);
+  };
 
-    const dataStr = JSON.stringify(invoiceData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `invoice-${payment.paymentId}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // Close history modal
+  const handleCloseHistoryModal = () => {
+    setShowHistoryModal(false);
+    setSelectedPayment(null);
   };
 
   if (loading) {
@@ -209,7 +205,7 @@ const PaymentHistory = ({ clinicId }) => {
       </div>
 
       {/* Payment Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-full">
@@ -233,8 +229,8 @@ const PaymentHistory = ({ clinicId }) => {
               <p className="text-sm font-medium text-gray-600">Reports Purchased</p>
               <p className="text-2xl font-semibold text-gray-900">
                 {payments.reduce((sum, p) => {
-                  const pkg = RazorpayService.getReportPackages().find(pkg => pkg.id === p.packageId);
-                  return sum + (pkg?.reports || 0);
+                  const reports = p.planDetails?.reportsIncluded || p.reports || 0;
+                  return sum + reports;
                 }, 0)}
               </p>
             </div>
@@ -249,6 +245,29 @@ const PaymentHistory = ({ clinicId }) => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Payments</p>
               <p className="text-2xl font-semibold text-gray-900">{payments.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="p-3 bg-orange-100 rounded-full">
+              <Clock className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Active Plans</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {payments.filter(p => {
+                  const expiryDate = p.subscription?.expiryDate ? new Date(p.subscription.expiryDate) : null;
+                  return expiryDate && expiryDate > new Date();
+                }).length}
+              </p>
+              <p className="text-xs text-gray-500">
+                {payments.filter(p => {
+                  const expiryDate = p.subscription?.expiryDate ? new Date(p.subscription.expiryDate) : null;
+                  return expiryDate && expiryDate < new Date();
+                }).length} expired
+              </p>
             </div>
           </div>
         </div>
@@ -270,16 +289,16 @@ const PaymentHistory = ({ clinicId }) => {
                   Payment Details
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Package
+                  Plan Details
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
+                  Amount & Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Purchase Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  Expiry Date
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -288,7 +307,12 @@ const PaymentHistory = ({ clinicId }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPayments.map((payment) => {
-                const packageInfo = RazorpayService.getReportPackages().find(pkg => pkg.id === payment.packageId);
+                const packageInfo = payment.planDetails || RazorpayService.getReportPackages().find(pkg => pkg.id === payment.packageId);
+                const subscriptionInfo = payment.subscription || {};
+                const expiryDate = subscriptionInfo.expiryDate ? new Date(subscriptionInfo.expiryDate) : null;
+                const isExpired = expiryDate && expiryDate < new Date();
+                const daysUntilExpiry = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                
                 return (
                   <tr key={payment.paymentId} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -299,27 +323,45 @@ const PaymentHistory = ({ clinicId }) => {
                         <div className="text-sm text-gray-500">
                           Order: {payment.orderId}
                         </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          {payment.paymentDetails?.gateway || 'razorpay'} • {payment.paymentDetails?.method || 'online'}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {packageInfo?.name || payment.packageName}
+                      </div>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {packageInfo?.description || `${packageInfo?.reportsIncluded || payment.reports} EEG reports`}
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <FileText className="h-3 w-3 mr-1" />
+                          {packageInfo?.reportsIncluded || payment.reports} reports
+                        </span>
+                        {packageInfo?.savings && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {packageInfo.savings}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{payment.packageName}</div>
-                      {packageInfo && (
-                        <div className="text-sm text-gray-500">
-                          {packageInfo.reports} reports
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-lg font-bold text-gray-900">
                         ₹{payment.amount?.toLocaleString() || 'N/A'}
                       </div>
-                      <div className="text-sm text-gray-500">{payment.currency || 'INR'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
-                        {getStatusIcon(payment.status)}
-                        <span className="ml-1 capitalize">{payment.status}</span>
-                      </span>
+                      {packageInfo?.originalPrice && packageInfo.originalPrice !== payment.amount && (
+                        <div className="text-sm text-gray-500 line-through">
+                          ₹{packageInfo.originalPrice.toLocaleString()}
+                        </div>
+                      )}
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
+                          {getStatusIcon(payment.status)}
+                          <span className="ml-1 capitalize">{payment.status}</span>
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
@@ -329,16 +371,56 @@ const PaymentHistory = ({ clinicId }) => {
                       <div className="text-sm text-gray-500">
                         {new Date(payment.createdAt).toLocaleTimeString()}
                       </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Purchase Date
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {expiryDate ? (
+                        <div>
+                          <div className="flex items-center text-sm">
+                            <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                            <span className={isExpired ? 'text-red-600' : daysUntilExpiry <= 30 ? 'text-yellow-600' : 'text-gray-900'}>
+                              {expiryDate.toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className={`text-xs mt-1 ${
+                            isExpired ? 'text-red-600' : 
+                            daysUntilExpiry <= 30 ? 'text-yellow-600' : 
+                            'text-green-600'
+                          }`}>
+                            {isExpired ? 'Expired' : 
+                             daysUntilExpiry <= 0 ? 'Expires today' :
+                             daysUntilExpiry === 1 ? 'Expires tomorrow' :
+                             daysUntilExpiry <= 30 ? `${daysUntilExpiry} days left` :
+                             'Active'}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {subscriptionInfo.validityPeriod || '1 year'}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          No expiry
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => downloadInvoice(payment)}
-                        className="text-primary-600 hover:text-primary-900 flex items-center"
-                        title="Download Invoice"
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Invoice
-                      </button>
+                      <div className="flex flex-col space-y-2">
+                        <button
+                          onClick={() => handleViewHistory(payment)}
+                          className="text-primary-600 hover:text-primary-900 flex items-center justify-end transition-colors"
+                          title="View Transaction History"
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          View History
+                        </button>
+                        {subscriptionInfo.reportsUsed !== undefined && (
+                          <div className="text-xs text-gray-600">
+                            {subscriptionInfo.reportsUsed || 0}/{subscriptionInfo.reportsRemaining + (subscriptionInfo.reportsUsed || 0)} used
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -375,6 +457,13 @@ const PaymentHistory = ({ clinicId }) => {
           )}
         </div>
       </div>
+      
+      {/* Payment History Modal */}
+      <PaymentHistoryModal
+        isOpen={showHistoryModal}
+        payment={selectedPayment}
+        onClose={handleCloseHistoryModal}
+      />
     </div>
   );
 };

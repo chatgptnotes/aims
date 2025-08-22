@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, UploadCloud, FileText, Loader2 } from 'lucide-react';
+import { X, UploadCloud, FileText, Loader2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
 import AWSS3Service from '../../services/awsS3Service';
 import { useAuth } from '../../contexts/AuthContext';
 import { logUploadAttempt, logUploadError } from '../../utils/uploadErrorChecker';
+import SubscriptionPopup from '../admin/SubscriptionPopup';
 
 const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
   const { user } = useAuth();
@@ -18,6 +19,28 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
     }
   });
   
+  // Load subscription and usage data
+  useEffect(() => {
+    const loadUsageData = async () => {
+      try {
+        // Load current reports count
+        const reports = await DatabaseService.getReportsByClinic(clinicId);
+        setCurrentReports(reports.length);
+        
+        // Load subscription data
+        const subscriptions = await DatabaseService.get('subscriptions') || [];
+        const clinicSubscription = subscriptions.find(sub => sub.clinicId === clinicId);
+        setSubscription(clinicSubscription);
+      } catch (error) {
+        console.error('Error loading usage data:', error);
+      }
+    };
+    
+    if (clinicId) {
+      loadUsageData();
+    }
+  }, [clinicId]);
+
   // Debug logging when modal opens
   useEffect(() => {
     console.log('📂 UploadReportModal opened with:', { 
@@ -39,9 +62,56 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
   }, [clinicId, patient, user]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [currentReports, setCurrentReports] = useState(0);
   const selectedFile = watch('reportFile');
 
+  // Check if clinic has reached report limit
+  const checkReportLimit = () => {
+    if (subscription && subscription.status === 'active') {
+      // Paid subscription - check against plan limit
+      return currentReports >= subscription.reportsAllowed;
+    } else {
+      // Trial subscription - 10 report limit
+      return currentReports >= 10;
+    }
+  };
+
+  const handleSubscription = async (subscriptionData) => {
+    try {
+      // Save subscription to database
+      await DatabaseService.add('subscriptions', subscriptionData);
+      
+      // Update clinic's subscription status
+      await DatabaseService.update('clinics', subscriptionData.clinicId, {
+        subscriptionStatus: 'active',
+        reportsAllowed: subscriptionData.reportsAllowed
+      });
+      
+      // Reload usage data
+      const reports = await DatabaseService.getReportsByClinic(clinicId);
+      setCurrentReports(reports.length);
+      
+      const subscriptions = await DatabaseService.get('subscriptions') || [];
+      const clinicSubscription = subscriptions.find(sub => sub.clinicId === clinicId);
+      setSubscription(clinicSubscription);
+      
+      toast.success('Subscription updated successfully!');
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast.error('Failed to update subscription');
+    }
+  };
+
   const onSubmit = async (data) => {
+    // Check if clinic has reached report limit
+    if (checkReportLimit()) {
+      setShowSubscriptionPopup(true);
+      toast.error('Report limit reached. Please upgrade your plan to continue uploading reports.');
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
     
@@ -133,6 +203,33 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
             <X size={24} />
           </button>
         </div>
+
+        {/* Usage Warning */}
+        {(() => {
+          const usageInfo = subscription && subscription.status === 'active' 
+            ? { used: currentReports, allowed: subscription.reportsAllowed, remaining: subscription.reportsAllowed - currentReports, isTrial: false }
+            : { used: currentReports, allowed: 10, remaining: 10 - currentReports, isTrial: true };
+          
+          if (usageInfo.remaining <= 2) {
+            return (
+              <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  <div>
+                    <p className="text-orange-800 font-medium">
+                      {usageInfo.remaining === 0 ? 'Report limit reached!' : 'Approaching report limit'}
+                    </p>
+                    <p className="text-orange-700 text-sm">
+                      You've used {usageInfo.used}/{usageInfo.allowed} reports. 
+                      {usageInfo.remaining === 0 ? ' Upgrade your plan to continue uploading.' : ` ${usageInfo.remaining} reports remaining.`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
         
         {isUploading && (
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -274,6 +371,20 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
           </div>
         </form>
       </div>
+
+      {/* Subscription Popup */}
+      <SubscriptionPopup
+        isOpen={showSubscriptionPopup}
+        onClose={() => setShowSubscriptionPopup(false)}
+        clinicId={clinicId}
+        currentUsage={currentReports}
+        onSubscribe={handleSubscription}
+        clinicInfo={{
+          name: user?.clinicName || user?.name || 'Clinic',
+          email: user?.email || '',
+          phone: user?.phone || ''
+        }}
+      />
     </div>
   );
 };

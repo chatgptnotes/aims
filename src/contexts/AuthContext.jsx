@@ -25,25 +25,67 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const token = Cookies.get('authToken') || localStorage.getItem('demoToken');
+      const token = Cookies.get('authToken') || localStorage.getItem('demoToken') || localStorage.getItem('authToken');
       const demoUser = localStorage.getItem('demoUser');
+      const storedUser = localStorage.getItem('user');
       
-      if (token || demoUser) {
+      console.log('🔄 Checking auth status - token exists:', !!token, 'user exists:', !!storedUser);
+      
+      if (token || demoUser || storedUser) {
         try {
-          const userData = await authService.getCurrentUser();
+          let userData = null;
+          
+          // First try to get from localStorage (faster and more reliable for our case)
+          if (storedUser) {
+            try {
+              userData = JSON.parse(storedUser);
+              console.log('✅ User data restored from localStorage:', userData.name, userData.role);
+              
+              // Validate user data has required fields
+              if (userData.id && userData.email && userData.role) {
+                console.log('✅ User data validation passed');
+                setUser(userData);
+                setIsAuthenticated(true);
+                setLoading(false);
+                return;
+              } else {
+                console.warn('⚠️ Stored user data incomplete, trying API...');
+              }
+            } catch (parseError) {
+              console.warn('⚠️ Failed to parse stored user data:', parseError);
+            }
+          }
+          
+          // Fallback to API call if localStorage data is invalid
+          if (!userData) {
+            console.log('🌐 Trying to get user data from API...');
+            userData = await authService.getCurrentUser();
+            if (userData) {
+              console.log('✅ User data retrieved from API');
+              // Store the fresh data in localStorage
+              localStorage.setItem('user', JSON.stringify(userData));
+            }
+          }
+          
           if (userData) {
             setUser(userData);
             setIsAuthenticated(true);
+          } else {
+            throw new Error('No user data available');
           }
         } catch (userError) {
           // If getting user fails, clear auth state
-          console.warn('Failed to get user data, clearing auth state');
+          console.warn('Failed to get user data, clearing auth state:', userError);
           Cookies.remove('authToken');
           localStorage.removeItem('demoUser');
           localStorage.removeItem('demoToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('authToken');
           setUser(null);
           setIsAuthenticated(false);
         }
+      } else {
+        console.log('❌ No authentication token found');
       }
     } catch (error) {
       console.warn('Auth check failed:', error);
@@ -51,6 +93,8 @@ export const AuthProvider = ({ children }) => {
       Cookies.remove('authToken');
       localStorage.removeItem('demoUser');
       localStorage.removeItem('demoToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -88,10 +132,21 @@ export const AuthProvider = ({ children }) => {
       console.log('📦 Auth response:', response);
 
       if (response && response.success && response.token) {
+        // Store authentication data in multiple places for reliability
         Cookies.set('authToken', response.token, { expires: 7 }); // 7 days
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        // Set state
         setUser(response.user);
         setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        console.log('✅ AuthContext: User data stored:', {
+          name: response.user.name,
+          role: response.user.role,
+          clinicId: response.user.clinicId
+        });
+        
         toast.success('Logged in successfully');
         console.log('✅ AuthContext: Login completed successfully');
         return { success: true, user: response.user };
@@ -154,8 +209,18 @@ export const AuthProvider = ({ children }) => {
         } else if (response.token) {
           // Normal registration with immediate login
           Cookies.set('authToken', response.token, { expires: 7 });
+          localStorage.setItem('authToken', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          
           setUser(response.user);
           setIsAuthenticated(true);
+          
+          console.log('✅ AuthContext: Registration user data stored:', {
+            name: response.user.name,
+            role: response.user.role,
+            clinicId: response.user.clinicId
+          });
+          
           toast.success(response.message || 'Registration successful!');
           console.log('✅ AuthContext: Registration completed successfully');
           return { success: true };
@@ -181,9 +246,21 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authService.logout();
+      
+      // Clear all authentication data
       Cookies.remove('authToken');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
       localStorage.removeItem('demoUser');
       localStorage.removeItem('demoToken');
+      
+      // Clear all cached patient data
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('patients_') || key.startsWith('patient_reports_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       setUser(null);
       setIsAuthenticated(false);
       toast.success('Logged out successfully');
@@ -193,8 +270,17 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout failed:', error);
       // Still clear local state even if API call fails
       Cookies.remove('authToken');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
       localStorage.removeItem('demoUser');
       localStorage.removeItem('demoToken');
+      
+      // Clear all cached patient data
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('patients_') || key.startsWith('patient_reports_')) {
+          localStorage.removeItem(key);
+        }
+      });
       setUser(null);
       setIsAuthenticated(false);
       window.location.href = '/login';

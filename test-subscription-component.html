@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Popup Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .primary-50 { background-color: #eff6ff; }
+        .primary-500 { border-color: #3b82f6; }
+        .primary-600 { background-color: #2563eb; }
+        .primary-700 { background-color: #1d4ed8; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { X, Check, Star, Zap, Crown, AlertTriangle } = lucideReact;
+
+        // Mock SubscriptionPopup Component (simplified version)
+        const SubscriptionPopup = ({ isOpen, onClose, clinicId, currentUsage, onSubscribe }) => {
+            const [selectedPlan, setSelectedPlan] = useState(null);
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            const subscriptionPlans = [
+                {
+                    id: 'basic',
+                    name: 'Basic Plan',
+                    price: 29,
+                    period: 'month',
+                    reports: 50,
+                    features: ['50 reports per month', 'Basic EEG analysis', 'Email support'],
+                    icon: React.createElement(Star, { className: "h-6 w-6 text-blue-500" }),
+                    popular: false
+                },
+                {
+                    id: 'professional',
+                    name: 'Professional Plan',
+                    price: 79,
+                    period: 'month',
+                    reports: 200,
+                    features: ['200 reports per month', 'Advanced EEG analysis', 'Priority support'],
+                    icon: React.createElement(Zap, { className: "h-6 w-6 text-yellow-500" }),
+                    popular: true
+                },
+                {
+                    id: 'enterprise',
+                    name: 'Enterprise Plan',
+                    price: 199,
+                    period: 'month',
+                    reports: 1000,
+                    features: ['1000 reports per month', 'Premium EEG analysis', '24/7 support'],
+                    icon: React.createElement(Crown, { className: "h-6 w-6 text-purple-500" }),
+                    popular: false
+                }
+            ];
+
+            const handleSubscribe = async () => {
+                if (!selectedPlan) {
+                    alert('Please select a subscription plan');
+                    return;
+                }
+                setIsProcessing(true);
+                setTimeout(() => {
+                    alert(`Successfully subscribed to ${selectedPlan.name}!`);
+                    setIsProcessing(false);
+                    onClose();
+                }, 2000);
+            };
+
+            if (!isOpen) return null;
+
+            return React.createElement('div', { 
+                className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" 
+            },
+                React.createElement('div', { 
+                    className: "bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" 
+                },
+                    // Header
+                    React.createElement('div', { 
+                        className: "flex items-center justify-between p-6 border-b border-gray-200" 
+                    },
+                        React.createElement('div', { className: "flex items-center space-x-3" },
+                            React.createElement(AlertTriangle, { className: "h-8 w-8 text-orange-500" }),
+                            React.createElement('div', {},
+                                React.createElement('h2', { className: "text-2xl font-bold text-gray-900" }, "Upgrade Your Plan"),
+                                React.createElement('p', { className: "text-gray-600" }, "You've reached your report limit. Choose a plan to continue.")
+                            )
+                        ),
+                        React.createElement('button', { 
+                            onClick: onClose,
+                            className: "text-gray-400 hover:text-gray-600 transition-colors" 
+                        },
+                            React.createElement(X, { className: "h-6 w-6" })
+                        )
+                    ),
+                    
+                    // Usage Alert
+                    React.createElement('div', { 
+                        className: "bg-orange-50 border-l-4 border-orange-400 p-4 mx-6 mt-4" 
+                    },
+                        React.createElement('div', { className: "flex" },
+                            React.createElement(AlertTriangle, { className: "h-5 w-5 text-orange-400 mt-0.5" }),
+                            React.createElement('div', { className: "ml-3" },
+                                React.createElement('p', { className: "text-sm text-orange-700" },
+                                    React.createElement('strong', {}, "Report Limit Reached: "),
+                                    `You've used ${currentUsage}/10 reports in your trial plan. To continue uploading and downloading reports, please upgrade to a paid plan.`
+                                )
+                            )
+                        )
+                    ),
+                    
+                    // Plans
+                    React.createElement('div', { className: "p-6" },
+                        React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-6" },
+                            subscriptionPlans.map((plan) =>
+                                React.createElement('div', {
+                                    key: plan.id,
+                                    className: `relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                                        selectedPlan?.id === plan.id
+                                            ? 'border-primary-500 bg-primary-50'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                    } ${plan.popular ? 'ring-2 ring-yellow-400' : ''}`,
+                                    onClick: () => setSelectedPlan(plan)
+                                },
+                                    plan.popular && React.createElement('div', { 
+                                        className: "absolute -top-3 left-1/2 transform -translate-x-1/2" 
+                                    },
+                                        React.createElement('span', { 
+                                            className: "bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-medium" 
+                                        }, "Most Popular")
+                                    ),
+                                    
+                                    React.createElement('div', { className: "flex items-center space-x-3 mb-4" },
+                                        plan.icon,
+                                        React.createElement('div', {},
+                                            React.createElement('h3', { className: "text-lg font-semibold text-gray-900" }, plan.name),
+                                            React.createElement('div', { className: "flex items-baseline space-x-1" },
+                                                React.createElement('span', { className: "text-3xl font-bold text-gray-900" }, `$${plan.price}`),
+                                                React.createElement('span', { className: "text-gray-500" }, `/${plan.period}`)
+                                            )
+                                        )
+                                    ),
+                                    
+                                    React.createElement('div', { className: "mb-6" },
+                                        React.createElement('p', { className: "text-2xl font-bold text-blue-600 mb-2" }, `${plan.reports} Reports`),
+                                        React.createElement('p', { className: "text-gray-600 text-sm" }, "per month")
+                                    ),
+                                    
+                                    React.createElement('ul', { className: "space-y-3 mb-6" },
+                                        plan.features.map((feature, index) =>
+                                            React.createElement('li', { 
+                                                key: index, 
+                                                className: "flex items-center space-x-2" 
+                                            },
+                                                React.createElement(Check, { className: "h-4 w-4 text-green-500 flex-shrink-0" }),
+                                                React.createElement('span', { className: "text-sm text-gray-700" }, feature)
+                                            )
+                                        )
+                                    ),
+                                    
+                                    React.createElement('div', { className: "flex items-center justify-center" },
+                                        selectedPlan?.id === plan.id ? 
+                                            React.createElement('div', { 
+                                                className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md text-center font-medium" 
+                                            }, "Selected") :
+                                            React.createElement('div', { 
+                                                className: "w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md text-center font-medium hover:bg-gray-200 transition-colors" 
+                                            }, "Select Plan")
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    
+                    // Footer
+                    React.createElement('div', { 
+                        className: "flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50" 
+                    },
+                        React.createElement('div', { className: "text-sm text-gray-600" },
+                            React.createElement('p', {}, "• All plans include a 30-day money-back guarantee"),
+                            React.createElement('p', {}, "• Cancel anytime with no hidden fees")
+                        ),
+                        React.createElement('div', { className: "flex space-x-3" },
+                            React.createElement('button', {
+                                onClick: onClose,
+                                className: "px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors",
+                                disabled: isProcessing
+                            }, "Cancel"),
+                            React.createElement('button', {
+                                onClick: handleSubscribe,
+                                disabled: !selectedPlan || isProcessing,
+                                className: `px-6 py-2 rounded-md font-medium transition-colors ${
+                                    selectedPlan && !isProcessing
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`
+                            }, isProcessing ? "Processing..." : `Subscribe to ${selectedPlan?.name || 'Plan'}`)
+                        )
+                    )
+                )
+            );
+        };
+
+        // Test App
+        const TestApp = () => {
+            const [showPopup, setShowPopup] = useState(false);
+            const [currentUsage, setCurrentUsage] = useState(10);
+
+            return React.createElement('div', { className: "max-w-4xl mx-auto" },
+                React.createElement('div', { className: "bg-white rounded-lg shadow-lg p-8 mb-8" },
+                    React.createElement('h1', { className: "text-3xl font-bold text-gray-900 mb-6" }, 
+                        "🧪 Subscription Popup Test"
+                    ),
+                    
+                    React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" },
+                        React.createElement('div', { className: "bg-gray-50 p-6 rounded-lg" },
+                            React.createElement('h3', { className: "text-lg font-semibold mb-4" }, "Test Scenarios"),
+                            React.createElement('div', { className: "space-y-3" },
+                                React.createElement('button', {
+                                    onClick: () => { setCurrentUsage(10); setShowPopup(true); },
+                                    className: "w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                                }, "Test: At Limit (10/10)"),
+                                React.createElement('button', {
+                                    onClick: () => { setCurrentUsage(8); setShowPopup(true); },
+                                    className: "w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
+                                }, "Test: Approaching Limit (8/10)"),
+                                React.createElement('button', {
+                                    onClick: () => { setCurrentUsage(5); setShowPopup(true); },
+                                    className: "w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                                }, "Test: Normal Usage (5/10)")
+                            )
+                        ),
+                        
+                        React.createElement('div', { className: "bg-gray-50 p-6 rounded-lg" },
+                            React.createElement('h3', { className: "text-lg font-semibold mb-4" }, "Current Status"),
+                            React.createElement('div', { className: "space-y-2" },
+                                React.createElement('p', {}, `Reports Used: ${currentUsage}/10`),
+                                React.createElement('p', {}, `Status: ${currentUsage >= 10 ? '🔴 At Limit' : currentUsage >= 8 ? '🟡 Approaching' : '🟢 Normal'}`),
+                                React.createElement('div', { className: "w-full bg-gray-200 rounded-full h-2 mt-4" },
+                                    React.createElement('div', {
+                                        className: `h-2 rounded-full ${currentUsage >= 10 ? 'bg-red-500' : currentUsage >= 8 ? 'bg-yellow-500' : 'bg-green-500'}`,
+                                        style: { width: `${Math.min((currentUsage / 10) * 100, 100)}%` }
+                                    })
+                                )
+                            )
+                        )
+                    ),
+                    
+                    React.createElement('div', { className: "bg-blue-50 border border-blue-200 rounded-lg p-6" },
+                        React.createElement('h4', { className: "text-lg font-semibold text-blue-900 mb-2" }, "📋 Testing Instructions"),
+                        React.createElement('ol', { className: "list-decimal list-inside space-y-1 text-blue-800" },
+                            React.createElement('li', {}, "Click any test scenario button above"),
+                            React.createElement('li', {}, "Popup should appear with current usage shown"),
+                            React.createElement('li', {}, "Select a subscription plan"),
+                            React.createElement('li', {}, "Click subscribe to test the flow"),
+                            React.createElement('li', {}, "Verify all UI elements display correctly")
+                        )
+                    )
+                ),
+                
+                React.createElement(SubscriptionPopup, {
+                    isOpen: showPopup,
+                    onClose: () => setShowPopup(false),
+                    clinicId: 'test-clinic-123',
+                    currentUsage: currentUsage,
+                    onSubscribe: (data) => {
+                        console.log('Subscription data:', data);
+                        setShowPopup(false);
+                    }
+                })
+            );
+        };
+
+        ReactDOM.render(React.createElement(TestApp), document.getElementById('root'));
+    </script>
+</body>
+</html>
