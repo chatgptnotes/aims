@@ -93,3 +93,8 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+# AWS credentials and setup files
+create-dynamodb-tables.js
+debug-*.js
+test-*.html
