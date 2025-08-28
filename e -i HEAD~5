@@ -1,0 +1,5 @@
+[33mfed5b99[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Remove create-dynamodb-tables.js file containing AWS credentials
+[33m18a8321[m Fix: Remove hardcoded AWS credentials from create-dynamodb-tables.js to resolve GitHub push protection
+[33m9a23f84[m Modern hospital-themed UI overhaul: Enhanced admin dashboard, sidebar, and clinic management with glassmorphism design, profile picture support, and responsive navigation
+[33m00c0ffd[m Remove AWS credentials and sensitive files from tracking
+[33meb6d1d5[m A5
