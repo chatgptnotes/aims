@@ -131,6 +131,14 @@ export const authService = {
         console.log('🔐 Stored password:', clinic.adminPassword);
         console.log('🔐 Provided password:', password);
         
+        // Check if clinic account is active
+        if (!clinic.isActive) {
+          console.log('❌ Clinic account is deactivated:', clinic.name);
+          return {
+            error: 'Your account has been deactivated. Please contact the administrator to activate your account.'
+          };
+        }
+        
         // Check if password matches (also check legacy 'password' field)
         const storedPassword = clinic.adminPassword || clinic.password;
         if (storedPassword === password) {
@@ -180,6 +188,23 @@ export const authService = {
                 error: 'Invalid OTP. Please check and try again.'
               };
             }
+          }
+          
+          // Check if clinic is activated (for both OTP and non-OTP cases)
+          if (!clinic.isActivated) {
+            console.log('⚠️ Clinic not activated yet');
+            const registrationMethod = clinic.registrationMethod || 'unknown';
+            let message = 'Your account is pending activation.';
+            
+            if (registrationMethod === 'self_registration') {
+              message = 'Your account registration is pending approval by the Super Admin. You will receive an email once your account is activated.';
+            } else if (registrationMethod === 'super_admin_created') {
+              message = 'Your account has been created but needs to be activated by the Super Admin. Please contact them to activate your account.';
+            }
+            
+            return {
+              error: message
+            };
           }
           
           // Create user object for clinic admin
@@ -296,7 +321,7 @@ export const authService = {
         console.log('✅ Super Admin registration - auto-activated:', newUser.email);
         
       } else {
-        // Create Clinic - auto-activated for now, can add email verification later
+        // Create Clinic - requires activation by super admin
         newUser = await DatabaseService.createClinic({
           name: name.trim(),
           email: normalizedEmail,
@@ -305,13 +330,15 @@ export const authService = {
           contactPerson: name.trim(),
           role: 'clinic_admin',
           isActive: true,
-          isActivated: true, // Auto-activate clinics for now
+          isActivated: false, // Require activation by super admin
           subscriptionStatus: 'trial',
           trialStartDate: new Date().toISOString(),
-          trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days trial
+          trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days trial
+          registrationMethod: 'self_registration' // Track how this was created
         });
         
-        console.log('✅ Clinic registration successful:', newUser.name);
+        needsActivation = true; // Clinic needs activation
+        console.log('✅ Clinic registration successful - awaiting activation:', newUser.name);
       }
 
       // Simulate API delay
@@ -332,19 +359,31 @@ export const authService = {
         createdAt: newUser.createdAt
       };
 
-      const token = `reg_token_${userType}_${Date.now()}`;
-      
-      // Store user for immediate login
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('authToken', token);
+      if (needsActivation) {
+        // Clinic registration - needs activation, don't login automatically
+        return {
+          success: true,
+          needsActivation: true,
+          message: 'Registration successful! Your account is pending activation by the Super Admin. You will receive an email once activated.',
+          userType: userType,
+          registeredEmail: newUser.email
+        };
+      } else {
+        // Super Admin - auto login
+        const token = `reg_token_${userType}_${Date.now()}`;
+        
+        // Store user for immediate login
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('authToken', token);
 
-      return {
-        success: true,
-        message: `${userType === 'super_admin' ? 'Super Admin' : 'Clinic'} registration successful! You are now logged in.`,
-        token: token,
-        user: user,
-        userType: userType
-      };
+        return {
+          success: true,
+          message: `${userType === 'super_admin' ? 'Super Admin' : 'Clinic'} registration successful! You are now logged in.`,
+          token: token,
+          user: user,
+          userType: userType
+        };
+      }
       
     } catch (error) {
       console.error('❌ Registration error:', error.message);

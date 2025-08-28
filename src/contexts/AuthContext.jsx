@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
+import DatabaseService from '../services/databaseService';
 
 const AuthContext = createContext();
 
@@ -44,10 +45,40 @@ export const AuthProvider = ({ children }) => {
               // Validate user data has required fields
               if (userData.id && userData.email && userData.role) {
                 console.log('✅ User data validation passed');
-                setUser(userData);
-                setIsAuthenticated(true);
-                setLoading(false);
-                return;
+                
+                // Fetch the latest user data from DynamoDB to get updated profile picture
+                try {
+                  console.log('🔄 Fetching latest user data from DynamoDB on app start...');
+                  let latestUserData = userData;
+                  
+                  if (userData.role === 'super_admin') {
+                    const superAdminData = await DatabaseService.findById('superAdmins', userData.id);
+                    if (superAdminData) {
+                      latestUserData = { ...userData, ...superAdminData };
+                      console.log('✅ Super admin data fetched from DynamoDB on app start');
+                    }
+                  } else if (userData.role === 'clinic_admin') {
+                    const clinicData = await DatabaseService.findById('clinics', userData.id);
+                    if (clinicData) {
+                      latestUserData = { ...userData, ...clinicData };
+                      console.log('✅ Clinic admin data fetched from DynamoDB on app start');
+                    }
+                  }
+                  
+                  // Update localStorage with latest data
+                  localStorage.setItem('user', JSON.stringify(latestUserData));
+                  setUser(latestUserData);
+                  setIsAuthenticated(true);
+                  setLoading(false);
+                  return;
+                } catch (dbError) {
+                  console.warn('⚠️ Failed to fetch latest user data from DynamoDB on app start, using localStorage data:', dbError);
+                  // Continue with localStorage data if DynamoDB fetch fails
+                  setUser(userData);
+                  setIsAuthenticated(true);
+                  setLoading(false);
+                  return;
+                }
               } else {
                 console.warn('⚠️ Stored user data incomplete, trying API...');
               }
@@ -135,21 +166,46 @@ export const AuthProvider = ({ children }) => {
         // Store authentication data in multiple places for reliability
         Cookies.set('authToken', response.token, { expires: 7 }); // 7 days
         localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        // Fetch the latest user data from DynamoDB to get updated profile picture
+        let latestUserData = response.user;
+        try {
+          console.log('🔄 Fetching latest user data from DynamoDB...');
+          if (response.user.role === 'super_admin') {
+            const superAdminData = await DatabaseService.findById('superAdmins', response.user.id);
+            if (superAdminData) {
+              latestUserData = { ...response.user, ...superAdminData };
+              console.log('✅ Super admin data fetched from DynamoDB');
+            }
+          } else if (response.user.role === 'clinic_admin') {
+            const clinicData = await DatabaseService.findById('clinics', response.user.id);
+            if (clinicData) {
+              latestUserData = { ...response.user, ...clinicData };
+              console.log('✅ Clinic admin data fetched from DynamoDB');
+            }
+          }
+        } catch (dbError) {
+          console.warn('⚠️ Failed to fetch latest user data from DynamoDB, using API response:', dbError);
+          // Continue with API response if DynamoDB fetch fails
+        }
+        
+        // Store the latest user data
+        localStorage.setItem('user', JSON.stringify(latestUserData));
         
         // Set state
-        setUser(response.user);
+        setUser(latestUserData);
         setIsAuthenticated(true);
         
         console.log('✅ AuthContext: User data stored:', {
-          name: response.user.name,
-          role: response.user.role,
-          clinicId: response.user.clinicId
+          name: latestUserData.name,
+          role: latestUserData.role,
+          clinicId: latestUserData.clinicId,
+          hasAvatar: !!latestUserData.avatar
         });
         
         toast.success('Logged in successfully');
         console.log('✅ AuthContext: Login completed successfully');
-        return { success: true, user: response.user };
+        return { success: true, user: latestUserData };
       } else {
         console.log('❌ AuthContext: Invalid response format:', response);
         throw new Error('Authentication failed');
@@ -210,9 +266,33 @@ export const AuthProvider = ({ children }) => {
           // Normal registration with immediate login
           Cookies.set('authToken', response.token, { expires: 7 });
           localStorage.setItem('authToken', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
           
-          setUser(response.user);
+          // Fetch the latest user data from DynamoDB to get updated profile picture
+          let latestUserData = response.user;
+          try {
+            console.log('🔄 Fetching latest user data from DynamoDB after registration...');
+            if (response.user.role === 'super_admin') {
+              const superAdminData = await DatabaseService.findById('superAdmins', response.user.id);
+              if (superAdminData) {
+                latestUserData = { ...response.user, ...superAdminData };
+                console.log('✅ Super admin data fetched from DynamoDB');
+              }
+            } else if (response.user.role === 'clinic_admin') {
+              const clinicData = await DatabaseService.findById('clinics', response.user.id);
+              if (clinicData) {
+                latestUserData = { ...response.user, ...clinicData };
+                console.log('✅ Clinic admin data fetched from DynamoDB');
+              }
+            }
+          } catch (dbError) {
+            console.warn('⚠️ Failed to fetch latest user data from DynamoDB, using API response:', dbError);
+            // Continue with API response if DynamoDB fetch fails
+          }
+          
+          // Store the latest user data
+          localStorage.setItem('user', JSON.stringify(latestUserData));
+          
+          setUser(latestUserData);
           setIsAuthenticated(true);
           
           console.log('✅ AuthContext: Registration user data stored:', {
@@ -317,6 +397,50 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = async (userData) => {
+    try {
+      setLoading(true);
+      console.log('🔄 Updating user profile:', userData);
+      
+      // Update local state immediately for better UX
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Save to DynamoDB based on user role
+      try {
+        if (user?.role === 'super_admin') {
+          // Update super admin in DynamoDB
+          await DatabaseService.update('superAdmins', user.id, userData);
+          console.log('✅ Super admin profile saved to DynamoDB');
+        } else if (user?.role === 'clinic_admin') {
+          // Update clinic admin in DynamoDB
+          await DatabaseService.update('clinics', user.id, userData);
+          console.log('✅ Clinic admin profile saved to DynamoDB');
+        } else {
+          // For regular users, update in appropriate table
+          await DatabaseService.update('users', user.id, userData);
+          console.log('✅ User profile saved to DynamoDB');
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Failed to save to DynamoDB, but local update successful:', dbError);
+        // Don't fail the entire operation if DynamoDB fails
+      }
+      
+      toast.success('Profile updated successfully!');
+      console.log('✅ Profile updated successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      toast.error(error.message || 'Failed to update profile');
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -326,6 +450,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
+    updateUser,
     checkAuthStatus,
   };
 

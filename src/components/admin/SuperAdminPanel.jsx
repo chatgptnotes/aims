@@ -21,14 +21,34 @@ const SuperAdminPanel = () => {
   const [clinics, setClinics] = useState([]);
   const [selectedClinic, setSelectedClinic] = useState('');
   const [error, setError] = useState(null);
+  const [isMounted, setIsMounted] = useState(true);
   
   // Get active tab and clinic from URL params or default to dashboard
   const activeTab = searchParams.get('tab') || 'dashboard';
   const urlClinic = searchParams.get('clinic');
 
   useEffect(() => {
-    loadAnalytics();
-    loadClinics();
+    try {
+      loadAnalytics();
+      loadClinics();
+    } catch (error) {
+      console.error('Error initializing SuperAdminPanel:', error);
+      if (isMounted) {
+        setError('Failed to initialize admin panel: ' + error.message);
+        setLoading(false);
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  // Reset mounted state when component mounts
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
   }, []);
 
   useEffect(() => {
@@ -43,11 +63,17 @@ const SuperAdminPanel = () => {
       console.log('📊 Loading clinics...');
       const clinicsData = await DatabaseService.get('clinics');
       console.log('📊 Clinics loaded:', clinicsData.length);
-      setClinics(clinicsData);
+      
+      // Only update state if component is still mounted
+      if (isMounted) {
+        setClinics(clinicsData);
+      }
     } catch (error) {
       console.error('❌ Error loading clinics:', error);
-      setError('Failed to load clinics: ' + error.message);
-      setClinics([]); // Set empty array to prevent further errors
+      if (isMounted) {
+        setError('Failed to load clinics: ' + error.message);
+        setClinics([]); // Set empty array to prevent further errors
+      }
     }
   };
 
@@ -67,17 +93,27 @@ const SuperAdminPanel = () => {
         monthlyRevenue: payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
       };
       
-      setAnalytics(data);
+      // Only update state if component is still mounted
+      if (isMounted) {
+        setAnalytics(data);
+      }
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
   const renderContent = () => {
     try {
       console.log('🎨 Rendering content for tab:', activeTab);
+      
+      // Clear any previous errors when switching tabs
+      if (error) {
+        setError(null);
+      }
       
       switch (activeTab) {
         case 'dashboard':
@@ -95,20 +131,37 @@ const SuperAdminPanel = () => {
         case 'settings':
           return <SystemSettings />;
         default:
+          console.log('🔄 Unknown tab, defaulting to dashboard:', activeTab);
           return <AdminDashboard analytics={analytics} onRefresh={loadAnalytics} />;
       }
     } catch (error) {
       console.error('❌ Error rendering content:', error);
+      setError(error.message || 'Unknown error occurred');
       return (
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h3 className="text-red-800 font-medium">Error Loading Content</h3>
           <p className="text-red-600 mt-2">{error?.message || 'Unknown error occurred'}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            Reload Page
-          </button>
+          <div className="flex space-x-3 mt-4">
+            <button 
+              onClick={() => {
+                setError(null);
+                window.location.reload();
+              }} 
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Reload Page
+            </button>
+            <button 
+              onClick={() => {
+                setError(null);
+                // Try to navigate to dashboard
+                window.location.href = '/admin';
+              }} 
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
       );
     }

@@ -7,6 +7,7 @@ import PatientManagement from './PatientManagement';
 import ReportViewer from './ReportViewer';
 import OverviewTab from './OverviewTab';
 import SubscriptionTab from './SubscriptionTab';
+import toast from 'react-hot-toast';
 
 const ClinicDashboard = () => {
   const { user } = useAuth();
@@ -17,25 +18,42 @@ const ClinicDashboard = () => {
   const [usage, setUsage] = useState({});
   const [loading, setLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
 
   // Get active tab from URL params or default to overview
   const activeTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
-    console.log('🔄 ClinicDashboard useEffect - user:', user?.name, 'clinicId:', user?.clinicId, 'dataLoaded:', dataLoaded);
-    if (user && user.clinicId && !dataLoaded) {
-      console.log('📊 Loading clinic data for the first time...');
-      loadClinicData();
-    } else if (user && !user.clinicId) {
-      console.warn('⚠️ User loaded but no clinicId found:', user);
-      setLoading(false);
-    } else if (user && user.clinicId && dataLoaded) {
-      console.log('✅ Data already loaded, skipping reload');
-      setLoading(false);
-    } else {
-      console.log('⏳ Waiting for user data to load...');
+    try {
+      console.log('🔄 ClinicDashboard useEffect - user:', user?.name, 'clinicId:', user?.clinicId, 'dataLoaded:', dataLoaded);
+      if (user && user.clinicId && !dataLoaded) {
+        console.log('📊 Loading clinic data for the first time...');
+        loadClinicData();
+      } else if (user && !user.clinicId) {
+        console.warn('⚠️ User loaded but no clinicId found:', user);
+        if (isMounted) {
+          setLoading(false);
+        }
+      } else if (user && user.clinicId && dataLoaded) {
+        console.log('✅ Data already loaded, skipping reload');
+        if (isMounted) {
+          setLoading(false);
+        }
+      } else {
+        console.log('⏳ Waiting for user data to load...');
+      }
+    } catch (error) {
+      console.error('Error initializing ClinicDashboard:', error);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
-  }, [user, dataLoaded]);
+    
+    // Cleanup function
+    return () => {
+      setIsMounted(false);
+    };
+  }, [user, dataLoaded, isMounted]);
 
   const loadClinicData = async () => {
     try {
@@ -274,6 +292,132 @@ const UsageTracking = ({ clinic, usage }) => {
 
 // Clinic Settings Component
 const ClinicSettings = ({ clinic }) => {
+  const [formData, setFormData] = useState({
+    name: clinic?.name || '',
+    contactPerson: clinic?.contactPerson || '',
+    email: clinic?.email || '',
+    phone: clinic?.phone || '',
+    address: clinic?.address || ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [originalData, setOriginalData] = useState({});
+
+  useEffect(() => {
+    if (clinic) {
+      const clinicData = {
+        name: clinic.name || '',
+        contactPerson: clinic.contactPerson || '',
+        email: clinic.email || '',
+        phone: clinic.phone || '',
+        address: clinic.address || ''
+      };
+      setFormData(clinicData);
+      setOriginalData(clinicData); // Store original data for change tracking
+    }
+  }, [clinic]);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const getChangedFields = () => {
+    const changes = {};
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== originalData[key]) {
+        changes[key] = {
+          old: originalData[key],
+          new: formData[key]
+        };
+      }
+    });
+    return changes;
+  };
+
+  const createProfileChangeAlert = async (changes) => {
+    try {
+      const changesList = Object.keys(changes).map(field => {
+        const fieldNames = {
+          name: 'Clinic Name',
+          contactPerson: 'Contact Person',
+          email: 'Email',
+          phone: 'Phone',
+          address: 'Address'
+        };
+        
+        return `${fieldNames[field]}: "${changes[field].old}" → "${changes[field].new}"`;
+      }).join('\n');
+
+      const alert = {
+        id: `alert_${Date.now()}`,
+        type: 'profile_change',
+        severity: 'info',
+        title: `Profile Updated - ${clinic?.name}`,
+        message: `Clinic "${clinic?.name}" has updated their profile information:\n\n${changesList}`,
+        clinicId: clinic?.id,
+        clinicName: clinic?.name,
+        changes: changes,
+        createdAt: new Date().toISOString(),
+        read: false,
+        actionRequired: false
+      };
+
+      // Add alert to database
+      await DatabaseService.add('alerts', alert);
+      console.log('✅ Profile change alert created for super admin');
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to create profile change alert:', error);
+      return false;
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!clinic?.id) {
+      toast.error('Clinic ID not found');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Get changed fields
+      const changes = getChangedFields();
+      
+      if (Object.keys(changes).length === 0) {
+        toast.info('No changes to save');
+        setLoading(false);
+        return;
+      }
+
+      // Update clinic profile in database
+      await DatabaseService.update('clinics', clinic.id, formData);
+      
+      // Create alert for super admin
+      const alertCreated = await createProfileChangeAlert(changes);
+      
+      // Update original data to reflect saved state
+      setOriginalData({ ...formData });
+      
+      // Success message
+      if (alertCreated) {
+        toast.success('Profile updated successfully! Super Admin has been notified of the changes.');
+      } else {
+        toast.success('Profile updated successfully!');
+      }
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasChanges = Object.keys(getChangedFields()).length > 0;
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -284,8 +428,10 @@ const ClinicSettings = ({ clinic }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Name</label>
             <input
               type="text"
-              defaultValue={clinic?.name || ''}
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter clinic name"
             />
           </div>
           
@@ -293,8 +439,10 @@ const ClinicSettings = ({ clinic }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
             <input
               type="text"
-              defaultValue={clinic?.contactPerson || ''}
+              value={formData.contactPerson}
+              onChange={(e) => handleInputChange('contactPerson', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter contact person name"
             />
           </div>
           
@@ -302,8 +450,10 @@ const ClinicSettings = ({ clinic }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input
               type="email"
-              defaultValue={clinic?.email || ''}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter email address"
             />
           </div>
           
@@ -311,8 +461,10 @@ const ClinicSettings = ({ clinic }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
             <input
               type="tel"
-              defaultValue={clinic?.phone || ''}
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter phone number"
             />
           </div>
         </div>
@@ -320,16 +472,47 @@ const ClinicSettings = ({ clinic }) => {
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
           <textarea
-            defaultValue={clinic?.address || ''}
+            value={formData.address}
+            onChange={(e) => handleInputChange('address', e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Enter clinic address"
           />
         </div>
 
+        {hasChanges && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              <strong>Pending Changes:</strong> You have unsaved changes. Click "Save Changes" to update your profile.
+            </p>
+          </div>
+        )}
+
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <button className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-            Save Changes
+          <button 
+            onClick={handleSaveChanges}
+            disabled={loading || !hasChanges}
+            className={`px-6 py-2 rounded-lg transition-colors ${
+              loading || !hasChanges
+                ? 'bg-gray-400 text-white cursor-not-allowed' 
+                : 'bg-primary-600 text-white hover:bg-primary-700'
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </span>
+            ) : (
+              'Save Changes'
+            )}
           </button>
+          
+          {hasChanges && (
+            <p className="text-xs text-gray-500 mt-2">
+              Super Admin will be notified of these changes
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -32,12 +32,27 @@ const AlertDashboard = () => {
     };
   }, []);
 
-  const loadAlerts = () => {
+  const loadAlerts = async () => {
     try {
-      const alertsData = AlertService.getAllActiveAlerts();
+      // Get alerts from AlertService (usage, trial alerts)
+      const alertServiceData = AlertService.getAllActiveAlerts();
+      
+      // Get alerts from database (profile changes, etc.)
+      const dbAlerts = await DatabaseService.get('alerts');
+      const activeDbAlerts = dbAlerts.filter(alert => !alert.dismissed);
+      
+      // Combine both sources
+      const allAlerts = [...alertServiceData, ...activeDbAlerts];
+      
+      // Sort by creation date (newest first)
+      allAlerts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
       const statsData = AlertService.getAlertStats();
       
-      setAlerts(alertsData);
+      // Update stats to include DB alerts
+      statsData.active = (statsData.active || 0) + activeDbAlerts.length;
+      
+      setAlerts(allAlerts);
       setStats(statsData);
     } catch (error) {
       toast.error('Error loading alerts');
@@ -47,9 +62,20 @@ const AlertDashboard = () => {
     }
   };
 
-  const handleAcknowledgeAlert = (alertId) => {
+  const handleAcknowledgeAlert = async (alertId) => {
     try {
-      AlertService.acknowledgeAlert(alertId);
+      // Check if it's a database alert or service alert
+      const dbAlerts = await DatabaseService.get('alerts');
+      const dbAlert = dbAlerts.find(alert => alert.id === alertId);
+      
+      if (dbAlert) {
+        // Update database alert
+        await DatabaseService.update('alerts', alertId, { read: true });
+      } else {
+        // Handle service alert
+        AlertService.acknowledgeAlert(alertId);
+      }
+      
       toast.success('Alert acknowledged');
       loadAlerts();
     } catch (error) {
@@ -58,9 +84,20 @@ const AlertDashboard = () => {
     }
   };
 
-  const handleDismissAlert = (alertId) => {
+  const handleDismissAlert = async (alertId) => {
     try {
-      AlertService.dismissAlert(alertId);
+      // Check if it's a database alert or service alert
+      const dbAlerts = await DatabaseService.get('alerts');
+      const dbAlert = dbAlerts.find(alert => alert.id === alertId);
+      
+      if (dbAlert) {
+        // Update database alert
+        await DatabaseService.update('alerts', alertId, { dismissed: true });
+      } else {
+        // Handle service alert
+        AlertService.dismissAlert(alertId);
+      }
+      
       toast.success('Alert dismissed');
       loadAlerts();
     } catch (error) {
@@ -80,6 +117,10 @@ const AlertDashboard = () => {
         return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case 'warning':
         return <Bell className="h-5 w-5 text-yellow-500" />;
+      case 'profile_change':
+        return <Users className="h-5 w-5 text-blue-500" />;
+      case 'info':
+        return <Bell className="h-5 w-5 text-green-500" />;
       default:
         return <Bell className="h-5 w-5 text-blue-500" />;
     }
@@ -91,14 +132,22 @@ const AlertDashboard = () => {
         return 'bg-red-50 border-red-200';
       case 'warning':
         return 'bg-yellow-50 border-yellow-200';
+      case 'profile_change':
+        return 'bg-blue-50 border-blue-200';
+      case 'info':
+        return 'bg-green-50 border-green-200';
       default:
         return 'bg-blue-50 border-blue-200';
     }
   };
 
-  const getClinicName = (clinicId) => {
-    const clinic = DatabaseService.findById('clinics', clinicId);
-    return clinic?.name || 'Unknown Clinic';
+  const getClinicName = async (clinicId) => {
+    try {
+      const clinic = await DatabaseService.findById('clinics', clinicId);
+      return clinic?.name || 'Unknown Clinic';
+    } catch {
+      return 'Unknown Clinic';
+    }
   };
 
   if (loading) {
@@ -110,9 +159,45 @@ const AlertDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Alert Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-orange-100 p-6 space-y-8">
+      {/* Modern Alerts Header */}
+      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-orange-600/10 to-amber-600/10"></div>
+        <div className="relative p-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 bg-clip-text text-transparent">
+                Alerts & Monitoring
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                System alerts and monitoring dashboard 🚨
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span>{stats.active || 0} Active Alerts</span>
+                </div>
+                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div className="flex items-center space-x-2">
+                  <Bell className="h-4 w-4" />
+                  <span>Real-time Monitoring</span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:block relative">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-2xl animate-pulse">
+                <AlertTriangle className="h-12 w-12 text-white" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xs">{stats.active || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Alert Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -216,7 +301,7 @@ const AlertDashboard = () => {
                     <div className="flex items-center space-x-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <Users className="h-4 w-4" />
-                        <span>{getClinicName(alert.clinicId)}</span>
+                        <span>{alert.clinicName || 'Unknown Clinic'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
@@ -230,7 +315,7 @@ const AlertDashboard = () => {
                       )}
                     </div>
 
-                    {alert.data && (
+                    {(alert.data || alert.changes) && (
                       <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-md">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">Details:</h4>
                         <div className="text-sm text-gray-600 space-y-1">
@@ -252,6 +337,18 @@ const AlertDashboard = () => {
                                 <div>Days Expired: {alert.data.daysExpired}</div>
                               )}
                               <div>Trial End: {new Date(alert.data.trialEndDate).toLocaleDateString()}</div>
+                            </>
+                          )}
+                          {alert.type === 'profile_change' && alert.changes && (
+                            <>
+                              <div className="font-medium text-gray-900 mb-1">Profile Changes:</div>
+                              {Object.keys(alert.changes).map(field => (
+                                <div key={field} className="pl-3 border-l-2 border-blue-200">
+                                  <div className="font-medium">{field && typeof field === 'string' ? field.charAt(0).toUpperCase() + field.slice(1) : field}:</div>
+                                  <div className="text-red-600">From: "{alert.changes[field].old || 'Empty'}"</div>
+                                  <div className="text-green-600">To: "{alert.changes[field].new || 'Empty'}"</div>
+                                </div>
+                              ))}
                             </>
                           )}
                         </div>

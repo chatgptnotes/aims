@@ -204,54 +204,101 @@ const PaymentHistory = ({ selectedClinic }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Payment History</h2>
-          <p className="text-gray-600">
-            {selectedClinic 
-              ? `Payment history for ${clinics.find(c => c.id === selectedClinic)?.name}`
-              : 'All payment transactions across clinics'
-            }
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-100 p-6 space-y-8">
+      {/* Modern Header Section */}
+      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-green-600/10 to-blue-600/10"></div>
+        <div className="relative p-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+                Payment History
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                {selectedClinic 
+                  ? `💰 Payment history for ${clinics.find(c => c.id === selectedClinic)?.name}`
+                  : 'All payment transactions across clinics 📊'
+                }
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span>{payments.length} Transactions</span>
+                </div>
+                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Razorpay Integration</span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:block relative">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-2xl">
+                <DollarSign className="h-12 w-12 text-white" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Revenue Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-green-600" />
+      {/* Modern Revenue Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="group relative overflow-hidden bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-600"></div>
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <DollarSign className="h-8 w-8 text-white" />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatAmount(getTotalRevenue())}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatAmount(getMonthlyRevenue())}</p>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Revenue</p>
+            <p className="text-3xl font-black text-slate-800">{formatAmount(getTotalRevenue())}</p>
+            <div className="flex items-center space-x-2 mt-4">
+              <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 rounded-full">
+                <TrendingUp className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-bold text-green-700">All time</span>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
-              <CreditCard className="h-6 w-6 text-purple-600" />
+        <div className="group relative overflow-hidden bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-              <p className="text-2xl font-bold text-gray-900">{payments.length}</p>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Revenue</p>
+            <p className="text-3xl font-black text-slate-800">{formatAmount(getMonthlyRevenue())}</p>
+            <div className="flex items-center space-x-2 mt-4">
+              <div className="flex items-center space-x-2 px-3 py-1 bg-blue-100 rounded-full">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-bold text-blue-700">This month</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="group relative overflow-hidden bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-purple-600"></div>
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <CreditCard className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Transactions</p>
+            <p className="text-3xl font-black text-slate-800">{payments.length}</p>
+            <div className="flex items-center space-x-2 mt-4">
+              <div className="flex items-center space-x-2 px-3 py-1 bg-purple-100 rounded-full">
+                <CheckCircle className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-bold text-purple-700">Completed</span>
+              </div>
             </div>
           </div>
         </div>

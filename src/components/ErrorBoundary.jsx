@@ -23,6 +23,22 @@ class ErrorBoundary extends React.Component {
       console.error('🚨 Upload modal crashed!');
     }
     
+    if (errorInfo.componentStack.includes('ClinicManagement')) {
+      console.error('🚨 Clinic Management component crashed!');
+    }
+    
+    if (errorInfo.componentStack.includes('SuperAdminPanel')) {
+      console.error('🚨 Super Admin Panel crashed!');
+    }
+    
+    // Add navigation error detection
+    if (error.message.includes('Cannot read properties') || 
+        error.message.includes('TypeError') ||
+        errorInfo.componentStack.includes('Router') ||
+        errorInfo.componentStack.includes('Navigate')) {
+      console.error('🚨 Navigation/Routing error detected');
+    }
+    
     this.setState({
       error: error,
       errorInfo: errorInfo

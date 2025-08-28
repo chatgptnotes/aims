@@ -707,36 +707,61 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Patient Reports</h2>
-          <p className="text-gray-600">
-            {superAdminSelectedClinic 
-              ? `Reports for ${clinics?.find(c => c?.id === superAdminSelectedClinic)?.name || 'Selected Clinic'}`
-              : 'Upload and manage EEG reports for patients'
-            }
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => {
-              loadData();
-              toast.success('Patient reports refreshed!');
-            }}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
-          >
-            <Loader2 className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
-          >
-            <Upload className="h-4 w-4" />
-            <span>Upload Report</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 space-y-8">
+      {/* Modern Header Section */}
+      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-blue-600/10 to-purple-600/10"></div>
+        <div className="relative p-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Patient Reports
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                {superAdminSelectedClinic 
+                  ? `📊 Reports for ${clinics?.find(c => c?.id === superAdminSelectedClinic)?.name || 'Selected Clinic'}`
+                  : 'Upload and manage EEG reports for patients 🧠'
+                }
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span>{filteredReports?.length || 0} Reports</span>
+                </div>
+                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div>{clinics?.length || 0} Clinics</div>
+                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div className="flex items-center space-x-2">
+                  <Cloud className="h-4 w-4" />
+                  <span>Cloud Storage</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => {
+                  loadData();
+                  toast.success('Patient reports refreshed!');
+                }}
+                className="group relative overflow-hidden bg-slate-100/80 hover:bg-slate-200/80 backdrop-blur-sm text-slate-700 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              >
+                <div className="flex items-center space-x-3">
+                  <Loader2 className="h-5 w-5" />
+                  <span>Refresh</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                <div className="relative flex items-center space-x-3">
+                  <Upload className="h-6 w-6" />
+                  <span>Upload Report</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

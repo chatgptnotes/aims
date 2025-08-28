@@ -278,14 +278,37 @@ const SystemSettings = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 border-r border-gray-200">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 p-6">
+      {/* Modern Settings Header */}
+      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl mb-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-blue-600/10"></div>
+        <div className="relative p-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                System Settings
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                Configure platform settings and preferences ⚙️
+              </p>
+            </div>
+            <div className="hidden md:block relative">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl">
+                <Settings className="h-12 w-12 text-white" />
+              </div>
+            </div>
           </div>
-          <nav className="space-y-1">
+        </div>
+      </div>
+
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
+        <div className="flex">
+          {/* Modern Sidebar */}
+          <div className="w-80 bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-slate-800">Configuration</h2>
+            </div>
+            <nav className="space-y-1">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
@@ -303,7 +326,8 @@ const SystemSettings = () => {
                 </button>
               );
             })}
-          </nav>
+            </nav>
+          </div>
         </div>
 
         {/* Content */}

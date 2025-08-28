@@ -24,10 +24,33 @@ function App() {
   React.useEffect(() => {
     const handleError = (event) => {
       console.error('🚨 Global error caught:', event.error);
+      
+      // Check if it's a navigation/routing error
+      if (event.error && (
+        event.error.message.includes('Loading chunk') ||
+        event.error.message.includes('Failed to fetch') ||
+        event.error.message.includes('Cannot read properties') ||
+        event.error.name === 'ChunkLoadError'
+      )) {
+        console.error('🚨 Navigation/Chunk loading error detected');
+        // Force reload to clear any stale state
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
     };
     
     const handleUnhandledRejection = (event) => {
       console.error('🚨 Unhandled promise rejection:', event.reason);
+      
+      // Check for common navigation errors
+      if (event.reason && (
+        String(event.reason).includes('Loading chunk') ||
+        String(event.reason).includes('Failed to fetch') ||
+        String(event.reason).includes('Cannot read properties')
+      )) {
+        console.error('🚨 Navigation promise rejection detected');
+      }
     };
     
     window.addEventListener('error', handleError);

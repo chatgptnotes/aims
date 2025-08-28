@@ -77,30 +77,53 @@ const AnalyticsDashboard = ({ analytics }) => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header with Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
-          <p className="text-gray-600">Comprehensive insights into platform usage and revenue</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-          </select>
-          <button
-            onClick={exportData}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
-          >
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-100 p-6 space-y-8">
+      {/* Modern Analytics Header */}
+      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-blue-600/10"></div>
+        <div className="relative p-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                Analytics Dashboard
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                Comprehensive insights into platform usage and revenue 📈
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                  <span>Real-time Analytics</span>
+                </div>
+                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Data Insights</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="px-6 py-3 bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-lg"
+              >
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <button
+                onClick={exportData}
+                className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                <div className="relative flex items-center space-x-3">
+                  <Download className="h-6 w-6" />
+                  <span>Export</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

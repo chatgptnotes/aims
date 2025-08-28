@@ -4,7 +4,7 @@ import DynamoService from './dynamoService';
 // Hybrid database service - uses DynamoDB when available, localStorage as fallback
 class DatabaseService {
   constructor() {
-    this.useDynamoDB = false;
+    this.useDynamoDB = true; // Enable DynamoDB to fetch real data
     this.initializeData();
     this.checkDynamoDBAvailability();
   }
@@ -52,16 +52,78 @@ class DatabaseService {
           localStorage.setItem(table, JSON.stringify([]));
         }
       });
+      
+      // Clean up existing clinics data - ensure all have valid IDs
+      this.cleanupClinicData();
     } catch (error) {
       console.warn('Failed to initialize data tables:', error);
     }
   }
 
+  cleanupClinicData() {
+    try {
+      const clinicsData = JSON.parse(localStorage.getItem('clinics') || '[]');
+      let needsCleanup = false;
+      
+      clinicsData.forEach((clinic, index) => {
+        if (!clinic.id) {
+          clinic.id = uuidv4();
+          needsCleanup = true;
+          console.log(`🔧 Fixed missing ID for clinic: ${clinic.name}`);
+        }
+      });
+      
+      // Remove duplicates based on email (more reliable than name)
+      const uniqueClinics = [];
+      const seenEmails = new Set();
+      const seenIds = new Set();
+      
+      clinicsData.forEach(clinic => {
+        if (!seenEmails.has(clinic.email) && !seenIds.has(clinic.id)) {
+          uniqueClinics.push(clinic);
+          seenEmails.add(clinic.email);
+          seenIds.add(clinic.id);
+        } else {
+          needsCleanup = true;
+          console.log(`🗑️ Removed duplicate clinic: ${clinic.name} (${clinic.email})`);
+        }
+      });
+      
+      if (needsCleanup) {
+        localStorage.setItem('clinics', JSON.stringify(uniqueClinics));
+        console.log(`✅ Clinic data cleanup complete. ${uniqueClinics.length} unique clinics remaining.`);
+      }
+    } catch (error) {
+      console.warn('Failed to cleanup clinic data:', error);
+    }
+  }
+
   // Generic CRUD operations
   async get(table) {
-    if (this.useDynamoDB) {
+    // Enable DynamoDB for production data
+    const forceLocalStorage = false; // Changed to false to use DynamoDB
+    
+    if (this.useDynamoDB && !forceLocalStorage) {
       try {
-        return await DynamoService.get(table);
+        const dynamoData = await DynamoService.get(table);
+        console.log(`📊 ${table} from DynamoDB:`, dynamoData.length, 'items');
+        
+        // Debug: Log the actual data for clinics
+        if (table === 'clinics') {
+          console.log('🔍 Raw clinics data from DynamoDB:', dynamoData);
+          if (dynamoData.length > 0) {
+            dynamoData.forEach((clinic, index) => {
+              console.log(`🔍 DynamoDB Clinic ${index}:`, {
+                name: clinic.name,
+                email: clinic.email,
+                id: clinic.id,
+                isActive: clinic.isActive
+              });
+            });
+          }
+        }
+        
+        return dynamoData;
       } catch (error) {
         console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
         this.useDynamoDB = false;
@@ -70,7 +132,26 @@ class DatabaseService {
     
     try {
       const data = localStorage.getItem(table);
-      return data ? JSON.parse(data) : [];
+      const parsedData = data ? JSON.parse(data) : [];
+      console.log(`💾 ${table} from localStorage:`, parsedData.length, 'items');
+      
+      // Debug: Log the actual data for clinics
+      if (table === 'clinics') {
+        console.log('🔍 Raw clinics data from localStorage:', data);
+        console.log('🔍 Parsed clinics data:', parsedData);
+        if (parsedData.length > 0) {
+          parsedData.forEach((clinic, index) => {
+            console.log(`🔍 Clinic ${index}:`, {
+              name: clinic.name,
+              email: clinic.email,
+              id: clinic.id,
+              isActive: clinic.isActive
+            });
+          });
+        }
+      }
+      
+      return parsedData;
     } catch (error) {
       console.warn(`Failed to get data from ${table}:`, error);
       return [];
@@ -86,9 +167,14 @@ class DatabaseService {
   }
 
   async add(table, item) {
-    if (this.useDynamoDB) {
+    // Enable DynamoDB for production data
+    const forceLocalStorage = false; // Changed to false to use DynamoDB
+    
+    if (this.useDynamoDB && !forceLocalStorage) {
       try {
-        return await DynamoService.add(table, item);
+        const result = await DynamoService.add(table, item);
+        console.log(`📊 Added to DynamoDB ${table}:`, item.name || item.id);
+        return result;
       } catch (error) {
         console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
         this.useDynamoDB = false;
@@ -96,16 +182,34 @@ class DatabaseService {
     }
     
     const data = await this.get(table);
-    const newItem = { ...item, id: item.id || uuidv4(), createdAt: item.createdAt || new Date().toISOString() };
+    
+    // Ensure unique ID
+    let newId = item.id || uuidv4();
+    while (data.some(existingItem => existingItem.id === newId)) {
+      newId = uuidv4(); // Generate new ID if duplicate found
+    }
+    
+    const newItem = { 
+      ...item, 
+      id: newId, 
+      createdAt: item.createdAt || new Date().toISOString() 
+    };
+    
     data.push(newItem);
     this.set(table, data);
+    console.log(`💾 Added to localStorage ${table}:`, newItem.name || newItem.id);
     return newItem;
   }
 
   async update(table, id, updates) {
-    if (this.useDynamoDB) {
+    // Enable DynamoDB for production data  
+    const forceLocalStorage = false; // Changed to false to use DynamoDB
+    
+    if (this.useDynamoDB && !forceLocalStorage) {
       try {
-        return await DynamoService.update(table, id, updates);
+        const result = await DynamoService.update(table, id, updates);
+        console.log(`📊 Updated in DynamoDB ${table}:`, id);
+        return result;
       } catch (error) {
         console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
         this.useDynamoDB = false;
@@ -117,24 +221,50 @@ class DatabaseService {
     if (index !== -1) {
       data[index] = { ...data[index], ...updates, updatedAt: new Date().toISOString() };
       this.set(table, data);
+      console.log(`💾 Updated in localStorage ${table}:`, id);
       return data[index];
     }
+    console.warn(`Item not found in ${table}:`, id);
     return null;
   }
 
   async delete(table, id) {
+    console.log(`🗑️ DatabaseService.delete called:`, { table, id });
+    
+    if (!id) {
+      throw new Error('Cannot delete: ID is required');
+    }
+    
     if (this.useDynamoDB) {
       try {
-        return await DynamoService.delete(table, id);
+        console.log('🔄 Attempting DynamoDB delete...');
+        const result = await DynamoService.delete(table, id);
+        console.log('✅ DynamoDB delete successful:', result);
+        return result;
       } catch (error) {
         console.warn(`DynamoDB failed, falling back to localStorage for ${table}:`, error);
         this.useDynamoDB = false;
       }
     }
     
+    console.log('📦 Using localStorage for delete operation');
     const data = await this.get(table);
+    console.log(`📊 Current ${table} data:`, data);
+    console.log(`🔍 Looking for item with ID: "${id}"`);
+    
+    const itemToDelete = data.find(item => item.id === id);
+    if (!itemToDelete) {
+      console.warn(`⚠️ Item with ID "${id}" not found in ${table}`);
+      console.log('Available IDs:', data.map(item => item.id));
+      throw new Error(`Item with ID "${id}" not found`);
+    }
+    
+    console.log('✅ Found item to delete:', itemToDelete);
     const filteredData = data.filter(item => item.id !== id);
+    console.log(`📊 Filtered data (${filteredData.length} items remaining):`, filteredData);
+    
     this.set(table, filteredData);
+    console.log('💾 Delete operation completed successfully');
     return true;
   }
 
