@@ -1,0 +1,603 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+$brain-stem-bg-color: #b81434;
+$cerebellum-bg-color: #00aa7f;
+$frontal-lobe-bg-color: #00bcd4;
+$occipital-lobe-bg-color: #ffc446;
+$parietal-lobe-bg-color: #e497a4;
+$temporal-lobe-bg-color: #7e7acf;
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes gentle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes guided-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.tdc-main {
+    height: 100vh;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
+    
+    // Mobile responsiveness
+    @media (max-width: 768px) {
+        height: auto;
+        min-height: 100vh;
+        flex-direction: column;
+        display: flex;
+    }
+
+    &-left {
+        width: 20%;
+        float: left;
+        height: 100%;
+        color: white;
+        background: rgba(0,0,0,.9);
+        box-shadow: 0 0 11px 1px rgba(0,0,0,.4);
+
+        // Mobile responsiveness
+        @media (max-width: 768px) {
+            width: 100%;
+            height: auto;
+            float: none;
+            order: 2;
+            padding: 20px 0;
+        }
+
+        &-wrapper {
+            height: 100%;
+
+            @media (max-width: 768px) {
+                height: auto;
+            }
+
+            &-info {
+                display: block;
+                padding: 10px;
+
+                @media (max-width: 768px) {
+                    padding: 15px 20px;
+                    text-align: center;
+                }
+
+                .tdc-main-title {
+                    font-size: 32px;
+                    font-weight: bold;
+                    background: linear-gradient(135deg, #00bcd4, #00aa7f);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin-bottom: 15px;
+                    line-height: 1.2;
+
+                    @media (max-width: 768px) {
+                        font-size: 20px;
+                        margin-bottom: 10px;
+                    }
+
+                    @media (max-width: 480px) {
+                        font-size: 18px;
+                    }
+                }
+
+                .tdc-info-title {
+                    font-size: 25px;
+                    font-weight: bold;
+
+                    @media (max-width: 768px) {
+                        font-size: 18px;
+                    }
+
+                    @media (max-width: 480px) {
+                        font-size: 16px;
+                    }
+                }
+
+                .tdc-info-description {
+                    font-size: 20px;
+
+                    @media (max-width: 768px) {
+                        font-size: 16px;
+                    }
+
+                    @media (max-width: 480px) {
+                        font-size: 14px;
+                    }
+                }
+            }
+        }
+    }
+
+    &-right {
+        position: relative;
+        width: 80%;
+        float: left;
+        height: 100%;
+
+        // Mobile responsiveness
+        @media (max-width: 768px) {
+            width: 100%;
+            height: 60vh;
+            float: none;
+            order: 1;
+        }
+
+        @media (max-width: 480px) {
+            height: 50vh;
+        }
+
+        &-filter {
+            position: absolute;
+            left: 0;
+            width: 50%;
+            height: 100%;
+
+            @media (max-width: 768px) {
+                width: 40%;
+                overflow-y: auto;
+            }
+
+            @media (max-width: 480px) {
+                width: 35%;
+            }
+
+            &-item {
+                width: 50%;
+                display: inline-block;
+                padding: 2px;
+                height: calc(100vh / 18.5);
+                border: 1px solid grey;
+                border-radius: 0 2px 2px 0;
+                opacity: .3;
+                transition: all .2s;
+                box-sizing: border-box;
+                text-align: center;
+                transform: scale(1);
+                transform-origin: left;
+                line-height: calc(100vh / 21);
+                font-size: 12px;
+
+                @media (max-width: 768px) {
+                    width: 100%;
+                    height: auto;
+                    min-height: 30px;
+                    line-height: 1.2;
+                    padding: 4px 2px;
+                    font-size: 10px;
+                    margin-bottom: 2px;
+                }
+
+                @media (max-width: 480px) {
+                    font-size: 9px;
+                    min-height: 25px;
+                    padding: 3px 1px;
+                }
+
+                &.active {
+                    opacity: 1;
+                    color: white;
+                    border-color: transparent;
+                    transform: scale(1.1);
+
+                    &.frontal_lobe {
+                        background: $frontal-lobe-bg-color;
+                    }
+
+                    &.temporal_lobe {
+                        background: $temporal-lobe-bg-color;
+                    }
+
+                    &.occipital_lobe {
+                        background: $occipital-lobe-bg-color;
+                    }
+
+                    &.cerebellum {
+                        background: $cerebellum-bg-color;
+                    }
+
+                    &.parietal_lobe {
+                        background: $parietal-lobe-bg-color;
+                    }
+
+                    &.brain_stem {
+                        background: $brain-stem-bg-color;
+                    }
+
+                }
+            }
+        }
+
+        &-demo {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+
+            @media (max-width: 768px) {
+                width: 60%;
+                margin-left: 40%;
+            }
+
+            @media (max-width: 480px) {
+                width: 65%;
+                margin-left: 35%;
+            }
+
+            &-brain {
+                position: relative;
+                float: right;
+                right: 100px;
+                width: 420px;
+                height: 450px;
+                top: calc(50% - 450px/2 + 20px);
+                display: block;
+
+                @media (max-width: 768px) {
+                    width: 280px;
+                    height: 300px;
+                    right: 20px;
+                    top: calc(50% - 150px + 15px);
+                    float: none;
+                    margin: 0 auto;
+                }
+
+                @media (max-width: 480px) {
+                    width: 220px;
+                    height: 240px;
+                    right: 10px;
+                    top: calc(50% - 120px + 15px);
+                }
+
+                &:hover {
+                    svg {
+                        opacity: .5;
+                    }
+                }
+
+                .tdc-brain-part {
+                    position: absolute;
+                    cursor: pointer;
+
+                    svg {
+                        width: 200px;
+                        fill: white;
+                        stroke: black;
+                        transform: scale(1);
+                        transition: all .5s;
+
+                        @media (max-width: 768px) {
+                            width: 130px;
+                        }
+
+                        @media (max-width: 480px) {
+                            width: 100px;
+                        }
+
+                        path {
+                            pointer-events: all;
+                            stroke-dasharray: 1000;
+                            stroke-dashoffset: 1000;
+                            animation: dash 2s linear forwards;
+                        }
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            transform: scale(1.5);
+                            opacity: 1;
+                            stroke: #fff;
+                        }
+                    }
+
+                    &.guided-pulse {
+                        svg {
+                            animation: guided-pulse 2s ease-in-out infinite;
+                        }
+                    }
+                }
+
+                .tdc-frontal-lobe {
+                    top: 0;
+                    left: 0;
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $frontal-lobe-bg-color;
+                        }
+                    }
+                }
+
+                .tdc-cerebellum {
+                    top: 235px;
+                    left: 215px;
+
+                    @media (max-width: 768px) {
+                        top: 155px;
+                        left: 140px;
+                    }
+
+                    @media (max-width: 480px) {
+                        top: 125px;
+                        left: 110px;
+                    }
+
+                    svg {
+                        width: 160px;
+
+                        @media (max-width: 768px) {
+                            width: 105px;
+                        }
+
+                        @media (max-width: 480px) {
+                            width: 80px;
+                        }
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $cerebellum-bg-color;
+                        }
+                    }
+                }
+
+                .tdc-occipital-lobe {
+                    top: 100px;
+                    left: 280px;
+
+                    @media (max-width: 768px) {
+                        top: 65px;
+                        left: 182px;
+                    }
+
+                    @media (max-width: 480px) {
+                        top: 50px;
+                        left: 142px;
+                    }
+
+                    svg {
+                        width: 140px;
+
+                        @media (max-width: 768px) {
+                            width: 91px;
+                        }
+
+                        @media (max-width: 480px) {
+                            width: 70px;
+                        }
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $occipital-lobe-bg-color;
+                        }
+                    }
+                }
+
+                .tdc-parietal-lobe {
+                    top: 0;
+                    left: 180px;
+
+                    @media (max-width: 768px) {
+                        top: 0;
+                        left: 117px;
+                    }
+
+                    @media (max-width: 480px) {
+                        top: 0;
+                        left: 90px;
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $parietal-lobe-bg-color;
+                        }
+                    }
+                }
+
+                .tdc-temporal-lobe {
+                    top: 140px;
+                    left: 95px;
+
+                    @media (max-width: 768px) {
+                        top: 91px;
+                        left: 62px;
+                    }
+
+                    @media (max-width: 480px) {
+                        top: 70px;
+                        left: 48px;
+                    }
+
+                    svg {
+                        width: 220px;
+
+                        @media (max-width: 768px) {
+                            width: 143px;
+                        }
+
+                        @media (max-width: 480px) {
+                            width: 110px;
+                        }
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $temporal-lobe-bg-color;
+                        }
+                    }
+                }
+
+                .tdc-brain-stem {
+                    top: 280px;
+                    left: 180px;
+
+                    @media (max-width: 768px) {
+                        top: 182px;
+                        left: 117px;
+                    }
+
+                    @media (max-width: 480px) {
+                        top: 140px;
+                        left: 90px;
+                    }
+
+                    svg {
+                        width: 140px;
+
+                        @media (max-width: 768px) {
+                            width: 91px;
+                        }
+
+                        @media (max-width: 480px) {
+                            width: 70px;
+                        }
+                    }
+
+                    &:hover,
+                    &.active {
+                        svg {
+                            fill: $brain-stem-bg-color;
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+/* Brain Area Title */
+.brain-area-title {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    left: 50%;
+    z-index: 25;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        top: 15px;
+        left: 40%;
+        right: 10px;
+    }
+
+    @media (max-width: 480px) {
+        top: 10px;
+        left: 35%;
+        right: 5px;
+        
+        h2 {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+/* Brain Instructional Callout */
+.brain-callout {
+    position: absolute;
+    top: 160px;
+    right: 20px;
+    z-index: 30;
+    animation: gentle-bob 3s ease-in-out infinite;
+    transition: opacity 0.3s ease-out;
+
+    @media (max-width: 768px) {
+        top: 120px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+
+    @media (max-width: 480px) {
+        top: 100px;
+    }
+
+    &-content {
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        position: relative;
+        max-width: 280px;
+        
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid rgba(0, 0, 0, 0.9);
+
+            @media (max-width: 768px) {
+                bottom: -8px;
+                left: 50%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            max-width: 240px;
+            padding: 10px 14px;
+        }
+
+        @media (max-width: 480px) {
+            max-width: 200px;
+            padding: 8px 12px;
+        }
+    }
+
+    &-text {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 500;
+
+        @media (max-width: 480px) {
+            font-size: 13px;
+        }
+    }
+
+    &-skip {
+        position: absolute;
+        bottom: 4px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: #00bcd4;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+        margin: 0;
+        font-weight: 500;
+        pointer-events: auto;
+
+        &:hover {
+            color: #00aa7f;
+        }
+
+        @media (max-width: 768px) {
+            pointer-events: auto;
+        }
+    }
+}

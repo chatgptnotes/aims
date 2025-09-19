@@ -98,3 +98,13 @@ jspm_packages/
 create-dynamodb-tables.js
 debug-*.js
 test-*.html
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# Migration results
+migration-results-*.json
+
+# Monorepo
+pnpm-lock.yaml
