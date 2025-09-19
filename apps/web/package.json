@@ -12,9 +12,6 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
-    "@neuro360/api": "workspace:*",
-    "@neuro360/core": "workspace:*",
-    "@neuro360/ui": "workspace:*",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.89.0",
     "@tanstack/react-table": "^8.21.3",
