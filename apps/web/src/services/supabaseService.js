@@ -1,36 +1,58 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get Supabase environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Get Supabase environment variables with fallbacks for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
-// Initialize Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storageKey: 'neuro360-auth',
-  },
-  global: {
-    headers: {
-      'x-application-name': 'neuro360-web',
-      'Authorization': `Bearer ${supabaseAnonKey}`, // Ensure anon key is used
+// Check if we have valid Supabase configuration
+const hasValidSupabaseConfig = supabaseUrl && supabaseUrl !== 'https://placeholder.supabase.co' &&
+                               supabaseAnonKey && supabaseAnonKey !== 'placeholder-anon-key';
+
+// Initialize Supabase client only if we have valid config
+let supabase = null;
+
+if (hasValidSupabaseConfig) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storageKey: 'neuro360-auth',
     },
-  },
-  db: {
-    schema: 'public',
-  },
-});
+    global: {
+      headers: {
+        'x-application-name': 'neuro360-web',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+    },
+    db: {
+      schema: 'public',
+    },
+  });
+}
 
 class SupabaseService {
   constructor() {
     this.supabase = supabase;
-    this.testConnection();
-    this.initializeTables();
+    this.hasValidConfig = hasValidSupabaseConfig;
+
+    if (!this.hasValidConfig) {
+      console.warn('⚠️ Supabase is not configured. Running in demo mode.');
+      console.warn('To enable Supabase, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
+    } else {
+      this.testConnection();
+      this.initializeTables();
+    }
+  }
+
+  // Check if Supabase is available
+  isAvailable() {
+    return this.hasValidConfig && this.supabase !== null;
   }
 
   async testConnection() {
+    if (!this.isAvailable()) return;
+
     try {
       console.log('🔌 Testing Supabase connection...');
       console.log('🔗 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
@@ -53,6 +75,8 @@ class SupabaseService {
   }
 
   async ensureTableExists(tableName) {
+    if (!this.isAvailable()) return false;
+
     try {
       // Quick check if table exists
       const { error } = await this.supabase.from(tableName).select('id').limit(0);
@@ -146,6 +170,8 @@ class SupabaseService {
   }
 
   async initializeTables() {
+    if (!this.isAvailable()) return;
+
     try {
       console.log('🚀 Initializing Supabase tables...');
 
@@ -169,8 +195,10 @@ class SupabaseService {
     }
   }
 
-  // Generic CRUD operations
+  // Generic CRUD operations with demo fallback
   async get(table) {
+    if (!this.isAvailable()) return [];
+
     try {
       console.log(`📊 Fetching data from Supabase table: ${table}`);
       const { data, error } = await this.supabase
@@ -192,6 +220,11 @@ class SupabaseService {
   }
 
   async add(table, item) {
+    if (!this.isAvailable()) {
+      console.warn('⚠️ Supabase not available, returning demo data');
+      return { ...item, id: 'demo-' + Date.now() };
+    }
+
     try {
       console.log(`➕ Adding item to Supabase table: ${table}`, item);
 
@@ -250,6 +283,11 @@ class SupabaseService {
   }
 
   async update(table, id, updates) {
+    if (!this.isAvailable()) {
+      console.warn('⚠️ Supabase not available, returning demo data');
+      return { id, ...updates };
+    }
+
     try {
       console.log(`📝 Updating item in Supabase table: ${table}`, { id, updates });
 
@@ -282,6 +320,11 @@ class SupabaseService {
   }
 
   async delete(table, id) {
+    if (!this.isAvailable()) {
+      console.warn('⚠️ Supabase not available, simulating delete');
+      return true;
+    }
+
     try {
       console.log(`🗑️ Deleting item from Supabase table: ${table}`, { id });
 
@@ -304,6 +347,8 @@ class SupabaseService {
   }
 
   async findById(table, id) {
+    if (!this.isAvailable()) return null;
+
     try {
       const { data, error } = await this.supabase
         .from(table)
@@ -324,6 +369,8 @@ class SupabaseService {
   }
 
   async findBy(table, field, value) {
+    if (!this.isAvailable()) return [];
+
     try {
       const { data, error } = await this.supabase
         .from(table)
@@ -343,6 +390,8 @@ class SupabaseService {
   }
 
   async findOne(table, field, value) {
+    if (!this.isAvailable()) return null;
+
     try {
       const { data, error } = await this.supabase
         .from(table)
@@ -380,6 +429,14 @@ class SupabaseService {
   }
 
   async getClinicUsage(clinicId) {
+    if (!this.isAvailable()) {
+      return {
+        totalReports: 0,
+        reportsThisMonth: 0,
+        usage: []
+      };
+    }
+
     const usage = await this.findBy('usage', 'clinic_id', clinicId);
     const reports = await this.findBy('reports', 'clinic_id', clinicId);
 
@@ -436,6 +493,10 @@ class SupabaseService {
 
   // Subscription methods
   async updateSubscription(clinicId, subscriptionData) {
+    if (!this.isAvailable()) {
+      return { ...subscriptionData, clinic_id: clinicId, id: 'demo-sub-' + Date.now() };
+    }
+
     let subscription = await this.findOne('subscriptions', 'clinic_id', clinicId);
 
     if (subscription) {
@@ -468,6 +529,16 @@ class SupabaseService {
 
   // Analytics methods
   async getAnalytics() {
+    if (!this.isAvailable()) {
+      return {
+        activeClinics: 5,
+        totalReports: 150,
+        totalPatients: 50,
+        monthlyRevenue: 25000,
+        recentActivity: []
+      };
+    }
+
     const clinics = await this.get('clinics');
     const reports = await this.get('reports');
     const patients = await this.get('patients');
@@ -495,6 +566,11 @@ class SupabaseService {
 
   // Auth methods
   async signUp(email, password, userData = {}) {
+    if (!this.isAvailable()) {
+      console.warn('⚠️ Supabase not available, returning demo user');
+      return { user: { email, ...userData }, session: null };
+    }
+
     try {
       const { data, error } = await this.supabase.auth.signUp({
         email,
@@ -513,6 +589,11 @@ class SupabaseService {
   }
 
   async signIn(email, password) {
+    if (!this.isAvailable()) {
+      console.warn('⚠️ Supabase not available, returning demo session');
+      return { user: { email }, session: null };
+    }
+
     try {
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
@@ -528,6 +609,8 @@ class SupabaseService {
   }
 
   async signOut() {
+    if (!this.isAvailable()) return;
+
     try {
       const { error } = await this.supabase.auth.signOut();
       if (error) throw error;
@@ -538,6 +621,8 @@ class SupabaseService {
   }
 
   async getCurrentUser() {
+    if (!this.isAvailable()) return null;
+
     try {
       const { data: { user } } = await this.supabase.auth.getUser();
       return user;
@@ -549,6 +634,11 @@ class SupabaseService {
 
   // Session management
   onAuthStateChange(callback) {
+    if (!this.isAvailable()) {
+      // Return a dummy unsubscribe function
+      return { data: null, error: null, unsubscribe: () => {} };
+    }
+
     return this.supabase.auth.onAuthStateChange(callback);
   }
 }
