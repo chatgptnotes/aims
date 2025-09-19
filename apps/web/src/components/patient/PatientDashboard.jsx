@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import bookingService from '../../services/bookingService';
+import progressTrackingService from '../../services/progressTrackingService';
 import {
   User,
   FileText,
@@ -25,9 +27,101 @@ import {
 const PatientDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentStats, setAppointmentStats] = useState({});
+  const [progressData, setProgressData] = useState(null);
+  const [currentStatus, setCurrentStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  // Load real appointment data
+  useEffect(() => {
+    const loadPatientData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+
+        // Load appointments
+        const patientAppointments = await bookingService.getPatientAppointments(user.id);
+        setAppointments(patientAppointments);
+
+        // Load appointment statistics
+        const stats = await bookingService.getAppointmentStats(user.id);
+        setAppointmentStats(stats);
+
+        // Load progress tracking data
+        const progressHistory = await progressTrackingService.getPatientProgressHistory(user.id, '6months');
+        setProgressData(progressHistory);
+
+        // Load current status
+        const status = await progressTrackingService.getCurrentProgressStatus(user.id);
+        setCurrentStatus(status);
+
+        console.log('✅ Patient data loaded successfully');
+      } catch (error) {
+        console.error('❌ Failed to load patient data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPatientData();
+  }, [user?.id]);
+
+  // Handle appointment booking
+  const handleBookAppointment = async () => {
+    try {
+      // Simple booking - book next available follow-up slot
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dateStr = tomorrow.toISOString().split('T')[0];
+
+      // Get available slots
+      const availableSlots = await bookingService.getAvailableSlots(
+        user?.clinic_id || 'default-clinic',
+        dateStr,
+        'follow-up'
+      );
+
+      if (availableSlots.length === 0) {
+        alert('No available slots for tomorrow. Please try a different date.');
+        return;
+      }
+
+      // Book the first available slot
+      const firstSlot = availableSlots.find(slot => slot.available);
+      if (!firstSlot) {
+        alert('No available slots found. Please contact the clinic directly.');
+        return;
+      }
+
+      const appointmentData = {
+        patientId: user.id,
+        clinicId: user?.clinic_id || 'default-clinic',
+        appointmentType: 'follow-up',
+        date: dateStr,
+        time: firstSlot.time,
+        requestedBy: user.id,
+        notes: 'Requested via patient portal'
+      };
+
+      const newAppointment = await bookingService.bookAppointment(appointmentData);
+
+      // Refresh appointments list
+      const updatedAppointments = await bookingService.getPatientAppointments(user.id);
+      setAppointments(updatedAppointments);
+
+      alert(`Appointment booked successfully for ${dateStr} at ${firstSlot.display}!`);
+      console.log('✅ Appointment booked:', newAppointment);
+
+    } catch (error) {
+      console.error('❌ Failed to book appointment:', error);
+      alert(`Failed to book appointment: ${error.message}`);
+    }
   };
   const [patientData, setPatientData] = useState({
     profile: {
@@ -93,15 +187,7 @@ const PatientDashboard = () => {
         unlocked: false
       }
     ],
-    appointments: [
-      {
-        id: 1,
-        type: 'Follow-up QEEG',
-        date: '2024-10-15',
-        time: '10:00 AM',
-        status: 'Scheduled'
-      }
-    ]
+    // appointments now loaded dynamically from booking service
   });
 
   const tabs = [
@@ -394,20 +480,71 @@ const PatientDashboard = () => {
           <h2 className="text-xl font-semibold text-gray-900">Progress Tracking</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600 mb-1">3</div>
-            <div className="text-sm text-blue-800">Completed Sessions</div>
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Loading progress data...</p>
           </div>
-          <div className="bg-green-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">75%</div>
-            <div className="text-sm text-green-800">Care Plan Progress</div>
+        ) : currentStatus?.hasData ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600 mb-1">
+                {Math.round(currentStatus.currentMetrics?.attention || 0)}
+              </div>
+              <div className="text-sm text-blue-800">Attention Score</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-green-600 mb-1">
+                {Math.round(currentStatus.currentMetrics?.relaxation || 0)}
+              </div>
+              <div className="text-sm text-green-800">Relaxation Score</div>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600 mb-1">
+                {Math.round(currentStatus.currentMetrics?.sleepQuality || 0)}
+              </div>
+              <div className="text-sm text-purple-800">Sleep Quality</div>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-orange-600 mb-1">
+                {Math.round(currentStatus.overallScore || 0)}
+              </div>
+              <div className="text-sm text-orange-800">Overall Score</div>
+            </div>
           </div>
-          <div className="bg-purple-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600 mb-1">+15%</div>
-            <div className="text-sm text-purple-800">Focus Improvement</div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <TrendingUp className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <p>No progress data available yet</p>
+            <p className="text-sm">Complete your first assessment to see progress tracking</p>
           </div>
-        </div>
+        )}
+
+        {/* Progress Trends */}
+        {progressData?.trends && (
+          <div className="mt-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Recent Trends</h3>
+            <div className="space-y-3">
+              {Object.entries(progressData.trends).map(([metric, trend]) => (
+                <div key={metric} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium text-gray-900 capitalize">{metric.replace(/([A-Z])/g, ' $1')}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm ${
+                      trend.direction === 'improving' ? 'text-green-600' :
+                      trend.direction === 'declining' ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      {trend.direction === 'improving' ? '↗️' : trend.direction === 'declining' ? '↘️' : '→'}
+                      {trend.direction}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({Math.abs(trend.change).toFixed(1)} pts)
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upcoming Appointments */}
@@ -419,29 +556,61 @@ const PatientDashboard = () => {
             </div>
             <h2 className="text-xl font-semibold text-gray-900">Upcoming Appointments</h2>
           </div>
-          <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <button
+            onClick={() => handleBookAppointment()}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             <span>Book Follow-up</span>
           </button>
         </div>
 
         <div className="space-y-3">
-          {patientData.appointments.map((appointment) => (
-            <div key={appointment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-blue-600" />
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-600 mt-2">Loading appointments...</p>
+            </div>
+          ) : appointments.length > 0 ? (
+            appointments.slice(0, 5).map((appointment) => (
+              <div key={appointment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{appointment.type}</h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(appointment.appointment_date).toLocaleDateString()} at {appointment.start_time}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Duration: {appointment.duration} min • ${appointment.price}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">{appointment.type}</h3>
-                  <p className="text-sm text-gray-600">{appointment.date} at {appointment.time}</p>
+                <div className="text-right">
+                  <span className={`px-3 py-1 text-sm rounded-full ${
+                    appointment.status === 'scheduled'
+                      ? 'bg-green-100 text-green-800'
+                      : appointment.status === 'completed'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                  </span>
+                  {appointment.clinics && (
+                    <p className="text-xs text-gray-500 mt-1">{appointment.clinics.name}</p>
+                  )}
                 </div>
               </div>
-              <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                {appointment.status}
-              </span>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <p>No upcoming appointments</p>
+              <p className="text-sm">Book your first appointment to get started</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

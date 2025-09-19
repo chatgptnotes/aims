@@ -8,11 +8,26 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Initialize Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Check if we have valid Supabase configuration
+const hasValidSupabaseConfig = supabaseUrl && supabaseUrl !== 'https://placeholder.supabase.co' &&
+                               supabaseAnonKey && supabaseAnonKey !== 'placeholder-anon-key';
+
+// Initialize Supabase client only if we have valid config
+let supabase = null;
+
+if (hasValidSupabaseConfig) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase client initialized successfully');
+} else {
+  console.warn('⚠️ Supabase not configured in AuthContext. Environment variables missing.');
+  console.log('Current environment variables:', {
+    VITE_SUPABASE_URL: supabaseUrl,
+    VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'Present' : 'Missing'
+  });
+}
 
 // 🚀 DEVELOPMENT MODE: Bypass authentication
-const BYPASS_AUTH = true; // Set to false to enable authentication
+const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true' || false; // Set to false to enable authentication
 
 const AuthContext = createContext();
 
@@ -74,7 +89,11 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Check Supabase session
+      // Check Supabase session only if client is available
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
+import fileStorageService from '../../services/fileStorageService';
 
 const BrandingConfiguration = () => {
   const [clinics, setClinics] = useState([]);
@@ -102,33 +103,43 @@ const BrandingConfiguration = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+    if (!selectedClinic) {
+      toast.error('Please select a clinic first');
       return;
     }
 
     setUploadingLogo(true);
 
     try {
-      // Convert to base64 for storage (in production, you'd upload to S3/CDN)
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64String = e.target.result;
-        setValue(logoType, base64String);
-        toast.success(`${logoType === 'primaryLogo' ? 'Primary' : 'Secondary'} logo uploaded successfully`);
+      // Validate logo dimensions
+      const dimensionValidation = await fileStorageService.validateLogoDimensions(file, 100, 50);
+      if (!dimensionValidation.isValid) {
+        toast.error(dimensionValidation.message);
         setUploadingLogo(false);
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+
+      // Upload logo using file storage service
+      const uploadResult = await fileStorageService.uploadLogo(file, selectedClinic, logoType);
+
+      if (uploadResult.success) {
+        setValue(logoType, uploadResult.url);
+        setValue(`${logoType}Metadata`, uploadResult.data);
+        toast.success(`${logoType === 'primaryLogo' ? 'Primary' : 'Secondary'} logo uploaded successfully`);
+
+        console.log(`✅ Logo uploaded:`, {
+          type: logoType,
+          size: uploadResult.data.size,
+          filename: uploadResult.data.filename,
+          dimensions: dimensionValidation.dimensions
+        });
+      } else {
+        toast.error(uploadResult.error);
+      }
     } catch (error) {
       console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo');
+      toast.error('Failed to upload logo: ' + (error.message || 'Unknown error'));
+    } finally {
       setUploadingLogo(false);
     }
   };

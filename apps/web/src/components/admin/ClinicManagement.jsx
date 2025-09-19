@@ -350,7 +350,11 @@ const ClinicManagement = ({ onUpdate }) => {
               email: clinic.email,
               id: clinic.id,
               isActive: clinic.isActive,
-              isActivated: clinic.isActivated
+              isActivated: clinic.isActivated,
+              subscriptionStatus: clinic.subscriptionStatus,
+              subscription_status: clinic.subscription_status,
+              is_active: clinic.is_active,
+              reports_allowed: clinic.reports_allowed
             });
           });
         } else {
@@ -465,23 +469,52 @@ const ClinicManagement = ({ onUpdate }) => {
       const clinicData = {
         ...data,
         contactPerson: data.contactPerson || data.name,
-        subscriptionStatus: data.subscriptionPlan || 'trial',
-        reportsAllowed: reportsAllowed,
-        reportsUsed: 0,
-        isActive: true,
-        isActivated: false, // Require manual activation by super admin
-        createdAt: new Date().toISOString(),
+        subscription_status: data.subscriptionPlan || 'trial', // Use snake_case for consistency
+        subscriptionStatus: data.subscriptionPlan || 'trial', // Legacy field
+        reports_allowed: reportsAllowed,
+        reportsAllowed: reportsAllowed, // Legacy field
+        reports_used: 0,
+        reportsUsed: 0, // Legacy field
+        is_active: true, // Super admin created clinics are pre-approved
+        isActive: true, // Legacy field
+        isActivated: true, // Super admin created clinics are pre-approved
+        trial_start_date: new Date().toISOString(),
+        trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days trial
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(), // Legacy field
         registrationMethod: 'super_admin_created', // Track how this was created
+        // Map adminPassword to password for authentication
+        password: data.adminPassword, // This is the field used for login
+        adminPassword: data.adminPassword, // Keep for compatibility
         // Remove confirmPassword from stored data
         confirmPassword: undefined
       };
       
-      await DatabaseService.add('clinics', clinicData);
-      toast.success(`Clinic created successfully with ${data.subscriptionPlan || 'trial'} plan. Remember to activate the account before the clinic can login.`);
+      const createdClinic = await DatabaseService.add('clinics', clinicData);
+
+      toast.success(`Clinic "${data.name}" created and activated successfully with ${data.subscriptionPlan || 'trial'} plan! They can now login.`);
       loadClinics();
       setShowModal(false);
       reset();
       onUpdate?.();
+
+      // Offer auto-login for newly created clinic
+      setTimeout(() => {
+        const autoLogin = window.confirm(`✅ Clinic "${data.name}" created successfully!\n\n🔑 Would you like to automatically login as this clinic to test their dashboard?`);
+
+        if (autoLogin) {
+          // Create clinic object for auto-login
+          const newClinic = {
+            id: createdClinic.id,
+            email: data.email,
+            name: data.name,
+            logo_url: data.logoUrl || null,
+            ...createdClinic
+          };
+          handleAutoClinicLogin(newClinic);
+        }
+      }, 1000);
     } catch (error) {
       toast.error('Error creating clinic');
       console.error(error);
@@ -620,6 +653,90 @@ const ClinicManagement = ({ onUpdate }) => {
         toast.error('Error activating clinic');
         console.error(error);
       }
+    }
+  };
+
+  const handleClinicApproval = async (clinicId) => {
+    if (window.confirm('Approve this clinic registration? This will activate their account and give them trial credits.')) {
+      try {
+        // Get clinic details
+        const clinic = await DatabaseService.findById('clinics', clinicId);
+
+        // Update clinic status to approved and activated
+        await DatabaseService.update('clinics', clinicId, {
+          subscription_status: 'trial', // Change from 'pending_approval' to 'trial'
+          is_active: true, // Activate the clinic
+          isActivated: true, // Legacy field for compatibility
+          reports_allowed: 10, // Give trial credits
+          trial_start_date: new Date().toISOString(),
+          trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days trial
+          activatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+        toast.success(`Clinic "${clinic.name}" approved and activated! They now have 10 trial reports and can login.`, {
+          duration: 4000
+        });
+
+        // Reload clinic list to reflect changes
+        loadClinics();
+        onUpdate?.();
+
+        // Show approval confirmation with auto-login option
+        setTimeout(() => {
+          const autoLogin = window.confirm(`✅ Clinic "${clinic.name}" activated successfully!\n\n🔑 Would you like to automatically login as this clinic to test their dashboard?`);
+
+          if (autoLogin) {
+            // Auto-login as the activated clinic
+            handleAutoClinicLogin(clinic);
+          } else {
+            toast.success(`📧 Approval notification sent to ${clinic.email}`, {
+              duration: 3000
+            });
+          }
+        }, 1500);
+
+      } catch (error) {
+        toast.error('Error approving clinic registration');
+        console.error('Clinic approval error:', error);
+      }
+    }
+  };
+
+  const handleAutoClinicLogin = async (clinic) => {
+    try {
+      console.log('🚀 Auto-login attempt for clinic:', clinic.name);
+
+      // Create a mock login session for the clinic
+      const clinicUser = {
+        id: clinic.id,
+        email: clinic.email,
+        name: clinic.name,
+        role: 'clinic_admin',
+        avatar: clinic.logo_url || null,
+        isActivated: true,
+        clinicId: clinic.id,
+        token: `auto_login_${Date.now()}`
+      };
+
+      // Save to localStorage for session persistence
+      localStorage.setItem('neuro360_user', JSON.stringify(clinicUser));
+      localStorage.setItem('neuro360_token', clinicUser.token);
+
+      // Show success message
+      toast.success(`🎉 Auto-login successful! Redirecting to ${clinic.name} clinic dashboard...`, {
+        duration: 2000
+      });
+
+      // Redirect to clinic dashboard after short delay
+      setTimeout(() => {
+        // Redirect to clinic portal (adjust URL as needed)
+        window.location.href = '/clinic'; // or '/dashboard' based on your routing
+      }, 2000);
+
+    } catch (error) {
+      console.error('❌ Auto-login failed:', error);
+      toast.error('Auto-login failed. Please login manually with clinic credentials.');
     }
   };
 
@@ -1172,6 +1289,14 @@ Please manually share these credentials with the clinic.`;
 
                 {/* Status Badges */}
                 <div className="flex flex-wrap gap-3 mb-8">
+                  {/* Approval Status Badge */}
+                  {clinic.subscriptionStatus === 'pending_approval' && (
+                    <span className="inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border-2 border-amber-200 shadow-amber-100/50">
+                      <AlertTriangle className="w-4 h-4 mr-2.5 text-amber-600 animate-pulse" />
+                      Pending Approval
+                    </span>
+                  )}
+
                   <span className={`inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 ${
                     clinic.isActive
                       ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-2 border-green-200 shadow-green-100/50'
@@ -1180,19 +1305,21 @@ Please manually share these credentials with the clinic.`;
                     <div className={`w-2.5 h-2.5 rounded-full mr-2.5 shadow-sm ${clinic.isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse' : 'bg-gradient-to-r from-red-500 to-red-600'}`}></div>
                     {clinic.isActive ? 'Active' : 'Inactive'}
                   </span>
-                  
-                  <span className={`inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 ${
-                    clinic.isActivated
-                      ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-2 border-blue-200 shadow-blue-100/50'
-                      : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-2 border-yellow-200 shadow-yellow-100/50'
-                  }`}>
-                    {clinic.isActivated ? (
-                      <CheckCircle className="w-4 h-4 mr-2.5 text-blue-600" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 mr-2.5 text-yellow-600" />
-                    )}
-                    {clinic.isActivated ? 'Verified' : 'Pending'}
-                  </span>
+
+                  {clinic.subscriptionStatus !== 'pending_approval' && (
+                    <span className={`inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 ${
+                      clinic.isActivated
+                        ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-2 border-blue-200 shadow-blue-100/50'
+                        : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-2 border-yellow-200 shadow-yellow-100/50'
+                    }`}>
+                      {clinic.isActivated ? (
+                        <CheckCircle className="w-4 h-4 mr-2.5 text-blue-600" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 mr-2.5 text-yellow-600" />
+                      )}
+                      {clinic.isActivated ? 'Verified' : 'Pending'}
+                    </span>
+                  )}
                   
                   <span className="inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-2 border-purple-200 shadow-purple-100/50 shadow-lg transition-all duration-300 hover:scale-105">
                     <CreditCard className="w-4 h-4 mr-2.5 text-purple-600" />
@@ -1296,7 +1423,25 @@ Please manually share these credentials with the clinic.`;
                     <span>Edit</span>
                   </button>
 
-                  {!clinic.isActivated && clinic.id && (
+                  {/* Approve Pending Clinic Button */}
+                  {clinic.subscriptionStatus === 'pending_approval' && (
+                    <button
+                      onClick={() => {
+                        try {
+                          handleClinicApproval(clinic.id);
+                        } catch (error) {
+                          console.error('Error approving clinic:', error);
+                        }
+                      }}
+                      className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0 animate-pulse"
+                      title="Approve Clinic Registration"
+                    >
+                      <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      <span>Approve</span>
+                    </button>
+                  )}
+
+                  {!clinic.isActivated && clinic.id && clinic.subscriptionStatus !== 'pending_approval' && (
                     <button
                       onClick={() => {
                         try {

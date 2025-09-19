@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { testSupabaseConnection } from './utils/supabaseTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/Landing.jsx';
 import LBWProjectUpdates from './pages/LBWProjectUpdates.jsx';
@@ -29,7 +30,17 @@ import DevelopmentModeHelper from './components/auth/DevelopmentModeHelper';
 
 function App() {
   console.log('🚀 App component loading...');
-  
+
+  // Test Supabase connection on app startup
+  useEffect(() => {
+    const runConnectionTest = async () => {
+      console.log('🚀 Neuro360 Multi-Auth System Starting...');
+      await testSupabaseConnection();
+    };
+
+    runConnectionTest();
+  }, []);
+
   // Add global error handler
   React.useEffect(() => {
     const handleError = (event) => {

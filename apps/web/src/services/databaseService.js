@@ -114,7 +114,8 @@ class DatabaseService {
       'clinics': [
         'id', 'name', 'email', 'phone', 'address', 'logo_url', 'is_active',
         'reports_used', 'reports_allowed', 'subscription_status', 'subscription_tier',
-        'trial_start_date', 'trial_end_date', 'created_at', 'updated_at'
+        'trial_start_date', 'trial_end_date', 'created_at', 'updated_at',
+        'password', 'adminPassword' // ADDED: Allow password fields for authentication
       ],
       'profiles': [
         'id', 'role', 'full_name', 'phone', 'avatar_url', 'created_at', 'updated_at'
@@ -286,21 +287,22 @@ class DatabaseService {
       console.log('🏥 Creating clinic with data:', clinicData);
 
       // Create clinic record matching the exact schema
+      // Preserve the data passed from authService (including pending approval status)
       const clinicRecord = {
         name: clinicData.name || clinicData.clinicName,
         email: clinicData.email,
-        phone: clinicData.phone,
-        address: clinicData.address,
-        logo_url: clinicData.logoUrl || null,
-        is_active: true,
-        reports_used: 0,
-        reports_allowed: parseInt(clinicData.reportsAllowed) || 10,
-        subscription_status: 'trial',
-        subscription_tier: 'free',
-        trial_start_date: new Date().toISOString(),
-        trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        phone: clinicData.phone || '',
+        address: clinicData.address || '',
+        logo_url: clinicData.logo_url || clinicData.logoUrl || null,
+        is_active: clinicData.is_active !== undefined ? clinicData.is_active : true,
+        reports_used: clinicData.reports_used || 0,
+        reports_allowed: clinicData.reports_allowed || parseInt(clinicData.reportsAllowed) || 10,
+        subscription_status: clinicData.subscription_status || 'trial',
+        subscription_tier: clinicData.subscription_tier || 'free',
+        trial_start_date: clinicData.trial_start_date || new Date().toISOString(),
+        trial_end_date: clinicData.trial_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: clinicData.created_at || new Date().toISOString(),
+        updated_at: clinicData.updated_at || new Date().toISOString()
       };
 
       console.log('📋 Clinic data to create:', clinicRecord);

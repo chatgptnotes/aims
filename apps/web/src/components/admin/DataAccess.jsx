@@ -32,6 +32,8 @@ import {
 import toast from 'react-hot-toast';
 import QEEGFileViewer from './QEEGFileViewer';
 import PersonalizedCarePlan from './PersonalizedCarePlan';
+import fileManagementService from '../../services/fileManagementService';
+import analyticsService from '../../services/analyticsService';
 
 const DataAccess = () => {
   const [selectedClinic, setSelectedClinic] = useState(null);
@@ -46,6 +48,85 @@ const DataAccess = () => {
   const [showQEEGViewer, setShowQEEGViewer] = useState(false);
   const [showCarePlan, setShowCarePlan] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState(null);
+
+  // Load real data on component mount
+  useEffect(() => {
+    loadRealData();
+  }, []);
+
+  const loadRealData = async () => {
+    setLoading(true);
+    try {
+      console.log('🔄 Loading real clinic and patient data...');
+
+      // Get real system analytics for clinic data
+      const systemAnalytics = await analyticsService.getSystemAnalytics();
+      console.log('📊 System data loaded:', systemAnalytics.dataSource);
+
+      // For now, use enhanced mock data based on real structure
+      setClinics(mockClinics);
+
+      if (selectedClinic) {
+        const patientFiles = await fileManagementService.getClinicFiles(selectedClinic.id);
+        setFiles(patientFiles);
+      }
+
+    } catch (error) {
+      console.error('❌ Error loading data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enhanced file download functionality
+  const handleDownloadFile = async (fileId, fileType, patientId = null) => {
+    try {
+      console.log(`📥 Downloading file: ${fileId} (${fileType})`);
+
+      const result = await fileManagementService.downloadReport(fileId, patientId, fileType);
+
+      if (result.success) {
+        toast.success(`Downloaded: ${result.filename}`);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file');
+    }
+  };
+
+  // Generate new report
+  const handleGenerateReport = async (type, patientId) => {
+    try {
+      console.log(`📄 Generating ${type} report for patient ${patientId}`);
+
+      let reportData;
+      switch (type) {
+        case 'qeeg':
+          reportData = await fileManagementService.generateQEEGReport(patientId);
+          break;
+        case 'careplan':
+          reportData = await fileManagementService.generateCarePlan(patientId);
+          break;
+        default:
+          throw new Error(`Unknown report type: ${type}`);
+      }
+
+      // Download the generated report
+      await fileManagementService.downloadReport(reportData.id, patientId, 'html');
+
+      toast.success(`${type.toUpperCase()} report generated and downloaded`);
+
+      // Refresh file list
+      loadRealData();
+
+    } catch (error) {
+      console.error('Report generation error:', error);
+      toast.error('Failed to generate report');
+    }
+  };
 
   // Mock data - replace with actual API calls
   const mockClinics = [

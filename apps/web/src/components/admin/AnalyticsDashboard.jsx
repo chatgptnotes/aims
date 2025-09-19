@@ -12,49 +12,88 @@ import {
   Filter
 } from 'lucide-react';
 import DatabaseService from '../../services/databaseService';
+import analyticsService from '../../services/analyticsService';
 
 const AnalyticsDashboard = ({ analytics }) => {
   const [timeRange, setTimeRange] = useState('30'); // days
   const [chartData, setChartData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [realTimeData, setRealTimeData] = useState(null);
 
   useEffect(() => {
+    loadRealAnalytics();
     generateChartData();
   }, [timeRange, analytics]);
 
-  const generateChartData = () => {
-    setLoading(true);
+  const loadRealAnalytics = async () => {
     try {
-      // Mock chart data generation
-      const days = parseInt(timeRange);
-      const dates = Array.from({ length: days }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (days - 1 - i));
-        return date.toISOString().split('T')[0];
-      });
+      setLoading(true);
+      console.log('📊 Loading real-time analytics data...');
 
-      // Generate mock data for charts
-      const reportsData = dates.map((date, index) => ({
-        date,
-        reports: Math.floor(Math.random() * 10) + 1,
-        revenue: Math.floor(Math.random() * 1000) + 100
-      }));
+      const systemAnalytics = await analyticsService.getSystemAnalytics();
+      setRealTimeData(systemAnalytics);
+
+      console.log('✅ Real-time analytics loaded:', systemAnalytics.dataSource);
+    } catch (error) {
+      console.error('❌ Error loading real analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateChartData = async () => {
+    try {
+      const days = parseInt(timeRange);
+
+      // Get real time-series data
+      const [reportsTimeSeries, revenueTimeSeries] = await Promise.all([
+        analyticsService.getTimeSeriesData('reports', days),
+        analyticsService.getTimeSeriesData('revenue', days)
+      ]);
+
+      // Combine analytics data (prefer real-time data over props)
+      const currentAnalytics = realTimeData || analytics;
 
       const clinicUsage = [
-        { name: 'Active Clinics', value: analytics.activeClinics || 0, color: '#3B82F6' },
-        { name: 'Trial Clinics', value: Math.floor((analytics.activeClinics || 0) * 0.6), color: '#F59E0B' },
-        { name: 'Inactive Clinics', value: Math.floor((analytics.activeClinics || 0) * 0.2), color: '#EF4444' }
+        {
+          name: 'Active Clinics',
+          value: currentAnalytics?.activeClinics || 0,
+          color: '#3B82F6'
+        },
+        {
+          name: 'Trial Clinics',
+          value: Object.values(currentAnalytics?.subscriptionTiers || {})
+                   .filter((_, index, arr) => index === 0).reduce((a, b) => a + b, 0),
+          color: '#F59E0B'
+        },
+        {
+          name: 'Inactive Clinics',
+          value: currentAnalytics?.inactiveClinics || 0,
+          color: '#EF4444'
+        }
       ];
 
+      // Regional distribution
+      const regionalData = Object.entries(currentAnalytics?.clinicsByRegion || {})
+        .map(([region, count]) => ({
+          name: region,
+          value: count,
+          color: `hsl(${Math.random() * 360}, 70%, 60%)`
+        }));
+
       setChartData({
-        reportsOverTime: reportsData,
-        revenueOverTime: reportsData,
-        clinicDistribution: clinicUsage
+        reportsOverTime: reportsTimeSeries,
+        revenueOverTime: revenueTimeSeries,
+        clinicDistribution: clinicUsage,
+        regionalDistribution: regionalData,
+        utilization: {
+          used: currentAnalytics?.totalReportsUsed || 0,
+          total: currentAnalytics?.totalReportsAllowed || 0,
+          percentage: currentAnalytics?.averageUtilization || 0
+        }
       });
     } catch (error) {
       console.error('Error generating chart data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
