@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Razorpay Key Loading</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status-box {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid;
+        }
+
+        .status-box.checking {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1565c0;
+        }
+
+        .status-box.success {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .status-box.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .status-box h2 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .key-display {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .key-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .key-value {
+            color: #1f2937;
+            font-size: 14px;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button.secondary {
+            background: #6b7280;
+        }
+
+        .button.secondary:hover {
+            background: #4b5563;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .checklist li {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f9fafb;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li::before {
+            content: "○";
+            margin-right: 10px;
+            font-size: 1.5em;
+            color: #9ca3af;
+        }
+
+        .checklist li.checked::before {
+            content: "✓";
+            color: #10b981;
+        }
+
+        .checklist li.failed::before {
+            content: "✗";
+            color: #ef4444;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .instructions {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .instructions h3 {
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Razorpay Key Verification</h1>
+        <p class="subtitle">Check if the correct Razorpay key is being loaded</p>
+
+        <div id="statusBox" class="status-box checking">
+            <h2>⏳ Checking...</h2>
+            <p>Verifying which Razorpay key is currently loaded...</p>
+        </div>
+
+        <div id="results" style="display: none;">
+            <div class="key-display">
+                <div class="key-label">Expected Key (from .env):</div>
+                <div class="key-value" id="expectedKey">rzp_live_xhAJH2vAW4eXzu</div>
+            </div>
+
+            <div class="key-display">
+                <div class="key-label">Actually Loaded Key:</div>
+                <div class="key-value" id="actualKey">Checking...</div>
+            </div>
+
+            <ul class="checklist" id="checklist">
+                <li id="check1">Environment variables accessible</li>
+                <li id="check2">Razorpay key loaded</li>
+                <li id="check3">Key matches expected value</li>
+                <li id="check4">No cache issues detected</li>
+            </ul>
+        </div>
+
+        <div id="errorInfo" style="display: none;" class="info-box">
+            <strong>⚠️ Cache Issue Detected!</strong>
+            <p>Your browser is loading the WRONG key from cache.</p>
+        </div>
+
+        <div id="successInfo" style="display: none;" class="info-box" style="background: #d1fae5; border-color: #10b981; color: #065f46;">
+            <strong>✅ Correct Key Loaded!</strong>
+            <p>Your Razorpay integration is using the correct credentials.</p>
+        </div>
+
+        <div class="instructions" id="instructions" style="display: none;">
+            <h3>🔧 How to Fix:</h3>
+            <ol>
+                <li><strong>Close this tab/window</strong></li>
+                <li><strong>Run:</strong> <code>complete-cache-clear.bat</code></li>
+                <li><strong>After server starts:</strong> Open in Incognito mode (Ctrl+Shift+N)</li>
+                <li><strong>Navigate to:</strong> http://localhost:5173</li>
+                <li><strong>Run this test again</strong></li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="button" onclick="runCheck()">🔄 Re-Check</button>
+            <button class="button secondary" onclick="window.location.href='http://localhost:5173'">Go to App</button>
+        </div>
+
+        <div class="code" id="consoleOutput" style="display: none;">
+            <div id="consoleText"></div>
+        </div>
+    </div>
+
+    <script>
+        const EXPECTED_KEY = 'rzp_live_xhAJH2vAW4eXzu';
+        const WRONG_KEY_PREFIX = 'rzp_live_x_A4A';
+
+        async function runCheck() {
+            console.log('🔍 Starting Razorpay key verification...');
+
+            document.getElementById('statusBox').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorInfo').style.display = 'none';
+            document.getElementById('successInfo').style.display = 'none';
+            document.getElementById('instructions').style.display = 'none';
+
+            // Wait a moment for effect
+            await new Promise(r => setTimeout(r, 500));
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+
+            let allChecks = true;
+            const consoleLog = [];
+
+            // Check 1: Environment variables accessible
+            try {
+                if (typeof import.meta !== 'undefined' && import.meta.env) {
+                    document.getElementById('check1').classList.add('checked');
+                    consoleLog.push('✅ Check 1: Environment variables accessible');
+                } else {
+                    document.getElementById('check1').classList.add('failed');
+                    allChecks = false;
+                    consoleLog.push('❌ Check 1: import.meta.env not available');
+                }
+            } catch (e) {
+                document.getElementById('check1').classList.add('failed');
+                allChecks = false;
+                consoleLog.push('❌ Check 1: Error accessing environment - ' + e.message);
+            }
+
+            // Check 2: Razorpay key loaded
+            let actualKey = 'NOT_FOUND';
+            try {
+                actualKey = import.meta.env.VITE_RAZORPAY_KEY_ID || 'NOT_FOUND';
+                if (actualKey !== 'NOT_FOUND') {
+                    document.getElementById('check2').classList.add('checked');
+                    consoleLog.push('✅ Check 2: Razorpay key found');
+                } else {
+                    document.getElementById('check2').classList.add('failed');
+                    allChecks = false;
+                    consoleLog.push('❌ Check 2: VITE_RAZORPAY_KEY_ID not found');
+                }
+            } catch (e) {
+                document.getElementById('check2').classList.add('failed');
+                allChecks = false;
+                consoleLog.push('❌ Check 2: Error loading key - ' + e.message);
+            }
+
+            document.getElementById('actualKey').textContent = actualKey;
+
+            // Check 3: Key matches expected value
+            if (actualKey === EXPECTED_KEY) {
+                document.getElementById('check3').classList.add('checked');
+                consoleLog.push('✅ Check 3: Key matches expected value');
+            } else {
+                document.getElementById('check3').classList.add('failed');
+                allChecks = false;
+                consoleLog.push('❌ Check 3: Key MISMATCH!');
+                consoleLog.push(`   Expected: ${EXPECTED_KEY}`);
+                consoleLog.push(`   Got: ${actualKey}`);
+            }
+
+            // Check 4: No cache issues
+            if (actualKey.startsWith(WRONG_KEY_PREFIX)) {
+                document.getElementById('check4').classList.add('failed');
+                allChecks = false;
+                consoleLog.push('❌ Check 4: CACHE ISSUE! Old key detected');
+                consoleLog.push('   This is the WRONG key from previous configuration');
+            } else if (actualKey === EXPECTED_KEY) {
+                document.getElementById('check4').classList.add('checked');
+                consoleLog.push('✅ Check 4: No cache issues detected');
+            } else {
+                document.getElementById('check4').classList.add('failed');
+                allChecks = false;
+                consoleLog.push('❌ Check 4: Unexpected key value');
+            }
+
+            // Update status
+            const statusBox = document.getElementById('statusBox');
+            if (allChecks) {
+                statusBox.className = 'status-box success';
+                statusBox.innerHTML = '<h2>✅ All Checks Passed!</h2><p>Your Razorpay integration is using the correct key.</p>';
+                document.getElementById('successInfo').style.display = 'block';
+            } else {
+                statusBox.className = 'status-box error';
+                statusBox.innerHTML = '<h2>❌ Issues Detected!</h2><p>Your browser is loading the wrong Razorpay key.</p>';
+                document.getElementById('errorInfo').style.display = 'block';
+                document.getElementById('instructions').style.display = 'block';
+            }
+
+            // Show console output
+            document.getElementById('consoleOutput').style.display = 'block';
+            document.getElementById('consoleText').innerHTML = consoleLog.join('\n');
+
+            // Also log to real console
+            console.log('='.repeat(80));
+            console.log('RAZORPAY KEY VERIFICATION RESULTS');
+            console.log('='.repeat(80));
+            consoleLog.forEach(log => console.log(log));
+            console.log('='.repeat(80));
+        }
+
+        // Run check on page load
+        window.addEventListener('DOMContentLoaded', runCheck);
+    </script>
+</body>
+</html>

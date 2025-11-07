@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Clinic Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover { background: #45a049; }
+    .clinic-card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+    .field { margin: 5px 0; }
+    .label { font-weight: bold; color: #555; }
+    .value { color: #333; }
+    .empty { color: #999; font-style: italic; }
+    .error { color: red; padding: 10px; background: #ffebee; border-radius: 4px; margin: 10px 0; }
+    .success { color: green; padding: 10px; background: #e8f5e9; border-radius: 4px; margin: 10px 0; }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .update-section {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fff3cd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏥 Check Clinic Data</h1>
+    <button onclick="checkClinics()">Load All Clinics</button>
+    <button onclick="addContactPersonColumn()">Add contact_person Column</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    // Load Supabase config from localStorage or use defaults
+    const SUPABASE_URL = localStorage.getItem('supabaseUrl') || 'https://omyltmcesgbhnqmhrrvq.supabase.co';
+    const SUPABASE_KEY = localStorage.getItem('supabaseAnonKey') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWx0bWNlc2diaG5xbWhycnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MzYxMDIsImV4cCI6MjA1MTExMjEwMn0.pG-F3YOFzsVfqBqX7VmADKf3z-KmQ6VrOG1yLWL0VsA';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function checkClinics() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<p>Loading clinics...</p>';
+
+      try {
+        const { data: clinics, error } = await supabase
+          .from('clinics')
+          .select('*');
+
+        if (error) {
+          output.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+          return;
+        }
+
+        if (!clinics || clinics.length === 0) {
+          output.innerHTML = '<p>No clinics found.</p>';
+          return;
+        }
+
+        let html = `<h2>Found ${clinics.length} clinic(s)</h2>`;
+
+        clinics.forEach(clinic => {
+          html += `
+            <div class="clinic-card">
+              <h3>${clinic.name || 'Unnamed Clinic'}</h3>
+              <div class="field">
+                <span class="label">ID:</span>
+                <span class="value">${clinic.id}</span>
+              </div>
+              <div class="field">
+                <span class="label">Email:</span>
+                <span class="value">${clinic.email || '<span class="empty">(empty)</span>'}</span>
+              </div>
+              <div class="field">
+                <span class="label">Contact Person:</span>
+                <span class="value">${clinic.contact_person || '<span class="empty">(empty)</span>'}</span>
+              </div>
+              <div class="field">
+                <span class="label">Phone:</span>
+                <span class="value">${clinic.phone || '<span class="empty">(empty)</span>'}</span>
+              </div>
+              <div class="field">
+                <span class="label">Address:</span>
+                <span class="value">${clinic.address || '<span class="empty">(empty)</span>'}</span>
+              </div>
+
+              <div class="update-section">
+                <h4>Update Clinic Info</h4>
+                <input type="text" id="contact_${clinic.id}" placeholder="Contact Person" value="${clinic.contact_person || ''}">
+                <input type="text" id="phone_${clinic.id}" placeholder="Phone Number" value="${clinic.phone || ''}">
+                <textarea id="address_${clinic.id}" placeholder="Address" rows="2">${clinic.address || ''}</textarea>
+                <button onclick="updateClinic('${clinic.id}')">Update This Clinic</button>
+              </div>
+            </div>
+          `;
+        });
+
+        output.innerHTML = html;
+      } catch (error) {
+        output.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    async function updateClinic(clinicId) {
+      const contactPerson = document.getElementById(`contact_${clinicId}`).value;
+      const phone = document.getElementById(`phone_${clinicId}`).value;
+      const address = document.getElementById(`address_${clinicId}`).value;
+
+      try {
+        const { data, error } = await supabase
+          .from('clinics')
+          .update({
+            contact_person: contactPerson,
+            phone: phone,
+            address: address
+          })
+          .eq('id', clinicId);
+
+        if (error) {
+          alert('❌ Error updating clinic: ' + error.message);
+          return;
+        }
+
+        alert('✅ Clinic updated successfully!');
+        checkClinics(); // Reload the data
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    async function addContactPersonColumn() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<p>Adding contact_person column...</p>';
+
+      try {
+        // Note: This requires database admin access
+        // You should run this SQL in Supabase Dashboard instead:
+        // ALTER TABLE clinics ADD COLUMN IF NOT EXISTS contact_person VARCHAR(255);
+
+        output.innerHTML = `
+          <div class="error">
+            <h3>⚠️ Cannot add column from browser</h3>
+            <p>Please run this SQL in your Supabase Dashboard > SQL Editor:</p>
+            <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto;">
+ALTER TABLE clinics
+ADD COLUMN IF NOT EXISTS contact_person VARCHAR(255);
+
+COMMENT ON COLUMN clinics.contact_person IS 'Name of the primary contact person for the clinic';
+            </pre>
+            <p>After running this SQL, click "Load All Clinics" button to check the data.</p>
+          </div>
+        `;
+      } catch (error) {
+        output.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    // Auto-load on page load
+    window.onload = checkClinics;
+  </script>
+</body>
+</html>

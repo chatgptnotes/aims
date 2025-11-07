@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Login Issue - Check Clinics Password</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover { background: #45a049; }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+    .success { background: #e8f5e9; border-left: 4px solid green; }
+    .error { background: #ffebee; border-left: 4px solid red; }
+    .warning { background: #fff3e0; border-left: 4px solid orange; }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: green;
+      font-size: 18px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #4CAF50;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Debug Login Issue</h1>
+    <p>This tool will check what password is stored in the clinics table and help debug login issues.</p>
+
+    <label>Enter Email:</label>
+    <input type="email" id="emailInput" value="hope@gmail.com" placeholder="hope@gmail.com">
+
+    <label>Enter Password You're Trying:</label>
+    <input type="password" id="passwordInput" placeholder="Enter password">
+
+    <button onclick="checkPassword()">Check Password in Database</button>
+    <button onclick="getAllClinics()">Show All Clinics</button>
+    <button onclick="testLogin()">Test Login Logic</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://omyltmcesgbhnqmhrrvq.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWx0bWNlc2diaG5xbWhycnZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MzYxMDIsImV4cCI6MjA1MTExMjEwMn0.pG-F3YOFzsVfqBqX7VmADKf3z-KmQ6VrOG1yLWL0VsA';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function checkPassword() {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+      const output = document.getElementById('output');
+
+      if (!password) {
+        output.innerHTML = `
+          <div class="result error">
+            <h3>❌ Error</h3>
+            <p>Please enter a password to test!</p>
+          </div>
+        `;
+        return;
+      }
+
+      output.innerHTML = '<div class="result">⏳ Checking password in database...</div>';
+
+      try {
+        console.log('Checking password for email:', email);
+
+        const { data, error } = await supabase
+          .from('clinics')
+          .select('*')
+          .eq('email', email);
+
+        if (error) {
+          output.innerHTML = `
+            <div class="result error">
+              <h3>❌ Database Error</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          output.innerHTML = `
+            <div class="result error">
+              <h3>❌ No Clinic Found</h3>
+              <p>No clinic found with email: <strong>${email}</strong></p>
+            </div>
+          `;
+          return;
+        }
+
+        const clinic = data[0];
+        const storedPassword = clinic.password;
+        const passwordMatches = storedPassword === password;
+
+        output.innerHTML = `
+          <div class="result ${passwordMatches ? 'success' : 'error'}">
+            <h3>${passwordMatches ? '✅ Password Match!' : '❌ Password Mismatch'}</h3>
+
+            <h4>What You Entered:</h4>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Password:</strong> ${password}</p>
+
+            <h4>What's in Database:</h4>
+            <p><strong>Stored Password:</strong> <span class="highlight">${storedPassword || '(NULL/Empty)'}</span></p>
+
+            <h4>Comparison:</h4>
+            <p><strong>Entered:</strong> "${password}"</p>
+            <p><strong>Stored:</strong> "${storedPassword}"</p>
+            <p><strong>Match:</strong> ${passwordMatches ? '✅ YES' : '❌ NO'}</p>
+
+            <h4>Full Clinic Record:</h4>
+            <table>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>ID</td>
+                <td>${clinic.id}</td>
+              </tr>
+              <tr>
+                <td>Email</td>
+                <td>${clinic.email}</td>
+              </tr>
+              <tr>
+                <td>Password</td>
+                <td><strong>${clinic.password || '(NULL/Empty)'}</strong></td>
+              </tr>
+              <tr>
+                <td>Name</td>
+                <td>${clinic.name || '(empty)'}</td>
+              </tr>
+              <tr>
+                <td>Contact Person</td>
+                <td>${clinic.contact_person || '(empty)'}</td>
+              </tr>
+              <tr>
+                <td>Clinic Name</td>
+                <td>${clinic.clinic_name || '(empty)'}</td>
+              </tr>
+              <tr>
+                <td>Phone</td>
+                <td>${clinic.phone || '(empty)'}</td>
+              </tr>
+              <tr>
+                <td>Address</td>
+                <td>${clinic.address || '(empty)'}</td>
+              </tr>
+              <tr>
+                <td>Is Active</td>
+                <td>${clinic.is_active ? 'Yes' : 'No'}</td>
+              </tr>
+            </table>
+
+            <h4>Diagnosis:</h4>
+            ${passwordMatches ?
+              '<p class="highlight">✅ Password is correct! Login should work.</p>' :
+              '<p style="color: red;">❌ Password in database is different from what you entered!</p>'
+            }
+
+            ${!storedPassword ?
+              '<p style="color: red;">⚠️ WARNING: Password field is NULL or empty in database!</p>' :
+              ''
+            }
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error:', error);
+        output.innerHTML = `
+          <div class="result error">
+            <h3>❌ Exception</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    async function getAllClinics() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<div class="result">⏳ Fetching all clinics...</div>';
+
+      try {
+        const { data, error } = await supabase
+          .from('clinics')
+          .select('id, email, password, name, contact_person, clinic_name, is_active');
+
+        if (error) {
+          output.innerHTML = `
+            <div class="result error">
+              <h3>❌ Error</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          output.innerHTML = `
+            <div class="result warning">
+              <h3>⚠️ No Clinics Found</h3>
+              <p>No clinics in the database.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let tableHTML = `
+          <div class="result success">
+            <h3>✅ All Clinics (${data.length} found)</h3>
+            <table>
+              <tr>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Name</th>
+                <th>Contact Person</th>
+                <th>Active</th>
+              </tr>
+        `;
+
+        data.forEach(clinic => {
+          tableHTML += `
+            <tr>
+              <td>${clinic.email}</td>
+              <td><strong>${clinic.password || '(NULL)'}</strong></td>
+              <td>${clinic.name || '(empty)'}</td>
+              <td>${clinic.contact_person || '(empty)'}</td>
+              <td>${clinic.is_active ? 'Yes' : 'No'}</td>
+            </tr>
+          `;
+        });
+
+        tableHTML += `
+            </table>
+          </div>
+        `;
+
+        output.innerHTML = tableHTML;
+      } catch (error) {
+        console.error('Error:', error);
+        output.innerHTML = `
+          <div class="result error">
+            <h3>❌ Exception</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    async function testLogin() {
+      const email = document.getElementById('emailInput').value.trim().toLowerCase();
+      const password = document.getElementById('passwordInput').value;
+      const output = document.getElementById('output');
+
+      if (!password) {
+        output.innerHTML = `
+          <div class="result error">
+            <h3>❌ Error</h3>
+            <p>Please enter a password to test!</p>
+          </div>
+        `;
+        return;
+      }
+
+      output.innerHTML = '<div class="result">⏳ Testing login logic...</div>';
+
+      try {
+        // Simulate the login logic from authService.js
+        console.log('🔐 Testing login with:', { email, password });
+
+        // Step 1: Get all clinics
+        const { data: clinics, error } = await supabase
+          .from('clinics')
+          .select('*');
+
+        if (error) {
+          output.innerHTML = `
+            <div class="result error">
+              <h3>❌ Database Error</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+          return;
+        }
+
+        console.log('🔍 Total clinics found:', clinics.length);
+
+        // Step 2: Try to find matching clinic
+        let matchedClinic = null;
+        let debugInfo = [];
+
+        clinics.forEach(c => {
+          const emailMatch = c.email === email;
+          const passwordMatch = c.password === password;
+          debugInfo.push({
+            email: c.email,
+            emailMatch,
+            hasPassword: !!c.password,
+            passwordMatch,
+            isMatch: emailMatch && passwordMatch
+          });
+
+          if (emailMatch && passwordMatch) {
+            matchedClinic = c;
+          }
+        });
+
+        let resultHTML = `
+          <div class="result ${matchedClinic ? 'success' : 'error'}">
+            <h3>${matchedClinic ? '✅ Login Would Succeed!' : '❌ Login Would Fail'}</h3>
+
+            <h4>Search Criteria:</h4>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Password:</strong> ${password}</p>
+
+            <h4>Search Results:</h4>
+        `;
+
+        if (matchedClinic) {
+          resultHTML += `
+            <p class="highlight">✅ Found matching clinic!</p>
+            <table>
+              <tr><th>Field</th><th>Value</th></tr>
+              <tr><td>Email</td><td>${matchedClinic.email}</td></tr>
+              <tr><td>Password</td><td>${matchedClinic.password}</td></tr>
+              <tr><td>Name</td><td>${matchedClinic.contact_person || matchedClinic.name}</td></tr>
+              <tr><td>Active</td><td>${matchedClinic.is_active ? 'Yes' : 'No'}</td></tr>
+            </table>
+          `;
+        } else {
+          resultHTML += `
+            <p style="color: red;">❌ No matching clinic found!</p>
+
+            <h4>Debug Info (all clinics checked):</h4>
+            <table>
+              <tr>
+                <th>Email</th>
+                <th>Email Match?</th>
+                <th>Has Password?</th>
+                <th>Password Match?</th>
+              </tr>
+          `;
+
+          debugInfo.forEach(info => {
+            resultHTML += `
+              <tr>
+                <td>${info.email}</td>
+                <td>${info.emailMatch ? '✅' : '❌'}</td>
+                <td>${info.hasPassword ? '✅' : '❌'}</td>
+                <td>${info.passwordMatch ? '✅' : '❌'}</td>
+              </tr>
+            `;
+          });
+
+          resultHTML += '</table>';
+        }
+
+        resultHTML += '</div>';
+        output.innerHTML = resultHTML;
+
+      } catch (error) {
+        console.error('Error:', error);
+        output.innerHTML = `
+          <div class="result error">
+            <h3>❌ Exception</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,1 +1,0 @@
-console.log('=== CLINIC DATA DEBUG ==='); const clinics = JSON.parse(localStorage.getItem('clinics') || '[]'); console.log('Total clinics in localStorage:', clinics.length); clinics.forEach((c, i) => console.log(`${i+1}. ${c.name} - Active: ${c.isActive} - Activated: ${c.isActivated}`)); console.log('========================');
