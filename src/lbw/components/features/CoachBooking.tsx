@@ -98,7 +98,7 @@ export default function CoachBooking({ coach, onBookingComplete, onCancel }: Coa
           {/* Coach Info */}
           <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="w-16 h-16 bg-brain-100 rounded-full flex items-center justify-center text-2xl">
-              👩‍⚕️
+              ‍️
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">{coach.name}</h3>

@@ -155,7 +155,7 @@ const CarePlanGenerator = ({ patient, neuroSenseReport, onSave, onClose }) => {
                 onClick={onClose}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               >
-                ✕
+                
               </button>
             </div>
           </div>
@@ -192,7 +192,7 @@ const CarePlanGenerator = ({ patient, neuroSenseReport, onSave, onClose }) => {
                         onClick={() => removeGoal(index)}
                         className="px-2 py-1 text-red-600 hover:bg-red-50 rounded"
                       >
-                        ✕
+                        
                       </button>
                     </div>
                   ) : (
@@ -233,7 +233,7 @@ const CarePlanGenerator = ({ patient, neuroSenseReport, onSave, onClose }) => {
                         onClick={() => removeIntervention(index)}
                         className="px-2 py-1 text-red-600 hover:bg-red-50 rounded"
                       >
-                        ✕
+                        
                       </button>
                     </div>
                   ) : (

@@ -12,9 +12,9 @@ class ProgressTrackingService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('📊 Progress Tracking Service: Connected');
+      console.log('DATA: Progress Tracking Service: Connected');
     } else {
-      console.warn('⚠️ Progress Tracking Service: Using offline mode');
+      console.warn('WARNING: Progress Tracking Service: Using offline mode');
       this.supabase = null;
     }
 
@@ -139,7 +139,7 @@ class ProgressTrackingService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to get progress history:', error);
+      console.error('ERROR: Failed to get progress history:', error);
       return this.getMockProgressHistory(patientId);
     }
   }
@@ -149,7 +149,7 @@ class ProgressTrackingService {
    */
   async compareProgressPeriods(patientId, period1Start, period1End, period2Start, period2End) {
     try {
-      console.log('📊 Comparing progress periods...');
+      console.log('DATA: Comparing progress periods...');
 
       // Get data for both periods
       const period1Data = await this.getProgressForPeriod(patientId, period1Start, period1End);
@@ -187,7 +187,7 @@ class ProgressTrackingService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to compare progress periods:', error);
+      console.error('ERROR: Failed to compare progress periods:', error);
       return this.getMockProgressComparison();
     }
   }
@@ -236,7 +236,7 @@ class ProgressTrackingService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to get current progress status:', error);
+      console.error('ERROR: Failed to get current progress status:', error);
       return this.getMockCurrentStatus();
     }
   }
@@ -275,7 +275,7 @@ class ProgressTrackingService {
       }));
 
     } catch (error) {
-      console.error('❌ Failed to get session progress:', error);
+      console.error('ERROR: Failed to get session progress:', error);
       return this.getMockSessionProgress();
     }
   }
@@ -285,7 +285,7 @@ class ProgressTrackingService {
    */
   async generateProgressReport(patientId, includeComparisons = true) {
     try {
-      console.log('📊 Generating comprehensive progress report...');
+      console.log('DATA: Generating comprehensive progress report...');
 
       // Get all progress data
       const [
@@ -342,7 +342,7 @@ class ProgressTrackingService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to generate progress report:', error);
+      console.error('ERROR: Failed to generate progress report:', error);
       throw new Error(`Progress report generation failed: ${error.message}`);
     }
   }

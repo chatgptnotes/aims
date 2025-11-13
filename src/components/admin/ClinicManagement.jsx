@@ -45,80 +45,76 @@ const ClinicManagement = ({ onUpdate }) => {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
-  // Simple delete function that won't crash the component
-  const deleteClinic = (clinic, index) => {
-    console.log('🗑️ DELETE CLINIC FUNCTION CALLED');
+  // Delete clinic function
+  const deleteClinic = async (clinic, index) => {
+    console.log('DELETE CLINIC FUNCTION CALLED');
     console.log('Clinic data:', clinic);
     console.log('Index:', index);
-    
+    console.log('Current clinics count:', clinics.length);
+
     try {
       const clinicName = clinic?.name || `Clinic ${index + 1}`;
       console.log('Clinic name to delete:', clinicName);
-      
+
+      if (!clinic?.id) {
+        console.error('ERROR: No clinic ID provided');
+        toast.error('Cannot delete: No clinic ID found');
+        return;
+      }
+
+      console.log('Clinic ID to delete:', clinic.id);
+
       // Show confirmation dialog
-      const confirmDelete = window.confirm(`Delete ${clinicName}?\n\nThis cannot be undone.`);
+      const confirmDelete = window.confirm(`Delete "${clinicName}"?\n\nThis action cannot be undone.`);
       console.log('User confirmed delete:', confirmDelete);
-      
+
       if (!confirmDelete) {
         console.log('User cancelled delete');
         return;
       }
-      
+
       console.log('Proceeding with delete operation...');
-      
-      // Get current clinics from localStorage
-      const currentClinics = JSON.parse(localStorage.getItem('clinics') || '[]');
-      console.log('Current clinics in storage:', currentClinics.length);
-      console.log('All clinic data:', currentClinics);
-      
-      // Remove clinic by index (most reliable method)
-      const updatedClinics = currentClinics.filter((_, i) => {
-        // Try multiple ways to identify the clinic to remove
-        if (clinic?.id && currentClinics[i]?.id) {
-          const shouldKeep = currentClinics[i].id !== clinic.id;
-          console.log(`Checking by ID: ${currentClinics[i].id} vs ${clinic.id} - Keep: ${shouldKeep}`);
-          return shouldKeep;
+      console.log('Deleting clinic ID:', clinic.id);
+
+      // Show loading toast
+      const loadingToast = toast.loading('Deleting clinic...');
+
+      try {
+        // Use DatabaseService.delete to delete the clinic directly
+        const deleteResult = await DatabaseService.delete('clinics', clinic.id);
+        console.log('DatabaseService.delete result:', deleteResult);
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        toast.success(`${clinicName} deleted successfully`);
+        console.log('Delete operation completed successfully');
+
+        // Reload clinics to refresh the list
+        console.log('Reloading clinics list...');
+        await loadClinics();
+        console.log('Clinics reloaded. New count:', clinics.length);
+
+        // Trigger refresh to ensure UI is in sync
+        if (onUpdate) {
+          console.log('Calling onUpdate callback...');
+          onUpdate();
         }
-        if (clinic?.email && currentClinics[i]?.email) {
-          const shouldKeep = currentClinics[i].email !== clinic.email;
-          console.log(`Checking by Email: ${currentClinics[i].email} vs ${clinic.email} - Keep: ${shouldKeep}`);
-          return shouldKeep;
-        }
-        // Fallback: remove by position if no ID matching works
-        const shouldKeep = i !== index;
-        console.log(`Checking by Index: ${i} vs ${index} - Keep: ${shouldKeep}`);
-        return shouldKeep;
-      });
-      
-      console.log('Updated clinics after filter:', updatedClinics.length);
-      console.log('Clinics removed:', currentClinics.length - updatedClinics.length);
-      
-      if (currentClinics.length === updatedClinics.length) {
-        console.warn('⚠️ No clinics were removed - filter may have failed');
-        toast.error('Could not identify clinic to delete');
-        return;
+      } catch (deleteError) {
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+        throw deleteError;
       }
-      
-      // Save updated data
-      localStorage.setItem('clinics', JSON.stringify(updatedClinics));
-      console.log('✅ Updated clinics saved to localStorage');
-      
-      // Update state immediately to reflect changes
-      setClinics(updatedClinics);
-      console.log('✅ React state updated');
-      
-      toast.success(`${clinicName} deleted successfully`);
-      console.log('✅ Delete operation completed successfully');
-      
+
     } catch (error) {
-      console.error('❌ Delete error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        clinic: clinic,
-        index: index
-      });
-      toast.error('Failed to delete clinic: ' + error.message);
+      console.error('Delete error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Clinic data:', clinic);
+      console.error('Index:', index);
+
+      // Show detailed error message
+      toast.error(`Failed to delete clinic: ${error.message}`);
     }
   };
 
@@ -126,16 +122,16 @@ const ClinicManagement = ({ onUpdate }) => {
     // Load clinics properly on component mount
     const initializeClinics = async () => {
       try {
-        console.log('🚀 Initializing clinic management...');
+        console.log('START: Initializing clinic management...');
         setLoading(true);
         
         // Load clinics with proper error handling
         await loadClinics(false); // Don't skip cleanup to ensure proper data loading
         
-        console.log('✅ Clinic initialization complete');
+        console.log('SUCCESS: Clinic initialization complete');
         
       } catch (error) {
-        console.error('❌ Error initializing clinics:', error);
+        console.error('ERROR: Error initializing clinics:', error);
         setClinics([]);
       } finally {
         setLoading(false);
@@ -165,7 +161,7 @@ const ClinicManagement = ({ onUpdate }) => {
 
   const cleanupDemoData = async () => {
     try {
-      console.log('🧹 Checking for demo clinic data...');
+      console.log('CLEANUP: Checking for demo clinic data...');
       
       // Get current clinic data safely
       let clinicsData = [];
@@ -176,7 +172,7 @@ const ClinicManagement = ({ onUpdate }) => {
         return; // Exit safely if we can't get data
       }
       
-      console.log('📋 Total clinics before cleanup:', clinicsData.length);
+      console.log('INFO: Total clinics before cleanup:', clinicsData.length);
       
       // Skip cleanup if no data
       if (!Array.isArray(clinicsData) || clinicsData.length === 0) {
@@ -210,7 +206,7 @@ const ClinicManagement = ({ onUpdate }) => {
         );
         
         if (isDemo) {
-          console.log(`🗑️ Removing demo clinic: ${clinic.name} - ${clinic.email}`);
+          console.log(`DELETE: Removing demo clinic: ${clinic.name} - ${clinic.email}`);
           return false;
         }
         
@@ -219,7 +215,7 @@ const ClinicManagement = ({ onUpdate }) => {
       
       // If we found demo clinics to remove, update the database
       if (realClinics.length < clinicsData.length) {
-        console.log(`✅ Removing ${clinicsData.length - realClinics.length} demo clinics`);
+        console.log(`SUCCESS: Removing ${clinicsData.length - realClinics.length} demo clinics`);
         
         try {
           // Only update if component is still mounted
@@ -251,17 +247,17 @@ const ClinicManagement = ({ onUpdate }) => {
             }
           }
           
-          console.log(`🎉 Cleanup complete! ${realClinics.length} real clinics remaining`);
+          console.log(`COMPLETE: Cleanup complete! ${realClinics.length} real clinics remaining`);
         } catch (storageError) {
           console.error('Failed to update storage after cleanup:', storageError);
           throw storageError; // Re-throw to let caller handle
         }
       } else {
-        console.log('✅ No demo clinics found - data is clean');
+        console.log('SUCCESS: No demo clinics found - data is clean');
       }
       
     } catch (error) {
-      console.error('❌ Demo data cleanup failed:', error);
+      console.error('ERROR: Demo data cleanup failed:', error);
       throw error; // Re-throw to let caller handle
     }
   };
@@ -270,47 +266,47 @@ const ClinicManagement = ({ onUpdate }) => {
     try {
       // Check if database is available
       if (!DatabaseService.usedatabase) {
-        console.log('📋 database not available, skipping migration');
+        console.log('INFO: database not available, skipping migration');
         return;
       }
 
       // Check if database already has data
       const existingClinics = await DatabaseService.get('clinics');
       if (existingClinics.length > 0) {
-        console.log('📊 database already has data, skipping migration');
+        console.log('DATA: database already has data, skipping migration');
         return;
       }
 
       // Get localStorage data
       const localStorageData = JSON.parse(localStorage.getItem('clinics') || '[]');
       if (localStorageData.length === 0) {
-        console.log('💾 No localStorage data to migrate');
+        console.log('STORAGE: No localStorage data to migrate');
         return;
       }
 
-      console.log('🚀 Starting migration of', localStorageData.length, 'clinics to database...');
+      console.log('START: Starting migration of', localStorageData.length, 'clinics to database...');
       
       // Migrate each clinic
       for (const clinic of localStorageData) {
         try {
           await DatabaseService.add('clinics', clinic);
-          console.log('✅ Migrated clinic:', clinic.name);
+          console.log('SUCCESS: Migrated clinic:', clinic.name);
         } catch (error) {
-          console.error('❌ Failed to migrate clinic:', clinic.name, error);
+          console.error('ERROR: Failed to migrate clinic:', clinic.name, error);
         }
       }
       
-      console.log('🎉 Migration completed successfully!');
+      console.log('COMPLETE: Migration completed successfully!');
       
     } catch (error) {
-      console.error('❌ Migration failed:', error);
+      console.error('ERROR: Migration failed:', error);
     }
   };
 
   const loadClinics = async (skipCleanup = false) => {
     try {
-      console.log('👑 SuperAdmin loading all registered clinics...');
-      console.log('🕒 Load time:', new Date().toLocaleTimeString());
+      console.log('SUPERADMIN: SuperAdmin loading all registered clinics...');
+      console.log('TIME: Load time:', new Date().toLocaleTimeString());
       
       // Don't clear state immediately - wait until we have new data
       // setClinics([]); // Removed this line to prevent flashing empty state
@@ -332,11 +328,11 @@ const ClinicManagement = ({ onUpdate }) => {
       
       try {
         clinicsData = await DatabaseService.get('clinics');
-        console.log('📊 Data from DatabaseService:', clinicsData.length, 'clinics');
+        console.log('DATA: Data from DatabaseService:', clinicsData.length, 'clinics');
         
         // Additional debug logging
         if (clinicsData && clinicsData.length > 0) {
-          console.log('🔍 First clinic details:', {
+          console.log('DEBUG: First clinic details:', {
             name: clinicsData[0].name,
             email: clinicsData[0].email,
             id: clinicsData[0].id,
@@ -345,7 +341,7 @@ const ClinicManagement = ({ onUpdate }) => {
           
           // Log all clinics for debugging
           clinicsData.forEach((clinic, index) => {
-            console.log(`🔍 Clinic ${index + 1}:`, {
+            console.log(`DEBUG: Clinic ${index + 1}:`, {
               name: clinic.name,
               email: clinic.email,
               id: clinic.id,
@@ -358,20 +354,20 @@ const ClinicManagement = ({ onUpdate }) => {
             });
           });
         } else {
-          console.log('📭 No clinics found in database');
+          console.log('EMPTY: No clinics found in database');
         }
       } catch (error) {
-        console.error('❌ Error getting clinics from DatabaseService:', error);
+        console.error('ERROR: Error getting clinics from DatabaseService:', error);
         clinicsData = [];
       }
       
       // Debug: Log raw data
-      console.log('🔍 Raw clinics data from DB:', clinicsData);
-      console.log('🔍 Raw localStorage data:', JSON.parse(localStorage.getItem('clinics') || '[]'));
+      console.log('DEBUG: Raw clinics data from DB:', clinicsData);
+      console.log('DEBUG: Raw localStorage data:', JSON.parse(localStorage.getItem('clinics') || '[]'));
       
       // Ensure clinicsData is an array and contains valid objects
       if (!Array.isArray(clinicsData)) {
-        console.warn('⚠️ Clinics data is not an array:', clinicsData);
+        console.warn('WARNING: Clinics data is not an array:', clinicsData);
         clinicsData = [];
       }
       
@@ -382,8 +378,8 @@ const ClinicManagement = ({ onUpdate }) => {
         (clinic.name || clinic.email || clinic.id)
       );
       
-      console.log('🏥 Found valid clinics:', clinicsData.length);
-      console.log('📋 Clinic names:', clinicsData.map(c => c && c.name || 'Unknown'));
+      console.log('CLINIC: Found valid clinics:', clinicsData.length);
+      console.log('INFO: Clinic names:', clinicsData.map(c => c && c.name || 'Unknown'));
       
       // Sort by creation date (newest first)
       const sortedClinics = clinicsData.sort((a, b) => 
@@ -394,13 +390,13 @@ const ClinicManagement = ({ onUpdate }) => {
       if (isMounted) {
         setClinics(sortedClinics);
       }
-      console.log('✅ Clinics loaded and sorted:', sortedClinics.length);
+      console.log('SUCCESS: Clinics loaded and sorted:', sortedClinics.length);
       
       // Debug: Check for duplicate IDs or missing IDs
       const clinicIds = sortedClinics.map(c => c && c.id || 'unknown-id');
       const uniqueIds = [...new Set(clinicIds)];
       if (clinicIds.length !== uniqueIds.length) {
-        console.warn('⚠️ DUPLICATE IDs found!');
+        console.warn('WARNING: DUPLICATE IDs found!');
         console.log('All IDs:', clinicIds);
         console.log('Unique IDs:', uniqueIds);
       }
@@ -408,24 +404,24 @@ const ClinicManagement = ({ onUpdate }) => {
       // Debug: Check for missing IDs
       const missingIds = sortedClinics.filter(c => !c.id);
       if (missingIds.length > 0) {
-        console.warn('⚠️ Clinics without ID found:', missingIds.length);
+        console.warn('WARNING: Clinics without ID found:', missingIds.length);
         console.log('Clinics without ID:', missingIds);
         
         // Auto-generate IDs for clinics that don't have them
-        console.log('🔄 Auto-generating missing IDs...');
+        console.log('REFRESH: Auto-generating missing IDs...');
         missingIds.forEach((clinic, index) => {
           if (!clinic.id) {
             clinic.id = `clinic-${Date.now()}-${index}`;
-            console.log(`✅ Generated ID for clinic "${clinic.name || 'Unknown'}": ${clinic.id}`);
+            console.log(`SUCCESS: Generated ID for clinic "${clinic.name || 'Unknown'}": ${clinic.id}`);
           }
         });
         
         // Save the updated clinics with IDs
         try {
           localStorage.setItem('clinics', JSON.stringify(sortedClinics));
-          console.log('💾 Updated clinics saved with generated IDs');
+          console.log('STORAGE: Updated clinics saved with generated IDs');
         } catch (error) {
-          console.error('❌ Failed to save clinics with generated IDs:', error);
+          console.error('ERROR: Failed to save clinics with generated IDs:', error);
         }
       }
       
@@ -438,7 +434,7 @@ const ClinicManagement = ({ onUpdate }) => {
         email: c && c.email || 'No email'
       })));
     } catch (error) {
-      console.error('❌ Error loading clinics:', error);
+      console.error('ERROR: Error loading clinics:', error);
       if (isMounted) {
         toast.error('Error loading clinics: ' + error.message);
         setError('Failed to load clinics: ' + error.message);
@@ -541,47 +537,47 @@ const ClinicManagement = ({ onUpdate }) => {
   };
 
   const handleDeleteClinic = async (clinicId) => {
-    console.log('🗑️ DELETE FUNCTION CALLED for clinic ID:', clinicId);
-    console.log('📊 Current time:', new Date().toISOString());
-    console.log('📋 All clinics before delete:', clinics.map(c => ({ id: c.id, name: c.name })));
+    console.log('DELETE: DELETE FUNCTION CALLED for clinic ID:', clinicId);
+    console.log('DATA: Current time:', new Date().toISOString());
+    console.log('INFO: All clinics before delete:', clinics.map(c => ({ id: c.id, name: c.name })));
     
     // Force an alert to ensure the function is being called
     alert(`Delete function called for clinic ID: ${clinicId}`);
     
     if (!clinicId) {
-      console.error('❌ No clinic ID provided for deletion');
+      console.error('ERROR: No clinic ID provided for deletion');
       alert('ERROR: No clinic ID found');
       toast.error('Cannot delete: No clinic ID found');
       return;
     }
     
-    console.log('🔍 Showing confirmation dialog...');
+    console.log('DEBUG: Showing confirmation dialog...');
     const confirmed = window.confirm(`Are you sure you want to delete clinic with ID: ${clinicId}?\n\nThis action cannot be undone.`);
-    console.log('✅ User confirmation result:', confirmed);
+    console.log('SUCCESS: User confirmation result:', confirmed);
     
     if (confirmed) {
       try {
-        console.log('✅ User confirmed deletion, proceeding...');
-        console.log('🔄 Calling DatabaseService.delete with:', { table: 'clinics', id: clinicId });
+        console.log('SUCCESS: User confirmed deletion, proceeding...');
+        console.log('REFRESH: Calling DatabaseService.delete with:', { table: 'clinics', id: clinicId });
         
         // First, let's manually check localStorage before deletion
         const currentData = JSON.parse(localStorage.getItem('clinics') || '[]');
-        console.log('📦 Current localStorage data before delete:', currentData);
+        console.log(' Current localStorage data before delete:', currentData);
         
         const result = await DatabaseService.delete('clinics', clinicId);
-        console.log('✅ DatabaseService.delete result:', result);
+        console.log('SUCCESS: DatabaseService.delete result:', result);
         
         // Check localStorage after deletion
         const afterData = JSON.parse(localStorage.getItem('clinics') || '[]');
-        console.log('📦 localStorage data after delete:', afterData);
+        console.log(' localStorage data after delete:', afterData);
         
         toast.success('Clinic deleted successfully!');
-        console.log('🔄 Reloading clinics list...');
+        console.log('REFRESH: Reloading clinics list...');
         await loadClinics();
         onUpdate?.();
-        console.log('✅ Delete operation completed successfully');
+        console.log('SUCCESS: Delete operation completed successfully');
       } catch (error) {
-        console.error('❌ Error during delete operation:', error);
+        console.error('ERROR: Error during delete operation:', error);
         console.error('Error details:', { 
           message: error.message, 
           stack: error.stack,
@@ -591,7 +587,7 @@ const ClinicManagement = ({ onUpdate }) => {
         toast.error('Error deleting clinic: ' + error.message);
       }
     } else {
-      console.log('❌ User cancelled deletion');
+      console.log('ERROR: User cancelled deletion');
       alert('Delete cancelled by user');
     }
   };
@@ -613,11 +609,11 @@ const ClinicManagement = ({ onUpdate }) => {
         // If clinic has Supabase credentials, update their email confirmation status
         if (clinic.supabaseUserId) {
           try {
-            console.log('📧 Updating Supabase profile for activated clinic...');
+            console.log('EMAIL: Updating Supabase profile for activated clinic...');
             // Note: In production, you'd need admin Supabase credentials to update user records
             // For now, we'll rely on the local database authentication fallback
           } catch (supabaseError) {
-            console.warn('⚠️ Could not update Supabase profile:', supabaseError);
+            console.warn('WARNING: Could not update Supabase profile:', supabaseError);
           }
         }
 
@@ -627,7 +623,7 @@ const ClinicManagement = ({ onUpdate }) => {
 
         // Show activation confirmation
         setTimeout(() => {
-          toast.success(`📧 Activation notification would be sent to ${clinic.email}`, {
+          toast.success(`EMAIL: Activation notification would be sent to ${clinic.email}`, {
             duration: 3000
           });
         }, 1000);
@@ -674,7 +670,7 @@ const ClinicManagement = ({ onUpdate }) => {
 
   const handleAutoClinicLogin = async (clinic) => {
     try {
-      console.log('🚀 Auto-login attempt for clinic:', clinic.name);
+      console.log('START: Auto-login attempt for clinic:', clinic.name);
 
       // Create a mock login session for the clinic
       const clinicUser = {
@@ -693,7 +689,7 @@ const ClinicManagement = ({ onUpdate }) => {
       localStorage.setItem('neuro360_token', clinicUser.token);
 
       // Show success message
-      toast.success(`🎉 Auto-login successful! Redirecting to ${clinic.name} clinic dashboard...`, {
+      toast.success(`COMPLETE: Auto-login successful! Redirecting to ${clinic.name} clinic dashboard...`, {
         duration: 2000
       });
 
@@ -704,7 +700,7 @@ const ClinicManagement = ({ onUpdate }) => {
       }, 2000);
 
     } catch (error) {
-      console.error('❌ Auto-login failed:', error);
+      console.error('ERROR: Auto-login failed:', error);
       toast.error('Auto-login failed. Please login manually with clinic credentials.');
     }
   };
@@ -828,12 +824,12 @@ const ClinicManagement = ({ onUpdate }) => {
         });
         
         await sendCredentialsEmail(selectedClinic, newPassword, otpCode);
-        toast.success('✅ Password set successfully! Credentials and activation OTP sent to clinic email.', {
+        toast.success('SUCCESS: Password set successfully! Credentials and activation OTP sent to clinic email.', {
           duration: 5000
         });
       } catch (emailError) {
         // Email failed, but password was set - show manual delivery option
-        toast.error('⚠️ Password set but email failed. Please manually share credentials with clinic.', {
+        toast.error('WARNING: Password set but email failed. Please manually share credentials with clinic.', {
           duration: 8000
         });
         
@@ -857,7 +853,7 @@ Please manually share these credentials with the clinic.`;
         try {
           if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(credentialsMessage);
-            toast.success('📋 Credentials copied to clipboard for manual sharing');
+            toast.success('INFO: Credentials copied to clipboard for manual sharing');
           } else {
             // Fallback for non-secure context
             const textArea = document.createElement('textarea');
@@ -870,11 +866,11 @@ Please manually share these credentials with the clinic.`;
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            toast.success('📋 Credentials copied to clipboard (fallback)');
+            toast.success('INFO: Credentials copied to clipboard (fallback)');
           }
         } catch (clipboardError) {
           console.warn('Could not copy to clipboard:', clipboardError);
-          toast.info('📝 Please manually copy the credentials from the alert above');
+          toast.info('NOTE: Please manually copy the credentials from the alert above');
         }
       }
       
@@ -911,17 +907,17 @@ Please manually share these credentials with the clinic.`;
       }
     } catch (error) {
       console.warn('Could not copy to clipboard:', error);
-      toast.info('📝 Please manually copy the password');
+      toast.info('NOTE: Please manually copy the password');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100 p-6">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading Clinic Management...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 font-medium">Loading Clinic Management...</p>
           </div>
         </div>
       </div>
@@ -930,24 +926,24 @@ Please manually share these credentials with the clinic.`;
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100 p-6">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto mt-20">
-          <h3 className="text-red-800 font-medium">Error Loading Clinic Management</h3>
-          <p className="text-red-600 mt-2">{error}</p>
+          <h3 className="text-red-800 font-semibold">Error Loading Clinic Management</h3>
+          <p className="text-red-600 mt-2 text-sm">{error}</p>
           <div className="flex space-x-3 mt-4">
-            <button 
+            <button
               onClick={() => {
                 setError(null);
                 setLoading(true);
                 loadClinics(false);
-              }} 
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              }}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
             >
               Retry
             </button>
-            <button 
-              onClick={() => window.location.href = '/admin'} 
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
             >
               Go to Dashboard
             </button>
@@ -965,35 +961,34 @@ Please manually share these credentials with the clinic.`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100 p-6">
-      {/* Modern Header with Glassmorphism */}
-      <div className="relative overflow-hidden bg-white/70 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5"></div>
-        <div className="relative p-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-[#E4EFFF]0 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Users className="h-7 w-7 text-white" />
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      {/* Clean Professional Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-4">
+        <div className="p-4 sm:p-5">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Users className="h-5 w-5 text-blue-600" />
                 </div>
-                <div>
-                  <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                     Clinic Management
                   </h1>
-                  <p className="text-slate-600 text-lg font-medium mt-1">
-                    Manage your registered clinics with modern precision ✨
+                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                    Manage your registered clinics with modern precision FEATURE:
                   </p>
                 </div>
               </div>
-              
+
               {/* Stats Cards */}
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/30 shadow-sm">
-                  <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="font-semibold text-slate-700">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center space-x-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                  <span className="text-xs font-medium text-gray-700">
                     {loading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-3 w-3 border-2 border-green-500 border-t-transparent"></div>
+                      <div className="flex items-center space-x-1.5">
+                        <div className="animate-spin rounded-full h-2.5 w-2.5 border-2 border-green-500 border-t-transparent"></div>
                         <span>Loading...</span>
                       </div>
                     ) : (
@@ -1001,21 +996,21 @@ Please manually share these credentials with the clinic.`;
                     )}
                   </span>
                 </div>
-                
-                <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/30 shadow-sm">
-                  <Calendar className="h-4 w-4 text-slate-500" />
-                  <span className="font-medium text-slate-600">
+
+                <div className="flex items-center space-x-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg">
+                  <Calendar className="h-3.5 w-3.5 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-600">
                     Updated: {new Date().toLocaleTimeString()}
                   </span>
                 </div>
               </div>
             </div>
-            
+
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-row gap-2 w-full lg:w-auto">
               <button
                 onClick={async () => {
-                  console.log('🔄 Manually refreshing clinic data...');
+                  console.log('REFRESH: Manually refreshing clinic data...');
                   setLoading(true);
                   try {
                     await loadClinics(false);
@@ -1027,42 +1022,36 @@ Please manually share these credentials with the clinic.`;
                     setLoading(false);
                   }
                 }}
-                className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-xl border border-white/20"
+                className="flex items-center justify-center space-x-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex-1 lg:flex-initial"
                 title="Refresh clinic data from database"
               >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                <div className="relative flex items-center space-x-2">
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Refresh Data</span>
-                </div>
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Refresh Data</span>
               </button>
-              
+
               <button
                 onClick={() => openModal()}
-                className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                className="flex items-center justify-center space-x-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex-1 lg:flex-initial"
               >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                <div className="relative flex items-center space-x-3">
-                  <Plus className="h-6 w-6" />
-                  <span>Add Clinic</span>
-                </div>
+                <Plus className="h-4 w-4" />
+                <span>Add Clinic</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modern Clinic Cards Grid */}
+      {/* All Clinics Section */}
       <div className="relative">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center space-x-3 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/30 shadow-sm">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#E4EFFF]0 to-purple-600 rounded-xl flex items-center justify-center">
-              <Users className="h-4 w-4 text-white" />
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center space-x-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="w-6 h-6 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
               {loading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                <div className="flex items-center space-x-1.5">
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent"></div>
                   <span>Loading Clinics...</span>
                 </div>
               ) : (
@@ -1072,37 +1061,56 @@ Please manually share these credentials with the clinic.`;
           </div>
         </div>
         
-        {/* Modern Card Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        {/* Modern Table View - Fully Responsive */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Clinic</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden md:table-cell">Email</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden lg:table-cell">Contact</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden xl:table-cell">Phone</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Status</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden sm:table-cell">Verification</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden lg:table-cell">Subscription</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap hidden xl:table-cell">Reports Usage</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           {(() => {
             try {
-              console.log('🔍 RENDERING: Starting to render clinics grid');
-              console.log('🔍 RENDERING: Clinics array:', clinics);
-              console.log('🔍 RENDERING: Clinics length:', clinics.length);
-              console.log('🔍 RENDERING: Clinics type:', typeof clinics);
-              console.log('🔍 RENDERING: Is Array:', Array.isArray(clinics));
+              console.log('DEBUG: RENDERING: Starting to render clinics table');
+              console.log('DEBUG: RENDERING: Clinics array:', clinics);
+              console.log('DEBUG: RENDERING: Clinics length:', clinics.length);
+              console.log('DEBUG: RENDERING: Clinics type:', typeof clinics);
+              console.log('DEBUG: RENDERING: Is Array:', Array.isArray(clinics));
               
               if (!Array.isArray(clinics)) {
-                console.error('❌ CRITICAL: clinics is not an array!', clinics);
+                console.error('ERROR: CRITICAL: clinics is not an array!', clinics);
                 return (
-                  <div className="col-span-3 bg-red-100 border border-red-300 rounded-lg p-4">
-                    <p className="text-red-700">Error: Clinics data is not an array</p>
-                    <p className="text-xs text-red-500">Type: {typeof clinics}</p>
-                    <p className="text-xs text-red-500">Value: {JSON.stringify(clinics)}</p>
-                  </div>
+                  <tr>
+                    <td colSpan="9" className="px-4 py-8 text-center">
+                      <div className="bg-red-100 border border-red-300 rounded-lg p-4 inline-block">
+                        <p className="text-red-700">Error: Clinics data is not an array</p>
+                        <p className="text-xs text-red-500">Type: {typeof clinics}</p>
+                      </div>
+                    </td>
+                  </tr>
                 );
               }
               
               return clinics.map((clinic, index) => {
                 try {
-                  console.log(`🔍 CLINIC ${index}: Starting render for clinic at index ${index}`);
-                  console.log(`🔍 CLINIC ${index}: Raw clinic data:`, clinic);
-                  console.log(`🔍 CLINIC ${index}: Clinic type:`, typeof clinic);
-                  console.log(`🔍 CLINIC ${index}: Clinic constructor:`, clinic ? clinic.constructor.name : 'null');
+                  console.log(`DEBUG: CLINIC ${index}: Starting render for clinic at index ${index}`);
+                  console.log(`DEBUG: CLINIC ${index}: Raw clinic data:`, clinic);
+                  console.log(`DEBUG: CLINIC ${index}: Clinic type:`, typeof clinic);
+                  console.log(`DEBUG: CLINIC ${index}: Clinic constructor:`, clinic ? clinic.constructor.name : 'null');
                   
                   // Safety check for clinic object
                   if (clinic === null) {
-                    console.warn(`⚠️ CLINIC ${index}: clinic is null`);
+                    console.warn(`WARNING: CLINIC ${index}: clinic is null`);
                     return (
                       <div key={`null-${index}`} className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
                         <p className="text-yellow-700">Warning: Null clinic at index {index}</p>
@@ -1111,7 +1119,7 @@ Please manually share these credentials with the clinic.`;
                   }
                   
                   if (clinic === undefined) {
-                    console.warn(`⚠️ CLINIC ${index}: clinic is undefined`);
+                    console.warn(`WARNING: CLINIC ${index}: clinic is undefined`);
                     return (
                       <div key={`undefined-${index}`} className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
                         <p className="text-yellow-700">Warning: Undefined clinic at index {index}</p>
@@ -1120,7 +1128,7 @@ Please manually share these credentials with the clinic.`;
                   }
                   
                   if (typeof clinic !== 'object') {
-                    console.warn(`⚠️ CLINIC ${index}: clinic is not an object:`, typeof clinic, clinic);
+                    console.warn(`WARNING: CLINIC ${index}: clinic is not an object:`, typeof clinic, clinic);
                     return (
                       <div key={`invalid-${index}`} className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
                         <p className="text-yellow-700">Warning: Invalid clinic object at index {index}</p>
@@ -1131,45 +1139,45 @@ Please manually share these credentials with the clinic.`;
                   }
                   
                   // Deep inspection of clinic object
-                  console.log(`🔍 CLINIC ${index}: clinic.name:`, clinic.name);
-                  console.log(`🔍 CLINIC ${index}: clinic.name type:`, typeof clinic.name);
-                  console.log(`🔍 CLINIC ${index}: clinic.name === null:`, clinic.name === null);
-                  console.log(`🔍 CLINIC ${index}: clinic.name === undefined:`, clinic.name === undefined);
-                  console.log(`🔍 CLINIC ${index}: clinic.name length:`, clinic.name ? clinic.name.length : 'N/A');
-                  console.log(`🔍 CLINIC ${index}: All properties:`, Object.keys(clinic));
+                  console.log(`DEBUG: CLINIC ${index}: clinic.name:`, clinic.name);
+                  console.log(`DEBUG: CLINIC ${index}: clinic.name type:`, typeof clinic.name);
+                  console.log(`DEBUG: CLINIC ${index}: clinic.name === null:`, clinic.name === null);
+                  console.log(`DEBUG: CLINIC ${index}: clinic.name === undefined:`, clinic.name === undefined);
+                  console.log(`DEBUG: CLINIC ${index}: clinic.name length:`, clinic.name ? clinic.name.length : 'N/A');
+                  console.log(`DEBUG: CLINIC ${index}: All properties:`, Object.keys(clinic));
                   
                   // Convert name to safe string if needed
                   let safeName = 'Unknown Clinic';
                   let safeInitial = 'C';
                   
                   try {
-                    console.log(`🔍 CLINIC ${index}: Processing clinic.name for safe display`);
+                    console.log(`DEBUG: CLINIC ${index}: Processing clinic.name for safe display`);
                     
                     if (clinic.name !== null && clinic.name !== undefined) {
                       if (typeof clinic.name === 'string') {
                         safeName = clinic.name;
-                        console.log(`🔍 CLINIC ${index}: Name is string: "${safeName}"`);
+                        console.log(`DEBUG: CLINIC ${index}: Name is string: "${safeName}"`);
                         
                         if (clinic.name && clinic.name.length > 0) {
                           try {
                             safeInitial = clinic.name.charAt(0).toUpperCase();
-                            console.log(`🔍 CLINIC ${index}: Got initial: "${safeInitial}"`);
+                            console.log(`DEBUG: CLINIC ${index}: Got initial: "${safeInitial}"`);
                           } catch (charError) {
-                            console.error(`❌ CLINIC ${index}: Error in charAt:`, charError);
+                            console.error(`ERROR: CLINIC ${index}: Error in charAt:`, charError);
                             safeInitial = 'C';
                           }
                         } else {
-                          console.log(`🔍 CLINIC ${index}: Name is empty string`);
+                          console.log(`DEBUG: CLINIC ${index}: Name is empty string`);
                           safeInitial = 'E'; // E for Empty
                         }
                       } else {
-                        console.log(`🔍 CLINIC ${index}: Name is not string, converting:`, typeof clinic.name);
+                        console.log(`DEBUG: CLINIC ${index}: Name is not string, converting:`, typeof clinic.name);
                         safeName = String(clinic.name);
                         if (safeName && safeName.length > 0) {
                           try {
                             safeInitial = safeName.charAt(0).toUpperCase();
                           } catch (charError) {
-                            console.error(`❌ CLINIC ${index}: Error in safeName charAt:`, charError);
+                            console.error(`ERROR: CLINIC ${index}: Error in safeName charAt:`, charError);
                             safeInitial = 'S';
                           }
                         } else {
@@ -1177,338 +1185,182 @@ Please manually share these credentials with the clinic.`;
                         }
                       }
                     } else {
-                      console.log(`🔍 CLINIC ${index}: Name is null or undefined`);
+                      console.log(`DEBUG: CLINIC ${index}: Name is null or undefined`);
                       safeName = 'Unknown Clinic';
                       safeInitial = 'U'; // U for Unknown
                     }
                   } catch (nameError) {
-                    console.error(`❌ CLINIC ${index}: Error processing name:`, nameError);
-                    console.error(`❌ CLINIC ${index}: clinic.name was:`, clinic.name);
-                    console.error(`❌ CLINIC ${index}: Full clinic object:`, clinic);
+                    console.error(`ERROR: CLINIC ${index}: Error processing name:`, nameError);
+                    console.error(`ERROR: CLINIC ${index}: clinic.name was:`, clinic.name);
+                    console.error(`ERROR: CLINIC ${index}: Full clinic object:`, clinic);
                     safeName = 'Error Processing Name';
                     safeInitial = '!';
                   }
                   
-                  console.log(`✅ CLINIC ${index}: Final safe values - name: "${safeName}", initial: "${safeInitial}"`);
-                  console.log(`🔑 CLINIC ${index}: ID for operations: "${clinic.id}"`);
-                  
+                  console.log(`SUCCESS: CLINIC ${index}: Final safe values - name: "${safeName}", initial: "${safeInitial}"`);
+                  console.log(`KEY: CLINIC ${index}: ID for operations: "${clinic.id}"`);
+
+                  const usagePercent = Math.round(((clinic.reportsUsed || 0) / (clinic.reportsAllowed || 10)) * 100);
+
                   return (
-            <div
-              key={clinic.id || `clinic-${index}`}
-              className="group relative overflow-hidden bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-white hover:via-[#CAE0FF]/50 hover:to-indigo-50/30"
-            >
-              {/* Animated Gradient Border */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#E4EFFF]0 via-purple-500 to-pink-500 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute inset-[2px] bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 rounded-[22px]"></div>
-              
-              {/* Card Content */}
-              <div className="relative p-8">
-                {/* Clinic Avatar & Basic Info */}
-                <div className="flex items-start space-x-6 mb-8">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#E4EFFF]0 via-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-2xl overflow-hidden ring-4 ring-white/20 group-hover:ring-blue-100/40 transition-all duration-300">
-                      {clinic.avatar ? (
-                        <img 
-                          src={clinic.avatar} 
-                          alt={`${safeName} Profile`} 
-                          className="w-20 h-20 object-cover group-hover:scale-110 transition-transform duration-300"
-                          onError={(e) => {
-                            console.log(`🖼️ Profile picture failed to load for ${safeName}, showing initial`);
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className={`w-20 h-20 flex items-center justify-center ${clinic.avatar ? 'hidden' : ''} group-hover:scale-110 transition-transform duration-300`}>
-                        {safeInitial}
-                      </div>
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg border-3 border-white ring-2 ring-blue-100">
-                      {clinic.isActive ? (
-                        <div className="w-3.5 h-3.5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse shadow-sm"></div>
-                      ) : (
-                        <div className="w-3.5 h-3.5 bg-gradient-to-r from-red-400 to-red-500 rounded-full shadow-sm"></div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-2xl font-black text-slate-800 truncate group-hover:text-[#323956] transition-colors mb-2 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text group-hover:from-blue-600 group-hover:to-indigo-600">
-                      {safeName}
-                    </h3>
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="flex items-center space-x-2 px-3 py-1.5 bg-[#E4EFFF] rounded-full border border-blue-100">
-                        <Mail className="w-3.5 h-3.5 text-[#323956]" />
-                        <span className="text-sm font-medium text-blue-700 truncate">{clinic.email || 'No email'}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-slate-600">
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4 text-slate-400" />
-                        <span className="font-medium">{clinic.contactPerson || 'No contact'}</span>
-                      </div>
-                      <div className="w-1 h-1 bg-slate-300 rounded-full"></div>
-                      <div className="flex items-center space-x-1">
-                        <Phone className="w-4 h-4 text-slate-400" />
-                        <span className="font-medium">{clinic.phone || 'No phone'}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    <tr key={clinic.id || `clinic-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      {/* Clinic Name with Avatar */}
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs shadow-sm relative">
+                            {clinic.avatar ? (
+                              <img src={clinic.avatar} alt={safeName} className="w-8 h-8 rounded-full object-cover" />
+                            ) : (
+                              safeInitial
+                            )}
+                            <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${clinic.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[100px] sm:max-w-[150px]">{safeName}</div>
+                            <div className="md:hidden text-xs text-gray-500 dark:text-gray-400 truncate max-w-[100px]">{clinic.email || '-'}</div>
+                          </div>
+                        </div>
+                      </td>
 
-                {/* Status Badges */}
-                <div className="flex flex-wrap gap-3 mb-8">
-                  {/* Approval Status Badge */}
-                  {clinic.subscriptionStatus === 'pending_approval' && (
-                    <span className="inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border-2 border-amber-200 shadow-amber-100/50">
-                      <AlertTriangle className="w-4 h-4 mr-2.5 text-amber-600 animate-pulse" />
-                      Pending Approval
-                    </span>
-                  )}
+                      {/* Email */}
+                      <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">
+                        <div className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[180px]">{clinic.email || '-'}</div>
+                      </td>
 
-                  <span className={`inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 ${
-                    clinic.isActive
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-2 border-green-200 shadow-green-100/50'
-                      : 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-2 border-red-200 shadow-red-100/50'
-                  }`}>
-                    <div className={`w-2.5 h-2.5 rounded-full mr-2.5 shadow-sm ${clinic.isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse' : 'bg-gradient-to-r from-red-500 to-red-600'}`}></div>
-                    {clinic.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                      {/* Contact Person */}
+                      <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">
+                        <div className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[120px]">{clinic.contactPerson || '-'}</div>
+                      </td>
 
-                  {clinic.subscriptionStatus !== 'pending_approval' && (
-                    <span className={`inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold shadow-lg transition-all duration-300 hover:scale-105 ${
-                      clinic.isActivated
-                        ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-2 border-blue-200 shadow-blue-100/50'
-                        : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-2 border-yellow-200 shadow-yellow-100/50'
-                    }`}>
-                      {clinic.isActivated ? (
-                        <CheckCircle className="w-4 h-4 mr-2.5 text-[#323956]" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 mr-2.5 text-yellow-600" />
-                      )}
-                      {clinic.isActivated ? 'Verified' : 'Pending'}
-                    </span>
-                  )}
-                  
-                  <span className="inline-flex items-center px-4 py-2.5 rounded-2xl text-sm font-bold bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-2 border-purple-200 shadow-purple-100/50 shadow-lg transition-all duration-300 hover:scale-105">
-                    <CreditCard className="w-4 h-4 mr-2.5 text-purple-600" />
-                    {clinic.subscriptionStatus || 'trial'}
-                  </span>
-                </div>
+                      {/* Phone */}
+                      <td className="px-4 py-2 whitespace-nowrap hidden xl:table-cell">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">{clinic.phone || '-'}</div>
+                      </td>
 
-                {/* Usage Progress */}
-                <div className="mb-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-slate-600" />
-                      <span className="text-sm font-bold text-slate-700">Reports Usage</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-bold text-slate-800">{clinic.reportsUsed || 0}</span>
-                      <span className="text-sm text-slate-500">/</span>
-                      <span className="text-sm font-bold text-slate-600">{clinic.reportsAllowed || 10}</span>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div className="w-full bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl h-5 overflow-hidden shadow-inner border border-slate-200">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#E4EFFF]0 via-purple-500 to-indigo-600 rounded-2xl transition-all duration-1000 ease-out shadow-lg relative overflow-hidden"
-                        style={{
-                          width: `${Math.min(((clinic.reportsUsed || 0) / (clinic.reportsAllowed || 10)) * 100, 100)}%`
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-                      </div>
-                    </div>
-                    {/* Usage percentage indicator */}
-                    <div className="absolute -top-8 right-0 bg-gradient-to-r from-[#E4EFFF]0 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg">
-                      {Math.round(((clinic.reportsUsed || 0) / (clinic.reportsAllowed || 10)) * 100)}%
-                    </div>
-                  </div>
-                </div>
+                      {/* Status */}
+                      <td className="px-4 py-2 whitespace-nowrap text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          clinic.isActive
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${clinic.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                          <span className="hidden sm:inline">{clinic.isActive ? 'Active' : 'Inactive'}</span>
+                          <span className="sm:hidden">{clinic.isActive ? 'A' : 'I'}</span>
+                        </span>
+                      </td>
 
-                {/* Created Date */}
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-slate-200">
-                    <Calendar className="w-4 h-4 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-700">
-                      Created: {clinic.createdAt ? new Date(clinic.createdAt).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      }) : 'Unknown date'}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-[#E4EFFF] to-indigo-50 rounded-lg border border-blue-200">
-                    <div className="w-2 h-2 bg-[#323956] rounded-full animate-pulse"></div>
-                    <span className="text-xs font-bold text-blue-700">LIVE</span>
-                  </div>
-                </div>
+                      {/* Verification */}
+                      <td className="px-4 py-2 whitespace-nowrap text-center hidden sm:table-cell">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          clinic.isActivated
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                        }`}>
+                          {clinic.isActivated ? (
+                            <><CheckCircle className="w-3 h-3 mr-1" /> Verified</>
+                          ) : (
+                            <><AlertTriangle className="w-3 h-3 mr-1" /> Trial</>
+                          )}
+                        </span>
+                      </td>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => {
-                      try {
-                        viewClinicDetails(clinic);
-                      } catch (error) {
-                        console.error('Error viewing clinic details:', error);
-                      }
-                    }}
-                    className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-[#E4EFFF]0 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0"
-                    title="View Details"
-                  >
-                    <Eye className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    <span>View</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      try {
-                        openAdminAssignment(clinic);
-                      } catch (error) {
-                        console.error('Error opening admin assignment:', error);
-                      }
-                    }}
-                    className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0"
-                    title="Manage Administrators"
-                  >
-                    <UserPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    <span>Admins</span>
-                  </button>
+                      {/* Subscription */}
+                      <td className="px-4 py-2 whitespace-nowrap text-center hidden lg:table-cell">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
+                          {clinic.subscriptionStatus || 'Trial'}
+                        </span>
+                      </td>
 
-                  <button
-                    onClick={() => {
-                      try {
-                        openModal(clinic);
-                      } catch (error) {
-                        console.error('Error opening modal:', error);
-                      }
-                    }}
-                    className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-slate-500 to-gray-600 hover:from-slate-600 hover:to-gray-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0"
-                    title="Edit Clinic"
-                  >
-                    <Edit className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    <span>Edit</span>
-                  </button>
+                      {/* Reports Usage */}
+                      <td className="px-4 py-2 whitespace-nowrap hidden xl:table-cell">
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 min-w-[80px]">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                              <div
+                                className="bg-blue-500 dark:bg-blue-400 h-1.5 rounded-full transition-all"
+                                style={{ width: `${usagePercent}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            {clinic.reportsUsed || 0}/{clinic.reportsAllowed || 10}
+                          </span>
+                        </div>
+                      </td>
 
-                  {/* Approve Pending Clinic Button */}
-                  {clinic.subscriptionStatus === 'pending_approval' && (
-                    <button
-                      onClick={() => {
-                        try {
-                          handleClinicApproval(clinic.id);
-                        } catch (error) {
-                          console.error('Error approving clinic:', error);
-                        }
-                      }}
-                      className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0 animate-pulse"
-                      title="Approve Clinic Registration"
-                    >
-                      <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                      <span>Approve</span>
-                    </button>
-                  )}
+                      {/* Actions */}
+                      <td className="px-4 py-2 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center space-x-1.5">
+                          <button
+                            onClick={() => viewClinicDetails(clinic)}
+                            className="p-1.5 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-md transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
 
-                  {!clinic.isActivated && clinic.id && clinic.subscriptionStatus !== 'pending_approval' && (
-                    <button
-                      onClick={() => {
-                        try {
-                          handleManualActivation(clinic.id);
-                        } catch (error) {
-                          console.error('Error activating clinic:', error);
-                        }
-                      }}
-                      className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0"
-                      title="Manually Activate"
-                    >
-                      <RefreshCw className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                      <span>Activate</span>
-                    </button>
-                  )}
-                  
-                  {clinic.id && (
-                    <button
-                      onClick={() => {
-                        try {
-                          handleDeactivateClinic(clinic.id);
-                        } catch (error) {
-                          console.error('Error toggling clinic status:', error);
-                        }
-                      }}
-                      className={`group flex items-center space-x-2 px-5 py-3 rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0 ${
-                        clinic.isActive 
-                          ? 'bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white' 
-                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
-                      }`}
-                      title={clinic.isActive ? "Deactivate" : "Activate"}
-                    >
-                      {clinic.isActive ? <AlertTriangle className="h-4 w-4 group-hover:scale-110 transition-transform" /> : <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />}
-                      <span>{clinic.isActive ? 'Deactivate' : 'Activate'}</span>
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={() => deleteClinic(clinic, index)}
-                    className="group flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-2xl text-sm font-bold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border-0"
-                    title="Delete Clinic"
-                  >
-                    <Trash2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            );
+                          <button
+                            onClick={() => openModal(clinic)}
+                            className="p-1.5 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-md transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Delete button clicked for:', clinic.name);
+                              deleteClinic(clinic, index);
+                            }}
+                            className="p-1.5 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-md transition-colors cursor-pointer"
+                            title="Delete Clinic"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
             } catch (error) {
-              console.error(`❌ CLINIC ${index}: Error rendering clinic card:`, error);
-              console.error(`❌ CLINIC ${index}: Error stack:`, error.stack);
-              console.error(`❌ CLINIC ${index}: Error message:`, error.message);
-              console.error(`❌ CLINIC ${index}: Clinic data:`, clinic);
-              console.error(`❌ CLINIC ${index}: Clinic JSON:`, JSON.stringify(clinic, null, 2));
+              console.error(`ERROR: CLINIC ${index}: Error rendering clinic row:`, error);
+              console.error(`ERROR: CLINIC ${index}: Error stack:`, error.stack);
+              console.error(`ERROR: CLINIC ${index}: Error message:`, error.message);
+              console.error(`ERROR: CLINIC ${index}: Clinic data:`, clinic);
+              console.error(`ERROR: CLINIC ${index}: Clinic JSON:`, JSON.stringify(clinic, null, 2));
               return (
-                <div key={`error-${index}`} className="bg-red-100 border border-red-300 rounded-lg p-4">
-                  <p className="text-red-700">❌ Error displaying clinic {index + 1}</p>
-                  <p className="text-xs text-red-500 font-mono">Error: {error.message}</p>
-                  <p className="text-xs text-red-500 font-mono">Type: {typeof clinic}</p>
-                  <p className="text-xs text-red-500 font-mono">Clinic: {clinic ? JSON.stringify(clinic).substring(0, 100) + '...' : 'null'}</p>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 ERROR DETAILS for clinic', index);
-                      console.log('Clinic object:', clinic);
-                      console.log('Error object:', error);
-                      console.log('All clinics:', clinics);
-                    }}
-                    className="mt-2 px-2 py-1 bg-red-200 text-red-800 rounded text-xs"
-                  >
-                    Debug in Console
-                  </button>
-                </div>
+                <tr key={`error-${index}`} className="bg-red-50">
+                  <td colSpan="9" className="px-4 py-4 text-center">
+                    <div className="text-red-700 text-sm">
+                      <p>ERROR: Error displaying clinic {index + 1}</p>
+                      <p className="text-xs text-red-500 font-mono">Error: {error.message}</p>
+                    </div>
+                  </td>
+                </tr>
               );
             }
           });
             } catch (mapError) {
-              console.error('❌ CRITICAL: Error in clinics.map:', mapError);
-              console.error('❌ CRITICAL: Error stack:', mapError.stack);
-              console.error('❌ CRITICAL: Clinics data:', clinics);
+              console.error('ERROR: CRITICAL: Error in clinics.map:', mapError);
+              console.error('ERROR: CRITICAL: Error stack:', mapError.stack);
+              console.error('ERROR: CRITICAL: Clinics data:', clinics);
               return (
-                <div className="col-span-3 bg-red-100 border border-red-300 rounded-lg p-4">
-                  <p className="text-red-700">❌ Critical Error: Unable to render clinics</p>
-                  <p className="text-xs text-red-500 font-mono">Map Error: {mapError.message}</p>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 MAP ERROR DETAILS');
-                      console.log('Map error:', mapError);
-                      console.log('Clinics:', clinics);
-                    }}
-                    className="mt-2 px-2 py-1 bg-red-200 text-red-800 rounded text-xs"
-                  >
-                    Debug in Console
-                  </button>
-                </div>
+                <tr>
+                  <td colSpan="9" className="px-4 py-8 text-center">
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-4 inline-block">
+                      <p className="text-red-700">ERROR: Critical Error: Unable to render clinics</p>
+                      <p className="text-xs text-red-500 font-mono">Map Error: {mapError.message}</p>
+                    </div>
+                  </td>
+                </tr>
               );
             }
           })()}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Empty State */}
@@ -1610,7 +1462,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
                   alt={`${clinic.name} Profile`} 
                   className="w-20 h-20 object-cover"
                   onError={(e) => {
-                    console.log(`🖼️ Profile picture failed to load for ${clinic.name} in modal`);
+                    console.log(`IMAGE: Profile picture failed to load for ${clinic.name} in modal`);
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.display = 'flex';
                   }}
@@ -1888,7 +1740,7 @@ const ClinicDetails = ({ clinic, onBack }) => {
                     alt={`${clinic.name} Profile`} 
                     className="h-16 w-16 object-cover"
                     onError={(e) => {
-                      console.log(`🖼️ Profile picture failed to load for ${clinic.name}, showing icon`);
+                      console.log(`IMAGE: Profile picture failed to load for ${clinic.name}, showing icon`);
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
                     }}

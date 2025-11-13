@@ -17,7 +17,7 @@ class QEEGProService {
    */
   async uploadForProcessing(edfFile, patientInfo) {
     try {
-      console.log('📤 Uploading EDF file to qEEG Pro:', edfFile.name);
+      console.log(' Uploading EDF file to qEEG Pro:', edfFile.name);
 
       // Simulate API call for demo (replace with actual API)
       const processingJob = await this.simulateQEEGProcessing(edfFile, patientInfo);
@@ -30,7 +30,7 @@ class QEEGProService {
         message: 'EDF file successfully uploaded to qEEG Pro for processing'
       };
     } catch (error) {
-      console.error('❌ Failed to upload to qEEG Pro:', error);
+      console.error('ERROR: Failed to upload to qEEG Pro:', error);
       throw new Error(`qEEG Pro upload failed: ${error.message}`);
     }
   }
@@ -42,14 +42,14 @@ class QEEGProService {
    */
   async checkProcessingStatus(jobId) {
     try {
-      console.log('🔍 Checking qEEG Pro job status:', jobId);
+      console.log('DEBUG: Checking qEEG Pro job status:', jobId);
 
       // Simulate status check (replace with actual API)
       const status = await this.simulateStatusCheck(jobId);
 
       return status;
     } catch (error) {
-      console.error('❌ Failed to check qEEG Pro status:', error);
+      console.error('ERROR: Failed to check qEEG Pro status:', error);
       throw new Error(`Status check failed: ${error.message}`);
     }
   }
@@ -61,14 +61,14 @@ class QEEGProService {
    */
   async downloadReport(jobId) {
     try {
-      console.log('📥 Downloading qEEG Pro report:', jobId);
+      console.log(' Downloading qEEG Pro report:', jobId);
 
       // Simulate report download (replace with actual API)
       const report = await this.simulateReportDownload(jobId);
 
       return report;
     } catch (error) {
-      console.error('❌ Failed to download qEEG Pro report:', error);
+      console.error('ERROR: Failed to download qEEG Pro report:', error);
       throw new Error(`Report download failed: ${error.message}`);
     }
   }
@@ -189,7 +189,7 @@ class QEEGProService {
       jobs[jobId].reportUrl = `https://demo-qeegpro.com/reports/${jobId}.pdf`;
       localStorage.setItem('qeegProJobs', JSON.stringify(jobs));
 
-      console.log('✅ qEEG Pro processing completed for job:', jobId);
+      console.log('SUCCESS: qEEG Pro processing completed for job:', jobId);
     }
   }
 
@@ -209,7 +209,7 @@ class QEEGProService {
         new Date(b.submittedAt) - new Date(a.submittedAt)
       );
     } catch (error) {
-      console.error('❌ Failed to get clinic jobs:', error);
+      console.error('ERROR: Failed to get clinic jobs:', error);
       return [];
     }
   }
@@ -232,7 +232,7 @@ class QEEGProService {
 
       throw new Error('Job not found or not cancellable');
     } catch (error) {
-      console.error('❌ Failed to cancel job:', error);
+      console.error('ERROR: Failed to cancel job:', error);
       throw new Error(`Job cancellation failed: ${error.message}`);
     }
   }

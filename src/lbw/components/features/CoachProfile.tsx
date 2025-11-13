@@ -49,7 +49,7 @@ export default function CoachProfile({ coach, onBookSession, onClose }: CoachPro
               <Card className="p-6">
                 <div className="text-center mb-6">
                   <div className="w-24 h-24 bg-brain-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
-                    👩‍⚕️
+                    ‍️
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900">{coach.name}</h3>
                   <p className="text-gray-600">{coach.title}</p>
@@ -123,7 +123,7 @@ export default function CoachProfile({ coach, onBookSession, onClose }: CoachPro
                       key={index}
                       className="flex items-center space-x-3 p-3 bg-brain-50 rounded-lg"
                     >
-                      <span className="text-brain-600">🎓</span>
+                      <span className="text-brain-600"></span>
                       <span className="text-sm text-gray-700">{cert}</span>
                     </div>
                   ))}

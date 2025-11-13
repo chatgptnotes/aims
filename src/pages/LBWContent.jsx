@@ -11,12 +11,12 @@ const LBWContent = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = [
-    { id: 'all', name: 'All Content', icon: '📚' },
-    { id: 'articles', name: 'Articles', icon: '📄' },
-    { id: 'videos', name: 'Videos', icon: '🎥' },
-    { id: 'podcasts', name: 'Podcasts', icon: '🎧' },
-    { id: 'exercises', name: 'Exercises', icon: '🧠' },
-    { id: 'research', name: 'Research', icon: '🔬' }
+    { id: 'all', name: 'All Content', icon: '' },
+    { id: 'articles', name: 'Articles', icon: 'FILE:' },
+    { id: 'videos', name: 'Videos', icon: '' },
+    { id: 'podcasts', name: 'Podcasts', icon: '' },
+    { id: 'exercises', name: 'Exercises', icon: '' },
+    { id: 'research', name: 'Research', icon: '' }
   ];
 
   const contentItems = [
@@ -30,7 +30,7 @@ const LBWContent = () => {
       rating: 4.8,
       views: 1250,
       premium: false,
-      thumbnail: '📖',
+      thumbnail: '',
       description: 'Learn about ADHD symptoms, diagnosis, and management strategies'
     },
     {
@@ -43,7 +43,7 @@ const LBWContent = () => {
       rating: 4.9,
       views: 3420,
       premium: false,
-      thumbnail: '🎥',
+      thumbnail: '',
       description: 'Guided meditation session for improving focus and reducing stress'
     },
     {
@@ -56,7 +56,7 @@ const LBWContent = () => {
       rating: 4.7,
       views: 890,
       premium: true,
-      thumbnail: '🎙️',
+      thumbnail: '️',
       description: 'Expert insights on improving memory and cognitive function'
     },
     {
@@ -69,7 +69,7 @@ const LBWContent = () => {
       rating: 4.6,
       views: 2100,
       premium: false,
-      thumbnail: '🧩',
+      thumbnail: '',
       description: 'Interactive exercises to improve concentration and attention'
     },
     {
@@ -82,7 +82,7 @@ const LBWContent = () => {
       rating: 4.9,
       views: 450,
       premium: true,
-      thumbnail: '📊',
+      thumbnail: 'DATA:',
       description: 'Recent studies on neurofeedback effectiveness and applications'
     },
     {
@@ -95,7 +95,7 @@ const LBWContent = () => {
       rating: 4.5,
       views: 1780,
       premium: false,
-      thumbnail: '🥗',
+      thumbnail: '',
       description: 'Foods and supplements that support optimal brain function'
     }
   ];
@@ -106,28 +106,28 @@ const LBWContent = () => {
       items: 5,
       duration: '2 hours',
       color: 'from-[#E4EFFF]0 to-purple-600',
-      icon: '🚀'
+      icon: 'START:'
     },
     {
       title: 'Advanced Neurofeedback Techniques',
       items: 8,
       duration: '4 hours',
       color: 'from-purple-500 to-pink-600',
-      icon: '⚡'
+      icon: ''
     },
     {
       title: 'Stress & Anxiety Management',
       items: 6,
       duration: '3 hours',
       color: 'from-green-500 to-teal-600',
-      icon: '🧘'
+      icon: ''
     },
     {
       title: 'Peak Performance Training',
       items: 10,
       duration: '5 hours',
       color: 'from-orange-500 to-red-600',
-      icon: '🏆'
+      icon: 'WINNER:'
     }
   ];
 

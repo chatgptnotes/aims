@@ -8,13 +8,13 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'Home', icon: '🏠' },
-    { path: '/about', label: 'About', icon: '📖' },
-    { path: '/assessments', label: 'Assessments', icon: '📋' },
-    { path: '/coaching', label: 'Coaching', icon: '👥' },
-    { path: '/content', label: 'Content', icon: '📚' },
-    { path: '/progress', label: 'Progress', icon: '📈' },
-    { path: '/qeeg', label: 'qEEG', icon: '⚡' },
+    { path: '/', label: 'Home', icon: '' },
+    { path: '/about', label: 'About', icon: '' },
+    { path: '/assessments', label: 'Assessments', icon: 'INFO:' },
+    { path: '/coaching', label: 'Coaching', icon: '' },
+    { path: '/content', label: 'Content', icon: '' },
+    { path: '/progress', label: 'Progress', icon: 'GROWTH:' },
+    { path: '/qeeg', label: 'qEEG', icon: '' },
   ];
 
   const isActive = (path: string) => {
@@ -220,23 +220,23 @@ const Header: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center space-x-8 py-2 text-base text-gray-700 dark:text-gray-200 font-medium">
             <span className="flex items-center space-x-1">
-              <span>🎯</span>
+              <span>TARGET:</span>
               <span>ADHD Support</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span>🧠</span>
+              <span></span>
               <span>Memory Enhancement</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span>😌</span>
+              <span></span>
               <span>Stress Management</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span>💡</span>
+              <span>IDEA:</span>
               <span>Cognitive Training</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span>📊</span>
+              <span>DATA:</span>
               <span>Progress Tracking</span>
             </span>
           </div>

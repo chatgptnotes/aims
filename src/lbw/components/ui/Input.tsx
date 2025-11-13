@@ -101,7 +101,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <span className="text-red-500 mr-1">⚠</span>
+                <span className="text-red-500 mr-1"></span>
                 {error}
               </motion.p>
             )}

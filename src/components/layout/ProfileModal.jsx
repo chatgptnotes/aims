@@ -62,27 +62,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      console.log('💾 Saving profile data to database:', formData);
+      console.log('STORAGE: Saving profile data to database:', formData);
 
-      // Validate password change if any password field is filled
-      if (formData.currentPassword || formData.password || formData.confirmPassword) {
-        // Check if user entered current password
-        if (!formData.currentPassword) {
-          alert('Please enter your current password to change it!');
-          setIsLoading(false);
-          return;
-        }
-
+      // Validate password change only if user wants to change password (all three fields filled)
+      if (formData.currentPassword && formData.password && formData.confirmPassword) {
         // Verify current password matches the one in database
         if (user?.password && formData.currentPassword !== user.password) {
           alert('Current password is incorrect!');
-          setIsLoading(false);
-          return;
-        }
-
-        // Check if new password is provided
-        if (!formData.password) {
-          alert('Please enter a new password!');
           setIsLoading(false);
           return;
         }
@@ -108,7 +94,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
           return;
         }
 
-        console.log('🔐 Password validation passed, will be updated');
+        console.log('AUTH: Password validation passed, will be updated');
       }
 
       // Prepare data to send
@@ -123,14 +109,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
         // Remove currentPassword and confirmPassword, only send new password
         delete dataToSave.currentPassword;
         delete dataToSave.confirmPassword;
-        console.log('🔐 Password will be updated');
+        console.log('AUTH: Password will be updated');
       }
 
       // Update user data including profile picture and password
       const result = await updateUser(dataToSave);
 
       if (result.success) {
-        console.log('✅ Profile saved successfully to database');
+        console.log('SUCCESS: Profile saved successfully to database');
         setShowSuccess(true);
         setTimeout(() => {
           setIsEditing(false);
@@ -138,7 +124,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
           onClose();
         }, 1500);
       } else {
-        console.error('❌ Failed to save profile:', result.error);
+        console.error('ERROR: Failed to save profile:', result.error);
         alert(result.error || 'Failed to save profile');
       }
     } catch (error) {
@@ -189,29 +175,29 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Profile Settings</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Profile Settings</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Profile Picture Section */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg ${getRoleColor()}`}>
                 {formData.avatar ? (
-                  <img 
-                    src={formData.avatar} 
-                    alt="Profile" 
+                  <img
+                    src={formData.avatar}
+                    alt="Profile"
                     className="w-24 h-24 rounded-2xl object-cover"
                   />
                 ) : (
@@ -221,7 +207,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
               {isEditing && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-2 -right-2 p-2 bg-[#323956] text-white rounded-full shadow-lg hover:bg-[#323956] transition-colors"
+                  className="absolute -bottom-2 -right-2 p-2 bg-[#323956] dark:bg-blue-600 text-white rounded-full shadow-lg hover:bg-[#323956] dark:hover:bg-blue-700 transition-colors"
                 >
                   <Camera className="h-4 w-4" />
                 </button>
@@ -235,8 +221,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
               className="hidden"
             />
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900">{user?.name || 'User'}</h3>
-              <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full text-black ${getRoleColor()}`}>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{user?.name || 'User'}</h3>
+              <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full text-black dark:text-white ${getRoleColor()}`}>
                 {getRoleLabel()}
               </span>
             </div>
@@ -246,7 +232,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
         {/* Profile Information */}
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <User className="h-4 w-4 inline mr-2" />
               Name
             </label>
@@ -256,12 +242,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
               value={formData.name}
               onChange={handleInputChange}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Mail className="h-4 w-4 inline mr-2" />
               Email
             </label>
@@ -271,13 +257,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
               value={formData.email}
               onChange={handleInputChange}
               disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800"
             />
           </div>
 
           {(user?.role === 'clinic_admin' || (user?.role === 'super_admin' && user?.clinicName)) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Building className="h-4 w-4 inline mr-2" />
                 Clinic Name
               </label>
@@ -287,13 +273,13 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 value={formData.clinicName}
                 onChange={handleInputChange}
                 disabled={!isEditing}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Phone className="h-4 w-4 inline mr-2" />
               Phone
             </label>
@@ -304,12 +290,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
               onChange={handleInputChange}
               disabled={!isEditing}
               placeholder="Enter phone number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <MapPin className="h-4 w-4 inline mr-2" />
               Address
             </label>
@@ -320,19 +306,19 @@ const ProfileModal = ({ isOpen, onClose }) => {
               disabled={!isEditing}
               placeholder="Enter clinic address"
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 dark:disabled:bg-gray-800 resize-none"
             />
           </div>
 
           {/* Password Change Section - Only shown when editing */}
           {isEditing && (
             <>
-              <div className="pt-4 border-t border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Change Password (Optional)</h3>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Change Password (Optional)</h3>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Lock className="h-4 w-4 inline mr-2" />
                   Current Password
                 </label>
@@ -342,12 +328,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   value={formData.currentPassword}
                   onChange={handleInputChange}
                   placeholder="Enter current password to change"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Lock className="h-4 w-4 inline mr-2" />
                   New Password
                 </label>
@@ -357,12 +343,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter new password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Lock className="h-4 w-4 inline mr-2" />
                   Confirm New Password
                 </label>
@@ -372,19 +358,19 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm new password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Shield className="h-4 w-4 inline mr-2" />
               Role
             </label>
-            <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg">
-              <span className={`inline-block px-2 py-1 text-xs font-semibold rounded text-black ${getRoleColor()}`}>
+            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+              <span className={`inline-block px-2 py-1 text-xs font-semibold rounded text-black dark:text-white ${getRoleColor()}`}>
                 {getRoleLabel()}
               </span>
             </div>
@@ -393,14 +379,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
         {/* Success Message */}
         {showSuccess && (
-          <div className="p-4 mx-6 bg-green-50 border border-green-200 rounded-lg">
+          <div className="p-4 mx-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <CheckCircle className="h-5 w-5 text-green-400" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">
-                  Profile saved successfully! 🎉
+                <p className="text-sm font-medium text-green-800 dark:text-green-400">
+                  Profile saved successfully!
                 </p>
               </div>
             </div>
@@ -408,11 +394,11 @@ const ProfileModal = ({ isOpen, onClose }) => {
         )}
 
         {/* Actions */}
-        <div className="p-6 border-t border-gray-100 flex space-x-3">
+        <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex space-x-3">
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex-1 flex items-center justify-center px-4 py-2 bg-[#323956] text-white rounded-lg hover:bg-[#323956] transition-colors"
+              className="flex-1 flex items-center justify-center px-4 py-2 bg-[#323956] dark:bg-blue-600 text-white rounded-lg hover:bg-[#323956] dark:hover:bg-blue-700 transition-colors"
             >
               <User className="h-4 w-4 mr-2" />
               Edit Profile
@@ -421,14 +407,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
             <>
               <button
                 onClick={() => setIsEditing(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center px-4 py-2 bg-[#323956] text-white rounded-lg hover:bg-[#323956] transition-colors disabled:opacity-50"
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-[#323956] dark:bg-blue-600 text-white rounded-lg hover:bg-[#323956] dark:hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

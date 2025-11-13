@@ -116,10 +116,10 @@ export default function QEEGUpload({ onUploadComplete }: QEEGUploadProps) {
   const getStatusIcon = (status: QEEGFile['status']) => {
     switch (status) {
       case 'pending': return '⏳'
-      case 'processing': return '🔄'
-      case 'analyzed': return '✅'
-      case 'error': return '❌'
-      default: return '📄'
+      case 'processing': return 'REFRESH:'
+      case 'analyzed': return 'SUCCESS:'
+      case 'error': return 'ERROR:'
+      default: return 'FILE:'
     }
   }
 
@@ -139,7 +139,7 @@ export default function QEEGUpload({ onUploadComplete }: QEEGUploadProps) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <div className="text-4xl mb-4">🧠</div>
+          <div className="text-4xl mb-4"></div>
           <h4 className="text-lg font-medium text-gray-900 mb-2">
             {isDragging ? 'Drop your qEEG files here' : 'Upload qEEG Files'}
           </h4>
@@ -184,7 +184,7 @@ export default function QEEGUpload({ onUploadComplete }: QEEGUploadProps) {
         
         {uploadedFiles.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-4">📁</div>
+            <div className="text-4xl mb-4"></div>
             <p>No qEEG files uploaded yet</p>
             <p className="text-sm">Upload your first file to get started with analysis</p>
           </div>
@@ -219,7 +219,7 @@ export default function QEEGUpload({ onUploadComplete }: QEEGUploadProps) {
                   )}
                   
                   <button className="text-gray-400 hover:text-red-600">
-                    🗑️
+                    DELETE:
                   </button>
                 </div>
               </div>

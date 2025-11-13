@@ -52,7 +52,7 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
 
   // Debug logging when modal opens
   useEffect(() => {
-    console.log('📂 UploadReportModal opened with:', {
+    console.log('FOLDER: UploadReportModal opened with:', {
       clinicId,
       patient: patient ? { id: patient.id, name: patient.name, fullObject: patient } : null,
       user: user ? { name: user.name, role: user.role } : null
@@ -60,15 +60,15 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
 
     // Validate required props
     if (!clinicId) {
-      console.error('❌ UploadReportModal: clinicId is required');
+      console.error('ERROR: UploadReportModal: clinicId is required');
       toast.error('Clinic ID is missing');
     }
     if (!patient) {
-      console.error('❌ UploadReportModal: patient is required');
+      console.error('ERROR: UploadReportModal: patient is required');
       toast.error('Patient information is missing. Please try again.');
     }
     if (!user) {
-      console.warn('⚠️ UploadReportModal: user not loaded yet');
+      console.warn('WARNING: UploadReportModal: user not loaded yet');
     }
   }, [clinicId, patient, user]);
 
@@ -206,7 +206,7 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
 
       // All files are now validated as EEG/qEEG formats (.edf, .eeg, .bdf)
       // Start complete EDF processing workflow
-      console.log('🧠 Starting EEG/qEEG processing workflow for:', file.name);
+      console.log(' Starting EEG/qEEG processing workflow for:', file.name);
 
       // Simulate progress for workflow initialization
       const progressInterval = setInterval(() => {
@@ -222,10 +222,10 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
       clearInterval(progressInterval);
       setUploadProgress(30);
 
-      toast.success(`🚀 EEG/qEEG processing workflow started!
-      📋 Workflow ID: ${workflowId.substring(0, 8)}...
+      toast.success(`START: EEG/qEEG processing workflow started!
+      INFO: Workflow ID: ${workflowId.substring(0, 8)}...
       ⏱️ Estimated completion: 8 minutes
-      🔄 Processing: Upload → qEEG Pro → NeuroSense → Care Plan`);
+      REFRESH: Processing: Upload → qEEG Pro → NeuroSense → Care Plan`);
 
       // Update progress to show workflow started
       setUploadProgress(100);
@@ -382,7 +382,7 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
                   <p className="pl-1">or drag and drop</p>
                 </div>
                 <p className="text-xs text-gray-500">EEG/qEEG files only (.edf, .eeg, .bdf) up to 50MB</p>
-                <p className="text-xs text-[#323956]">✅ Files will be stored securely in cloud storage</p>
+                <p className="text-xs text-[#323956]">SUCCESS: Files will be stored securely in cloud storage</p>
               </div>
             </div>
             {selectedFile && selectedFile[0] && (

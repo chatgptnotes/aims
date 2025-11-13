@@ -56,7 +56,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
         setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
 
         try {
-          console.log(`🧠 Processing ${file.name} with NeuroSense Cloud AI...`);
+          console.log(` Processing ${file.name} with NeuroSense Cloud AI...`);
 
           // Step 1: Upload to cloud
           updateFileStatus(fileId, 'uploading', 25);
@@ -73,20 +73,20 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
 
           // Step 2: Start AI processing
           updateFileStatus(fileId, 'processing', 50);
-          console.log(`⚡ Cloud processing job started: ${uploadResult.processingJob.jobId}`);
+          console.log(` Cloud processing job started: ${uploadResult.processingJob.jobId}`);
 
           // Step 3: Monitor processing status
           const processingJobId = uploadResult.processingJob.jobId;
           await monitorProcessingJob(fileId, processingJobId);
 
         } catch (error) {
-          console.error(`❌ Failed to process ${file.name}:`, error);
+          console.error(`ERROR: Failed to process ${file.name}:`, error);
           updateFileStatus(fileId, 'error', 0);
           alert(`Failed to process ${file.name}: ${error.message}`);
         }
       }
     } catch (error) {
-      console.error('❌ Upload process failed:', error);
+      console.error('ERROR: Upload process failed:', error);
     } finally {
       setIsUploading(false);
     }
@@ -109,7 +109,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
       try {
         const jobStatus = await neuroSenseCloudService.getJobStatus(jobId);
 
-        console.log(`📊 Job ${jobId} status: ${jobStatus.status}`);
+        console.log(`DATA: Job ${jobId} status: ${jobStatus.status}`);
 
         switch (jobStatus.status) {
           case 'processing':
@@ -137,7 +137,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
           case 'failed':
           case 'error':
             updateFileStatus(fileId, 'error', 0);
-            console.error(`❌ Processing failed: ${jobStatus.status_message}`);
+            console.error(`ERROR: Processing failed: ${jobStatus.status_message}`);
             return true;
           default:
             // Still processing, continue monitoring
@@ -147,7 +147,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
         attempts++;
         if (attempts >= maxAttempts) {
           updateFileStatus(fileId, 'error', 0);
-          console.error('❌ Processing timeout');
+          console.error('ERROR: Processing timeout');
           return true;
         }
 
@@ -156,7 +156,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
         return false;
 
       } catch (error) {
-        console.error('❌ Failed to check job status:', error);
+        console.error('ERROR: Failed to check job status:', error);
         updateFileStatus(fileId, 'error', 0);
         return true;
       }
@@ -193,7 +193,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
         return;
       }
 
-      console.log('📊 Generating comprehensive report...');
+      console.log('DATA: Generating comprehensive report...');
 
       // Generate report using file management service
       const reportData = await aiAnalysisService.generateQEEGReport(
@@ -208,9 +208,9 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
         'pdf'
       );
 
-      console.log('✅ Report generated and downloaded successfully');
+      console.log('SUCCESS: Report generated and downloaded successfully');
     } catch (error) {
-      console.error('❌ Report generation failed:', error);
+      console.error('ERROR: Report generation failed:', error);
       alert(`Failed to generate report: ${error.message}`);
     }
   };
@@ -227,7 +227,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
       const reportPath = `reports/${patientId || user?.id}/${analysisResult.sessionId}/interactive_report.html`;
       await neuroSenseCloudService.downloadCloudReport(reportPath, 'interactive_analysis.html');
     } catch (error) {
-      console.error('❌ Failed to view analysis:', error);
+      console.error('ERROR: Failed to view analysis:', error);
       alert(`Failed to view analysis: ${error.message}`);
     }
   };
@@ -270,7 +270,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <div className="text-4xl mb-4">🧠</div>
+          <div className="text-4xl mb-4"></div>
           <h4 className="text-lg font-medium text-gray-900 mb-2">
             {isDragging ? 'Drop your qEEG files here' : 'Upload qEEG Files'}
           </h4>
@@ -315,7 +315,7 @@ const QEEGUpload = ({ onUploadComplete, patientId }) => {
 
         {uploadedFiles.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-4">📁</div>
+            <div className="text-4xl mb-4"></div>
             <p>No qEEG files uploaded yet</p>
             <p className="text-sm">Upload your first file to get started with analysis</p>
           </div>

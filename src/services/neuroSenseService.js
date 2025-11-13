@@ -19,7 +19,7 @@ class NeuroSenseService {
    */
   async processQEEGReport(qeegReport, patientInfo) {
     try {
-      console.log('🧠 Processing qEEG report through NeuroSense algorithms...');
+      console.log(' Processing qEEG report through NeuroSense algorithms...');
 
       const processingResult = await this.runNeuroSenseAnalysis(qeegReport, patientInfo);
 
@@ -32,7 +32,7 @@ class NeuroSenseService {
         recommendations: processingResult.recommendations
       };
     } catch (error) {
-      console.error('❌ NeuroSense processing failed:', error);
+      console.error('ERROR: NeuroSense processing failed:', error);
       throw new Error(`NeuroSense processing failed: ${error.message}`);
     }
   }
@@ -391,11 +391,11 @@ class NeuroSenseService {
       };
 
       await DatabaseService.add('neurosense_reports', reportData);
-      console.log('✅ NeuroSense report saved to database:', reportData.id);
+      console.log('SUCCESS: NeuroSense report saved to database:', reportData.id);
 
       return reportData;
     } catch (error) {
-      console.error('❌ Failed to save NeuroSense report:', error);
+      console.error('ERROR: Failed to save NeuroSense report:', error);
       throw error;
     }
   }

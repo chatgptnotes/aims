@@ -11,18 +11,18 @@ class DatabaseService {
 
   async checkSupabaseAvailability() {
     try {
-      console.log('🔧 Checking Supabase availability...');
+      console.log('CONFIG: Checking Supabase availability...');
 
       // Test Supabase connection with clinics table (which we know exists)
       const testResult = await this.supabaseService.get('clinics');
       if (testResult !== undefined) {
         this.useSupabase = true;
-        console.log('🚀 Using Supabase for data storage');
+        console.log('START: Using Supabase for data storage');
       } else {
         throw new Error('Supabase connection failed');
       }
     } catch (error) {
-      console.error('❌ Supabase connection failed:', error);
+      console.error('ERROR: Supabase connection failed:', error);
       throw new Error('Database connection required. Please check your internet connection and try again.');
     }
   }
@@ -48,16 +48,16 @@ class DatabaseService {
     try {
       const actualTable = this.mapTableName(table);
       const data = await this.supabaseService.get(actualTable);
-      console.log(`📊 ${table} from Supabase (${actualTable}):`, data?.length || 0, 'items');
+      console.log(`DATA: ${table} from Supabase (${actualTable}):`, data?.length || 0, 'items');
 
       // Ensure data is always an array
       if (!data) {
-        console.warn(`⚠️ No data returned for ${table}, returning empty array`);
+        console.warn(`WARNING: No data returned for ${table}, returning empty array`);
         return [];
       }
 
       if (!Array.isArray(data)) {
-        console.warn(`⚠️ Data for ${table} is not an array:`, typeof data);
+        console.warn(`WARNING: Data for ${table} is not an array:`, typeof data);
         return [];
       }
 
@@ -68,7 +68,7 @@ class DatabaseService {
           id: clinic.id,
           name: clinic.name,
           email: clinic.email,
-          password: clinic.password,  // ✅ CRITICAL: Include password for login authentication
+          password: clinic.password,  // SUCCESS: CRITICAL: Include password for login authentication
           contactPerson: clinic.contact_person,
           contact_person: clinic.contact_person,  // Keep snake_case for compatibility
           clinicName: clinic.clinic_name,
@@ -96,24 +96,24 @@ class DatabaseService {
       if (table === 'patients' && actualTable === 'patients') {
         // Extra safety check for patients data
         if (!data || !Array.isArray(data) || data.length === 0) {
-          console.warn('⚠️ No patients data to transform, returning empty array');
-          console.warn('⚠️ Data value:', data);
-          console.warn('⚠️ Is array:', Array.isArray(data));
-          console.warn('⚠️ Length:', data?.length);
+          console.warn('WARNING: No patients data to transform, returning empty array');
+          console.warn('WARNING: Data value:', data);
+          console.warn('WARNING: Is array:', Array.isArray(data));
+          console.warn('WARNING: Length:', data?.length);
           return [];
         }
 
-        console.log('✅ Transforming patients data, count:', data.length);
-        console.log('✅ Raw patients data before transform:', data);
+        console.log('SUCCESS: Transforming patients data, count:', data.length);
+        console.log('SUCCESS: Raw patients data before transform:', data);
 
         // Transform patients data to camelCase format
         const transformed = data.map(patient => {
           if (!patient) {
-            console.warn('⚠️ Null patient in data array, skipping');
+            console.warn('WARNING: Null patient in data array, skipping');
             return null;
           }
 
-          console.log('🔄 Transforming patient:', patient.email);
+          console.log('REFRESH: Transforming patient:', patient.email);
 
           return {
             id: patient.id,
@@ -141,8 +141,8 @@ class DatabaseService {
           };
         }).filter(p => p !== null);
 
-        console.log('✅ Transformed patients data, count:', transformed.length);
-        console.log('✅ Transformed patients:', transformed);
+        console.log('SUCCESS: Transformed patients data, count:', transformed.length);
+        console.log('SUCCESS: Transformed patients:', transformed);
         return transformed;
       }
 
@@ -151,7 +151,7 @@ class DatabaseService {
       // Final safety check - ensure result is always an array
       return Array.isArray(result) ? result : [];
     } catch (error) {
-      console.error(`❌ Failed to get data from ${table}:`, error);
+      console.error(`ERROR: Failed to get data from ${table}:`, error);
       // Return empty array instead of throwing to prevent crashes
       return [];
     }
@@ -177,11 +177,11 @@ class DatabaseService {
       // Convert field names to snake_case for Supabase
       const supabaseItem = this.convertToSnakeCase(filteredItem);
       const result = await this.supabaseService.add(actualTable, supabaseItem);
-      console.log(`📊 Added to Supabase ${table}:`, item.name || item.id);
+      console.log(`DATA: Added to Supabase ${table}:`, item.name || item.id);
 
       return this.convertToCamelCase(result);
     } catch (error) {
-      console.error(`❌ Failed to add to ${table}:`, error);
+      console.error(`ERROR: Failed to add to ${table}:`, error);
       throw error;
     }
   }
@@ -240,7 +240,7 @@ class DatabaseService {
       if (allowedFields.includes(snakeKey) || allowedFields.includes(key)) {
         filteredItem[key] = value;
       } else {
-        console.log(`🚫 Filtering out invalid field for ${table}: ${key}`);
+        console.log(` Filtering out invalid field for ${table}: ${key}`);
       }
     }
 
@@ -250,29 +250,29 @@ class DatabaseService {
   async update(table, id, updates) {
     try {
       const actualTable = this.mapTableName(table);
-      console.log(`🔄 DatabaseService.update - Table: ${table}, ID: ${id}`);
-      console.log(`🔄 Original updates:`, updates);
+      console.log(`REFRESH: DatabaseService.update - Table: ${table}, ID: ${id}`);
+      console.log(`REFRESH: Original updates:`, updates);
 
       // Filter valid fields based on table
       const filteredUpdates = this.filterValidFields(actualTable, updates);
-      console.log(`🔄 Filtered updates:`, filteredUpdates);
+      console.log(`REFRESH: Filtered updates:`, filteredUpdates);
 
       const supabaseUpdates = this.convertToSnakeCase(filteredUpdates);
-      console.log(`🔄 Snake_case updates for Supabase:`, supabaseUpdates);
+      console.log(`REFRESH: Snake_case updates for Supabase:`, supabaseUpdates);
 
       const result = await this.supabaseService.update(actualTable, id, supabaseUpdates);
-      console.log(`📊 Updated in Supabase ${table}:`, id);
-      console.log(`📊 Supabase update result:`, result);
+      console.log(`DATA: Updated in Supabase ${table}:`, id);
+      console.log(`DATA: Supabase update result:`, result);
 
       return this.convertToCamelCase(result);
     } catch (error) {
-      console.error(`❌ Failed to update ${table}:`, error);
+      console.error(`ERROR: Failed to update ${table}:`, error);
       throw error;
     }
   }
 
   async delete(table, id) {
-    console.log(`🗑️ DatabaseService.delete called:`, { table, id });
+    console.log(`DELETE: DatabaseService.delete called:`, { table, id });
 
     if (!id) {
       throw new Error('Cannot delete: ID is required');
@@ -281,10 +281,10 @@ class DatabaseService {
     try {
       const actualTable = this.mapTableName(table);
       const result = await this.supabaseService.delete(actualTable, id);
-      console.log('✅ Supabase delete successful:', result);
+      console.log('SUCCESS: Supabase delete successful:', result);
       return result;
     } catch (error) {
-      console.error(`❌ Failed to delete from ${table}:`, error);
+      console.error(`ERROR: Failed to delete from ${table}:`, error);
       throw error;
     }
   }
@@ -295,7 +295,7 @@ class DatabaseService {
       const result = await this.supabaseService.findById(actualTable, id);
       return this.convertToCamelCase(result);
     } catch (error) {
-      console.error(`❌ Failed to find by ID in ${table}:`, error);
+      console.error(`ERROR: Failed to find by ID in ${table}:`, error);
       throw error;
     }
   }
@@ -307,7 +307,7 @@ class DatabaseService {
       const results = await this.supabaseService.findBy(actualTable, snakeField, value);
       return results.map(item => this.convertToCamelCase(item));
     } catch (error) {
-      console.error(`❌ Failed to find by ${field} in ${table}:`, error);
+      console.error(`ERROR: Failed to find by ${field} in ${table}:`, error);
       throw error;
     }
   }
@@ -319,7 +319,7 @@ class DatabaseService {
       const result = await this.supabaseService.findOne(actualTable, snakeField, value);
       return this.convertToCamelCase(result);
     } catch (error) {
-      console.error(`❌ Failed to find one in ${table}:`, error);
+      console.error(`ERROR: Failed to find one in ${table}:`, error);
       throw error;
     }
   }
@@ -389,7 +389,7 @@ class DatabaseService {
   // Patient authentication
   async createPatientAuth(email, password, metadata = {}) {
     try {
-      console.log('🔐 Creating patient authentication account:', email);
+      console.log('AUTH: Creating patient authentication account:', email);
 
       // Use Supabase Auth to create user
       const { data, error } = await this.supabaseService.supabase.auth.signUp({
@@ -405,11 +405,11 @@ class DatabaseService {
       });
 
       if (error) {
-        console.error('❌ Supabase auth signup error:', error);
+        console.error('ERROR: Supabase auth signup error:', error);
         throw error;
       }
 
-      console.log('✅ Patient auth account created successfully:', data.user?.id);
+      console.log('SUCCESS: Patient auth account created successfully:', data.user?.id);
 
       // Also create profile record in profiles table
       if (data.user) {
@@ -422,15 +422,15 @@ class DatabaseService {
               full_name: metadata.full_name || '',
               created_at: new Date().toISOString()
             });
-          console.log('✅ Patient profile created');
+          console.log('SUCCESS: Patient profile created');
         } catch (profileError) {
-          console.error('⚠️ Profile creation failed (continuing anyway):', profileError);
+          console.error('WARNING: Profile creation failed (continuing anyway):', profileError);
         }
       }
 
       return data;
     } catch (error) {
-      console.error('❌ Failed to create patient auth:', error);
+      console.error('ERROR: Failed to create patient auth:', error);
       throw error;
     }
   }
@@ -438,7 +438,7 @@ class DatabaseService {
   // Clinic specific methods
   async createClinic(clinicData) {
     try {
-      console.log('🏥 Creating clinic with data:', clinicData);
+      console.log('CLINIC: Creating clinic with data:', clinicData);
 
       // Create clinic record matching the exact schema
       // Preserve the data passed from authService (including pending approval status)
@@ -464,7 +464,7 @@ class DatabaseService {
         clinicRecord.id = clinicData.id;
       }
 
-      console.log('📋 Clinic data to create:', clinicRecord);
+      console.log('INFO: Clinic data to create:', clinicRecord);
 
       // Use direct Supabase insert to clinics table
       const { data: clinic, error } = await this.supabaseService.supabase
@@ -474,11 +474,11 @@ class DatabaseService {
         .single();
 
       if (error) {
-        console.error('❌ Supabase insert error:', error);
+        console.error('ERROR: Supabase insert error:', error);
         throw error;
       }
 
-      console.log('✅ Clinic created:', clinic);
+      console.log('SUCCESS: Clinic created:', clinic);
 
       // Return in camelCase format for consistency
       return {
@@ -502,7 +502,7 @@ class DatabaseService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to create clinic:', error);
+      console.error('ERROR: Failed to create clinic:', error);
       throw error;
     }
   }
@@ -531,7 +531,7 @@ class DatabaseService {
   async getReportsByClinic(clinicId) {
     try {
       if (!clinicId) {
-        console.warn('⚠️ getReportsByClinic: No clinicId provided');
+        console.warn('WARNING: getReportsByClinic: No clinicId provided');
         return [];
       }
 
@@ -545,7 +545,7 @@ class DatabaseService {
           .select('*');
 
         if (error) {
-          console.error('❌ Error querying all reports:', error);
+          console.error('ERROR: Error querying all reports:', error);
           return [];
         }
 
@@ -556,7 +556,7 @@ class DatabaseService {
                  report.org_id === clinicId;
         });
 
-        console.log(`📋 Found ${clinicReports.length} reports for clinic ${clinicId} (from ${allReports?.length || 0} total reports)`);
+        console.log(`INFO: Found ${clinicReports.length} reports for clinic ${clinicId} (from ${allReports?.length || 0} total reports)`);
 
         // Fix old reports by updating them with clinic_id field if missing
         for (const report of clinicReports) {
@@ -565,7 +565,7 @@ class DatabaseService {
 
           // Fix missing clinic_id
           if (!report.clinic_id && (report.org_id || report.clinicId)) {
-            console.log(`🔧 Fixing report ${report.id} - adding clinic_id field`);
+            console.log(`CONFIG: Fixing report ${report.id} - adding clinic_id field`);
             updates.clinic_id = clinicId;
             report.clinic_id = clinicId;
             needsUpdate = true;
@@ -573,45 +573,45 @@ class DatabaseService {
 
           // Fix missing patient_id - try to get from report_data or file_path
           if (!report.patient_id) {
-            console.log(`🔧 Report ${report.id} has null patient_id, attempting to fix...`);
-            console.log(`  📄 Report file_path:`, report.file_path);
-            console.log(`  📄 Report report_data:`, report.report_data);
+            console.log(`CONFIG: Report ${report.id} has null patient_id, attempting to fix...`);
+            console.log(`  FILE: Report file_path:`, report.file_path);
+            console.log(`  FILE: Report report_data:`, report.report_data);
 
             // Check if report_data has patient info
             if (report.report_data && typeof report.report_data === 'object') {
               const patientIdFromData = report.report_data.patientId || report.report_data.patient_id;
               if (patientIdFromData) {
-                console.log(`  ✅ Found patient_id in report_data: ${patientIdFromData}`);
+                console.log(`  SUCCESS: Found patient_id in report_data: ${patientIdFromData}`);
                 updates.patient_id = patientIdFromData;
                 report.patient_id = patientIdFromData;
                 needsUpdate = true;
               } else {
-                console.log(`  ❌ No patient_id found in report_data`);
+                console.log(`  ERROR: No patient_id found in report_data`);
               }
             } else {
-              console.log(`  ❌ report_data is not an object or is null`);
+              console.log(`  ERROR: report_data is not an object or is null`);
             }
 
             // If still no patient_id, try to extract from file_path
             if (!updates.patient_id && report.file_path) {
               // file_path format: reports/{clinicId}/{patientId}/{filename}
               const pathParts = report.file_path.split('/');
-              console.log(`  📂 file_path parts:`, pathParts);
+              console.log(`  FOLDER: file_path parts:`, pathParts);
               if (pathParts.length >= 3 && pathParts[0] === 'reports') {
                 const potentialPatientId = pathParts[2];
-                console.log(`  ✅ Found patient_id in file_path: ${potentialPatientId}`);
+                console.log(`  SUCCESS: Found patient_id in file_path: ${potentialPatientId}`);
                 updates.patient_id = potentialPatientId;
                 report.patient_id = potentialPatientId;
                 needsUpdate = true;
               } else {
-                console.log(`  ❌ file_path format doesn't match expected pattern`);
+                console.log(`  ERROR: file_path format doesn't match expected pattern`);
               }
             } else if (!report.file_path) {
-              console.log(`  ❌ No file_path available`);
+              console.log(`  ERROR: No file_path available`);
             }
 
             if (!updates.patient_id) {
-              console.warn(`  ⚠️ Could not determine patient_id for report ${report.id}`);
+              console.warn(`  WARNING: Could not determine patient_id for report ${report.id}`);
             }
           }
 
@@ -622,20 +622,20 @@ class DatabaseService {
                 .from(actualTable)
                 .update(updates)
                 .eq('id', report.id);
-              console.log(`  ✅ Successfully updated report ${report.id}`);
+              console.log(`  SUCCESS: Successfully updated report ${report.id}`);
             } catch (updateError) {
-              console.warn(`  ⚠️ Could not update report ${report.id}:`, updateError);
+              console.warn(`  WARNING: Could not update report ${report.id}:`, updateError);
             }
           }
         }
 
         return clinicReports.map(item => this.convertToCamelCase(item));
       } catch (error) {
-        console.error(`❌ Error getting reports for clinic ${clinicId}:`, error);
+        console.error(`ERROR: Error getting reports for clinic ${clinicId}:`, error);
         return [];
       }
     } catch (error) {
-      console.error(`❌ Outer error getting reports for clinic ${clinicId}:`, error);
+      console.error(`ERROR: Outer error getting reports for clinic ${clinicId}:`, error);
       return [];
     }
   }
@@ -643,15 +643,15 @@ class DatabaseService {
   async getReportsByPatient(patientId) {
     try {
       if (!patientId) {
-        console.warn('⚠️ getReportsByPatient: No patientId provided');
+        console.warn('WARNING: getReportsByPatient: No patientId provided');
         return [];
       }
 
       const reports = await this.findBy('reports', 'patient_id', patientId);
-      console.log(`📋 Found ${reports?.length || 0} reports for patient ${patientId}`);
+      console.log(`INFO: Found ${reports?.length || 0} reports for patient ${patientId}`);
       return reports || [];
     } catch (error) {
-      console.error(`❌ Error getting reports for patient ${patientId}:`, error);
+      console.error(`ERROR: Error getting reports for patient ${patientId}:`, error);
       return [];
     }
   }
@@ -670,17 +670,17 @@ class DatabaseService {
           await this.update('clinics', clinic.id, {
             reportsUsed: (clinic.reportsUsed || 0) + 1
           });
-          console.log('✅ Updated clinic reports usage count');
+          console.log('SUCCESS: Updated clinic reports usage count');
         }
       } catch (updateError) {
-        console.warn('⚠️ Could not update clinic usage:', updateError);
+        console.warn('WARNING: Could not update clinic usage:', updateError);
         // Continue anyway - report was created successfully
       }
     }
 
     // Skip usage tracking for now - 'usage' table doesn't exist yet
     // TODO: Create proper usage/analytics table in future
-    console.log('ℹ️ Skipping usage tracking (table not configured)');
+    console.log('INFO: Skipping usage tracking (table not configured)');
 
     return report;
   }
@@ -714,7 +714,7 @@ class DatabaseService {
 
   // Force refresh data connection
   async refreshConnection() {
-    console.log('🔄 Refreshing database connection...');
+    console.log('REFRESH: Refreshing database connection...');
     await this.checkSupabaseAvailability();
   }
 
@@ -730,7 +730,7 @@ class DatabaseService {
         const now = new Date();
 
         if (now > trialEndDate) {
-          console.log(`⏰ Trial expired for clinic ${clinicId}`);
+          console.log(`TIMER: Trial expired for clinic ${clinicId}`);
 
           // Update clinic status
           await this.update('clinics', clinicId, {
@@ -760,7 +760,7 @@ class DatabaseService {
   // Check all expired trials (can be run periodically)
   async checkAllExpiredTrials() {
     try {
-      console.log('🔍 Checking all expired trials...');
+      console.log('DEBUG: Checking all expired trials...');
 
       const clinics = await this.get('clinics');
       const expiredClinics = [];
@@ -772,7 +772,7 @@ class DatabaseService {
         }
       }
 
-      console.log(`✅ Found ${expiredClinics.length} expired trials`);
+      console.log(`SUCCESS: Found ${expiredClinics.length} expired trials`);
       return expiredClinics;
     } catch (error) {
       console.error('Error checking expired trials:', error);

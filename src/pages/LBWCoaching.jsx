@@ -16,7 +16,7 @@ const LBWCoaching = () => {
       rating: 4.9,
       sessions: 250,
       price: 80,
-      image: '👩‍⚕️',
+      image: '‍️',
       bio: 'Specializing in ADHD management and executive function optimization with 10+ years experience.',
       availability: 'Available today'
     },
@@ -28,7 +28,7 @@ const LBWCoaching = () => {
       rating: 4.8,
       sessions: 180,
       price: 90,
-      image: '👨‍⚕️',
+      image: '‍️',
       bio: 'Expert in stress regulation, trauma recovery, and nervous system optimization.',
       availability: 'Next available: Tomorrow'
     },
@@ -40,7 +40,7 @@ const LBWCoaching = () => {
       rating: 4.9,
       sessions: 320,
       price: 150,
-      image: '👩‍🔬',
+      image: '‍',
       bio: 'qEEG consultation and brain mapping specialist with advanced neurofeedback expertise.',
       availability: 'Available this week'
     },
@@ -52,7 +52,7 @@ const LBWCoaching = () => {
       rating: 4.7,
       sessions: 145,
       price: 75,
-      image: '👨‍💼',
+      image: '‍',
       bio: 'Focus on cognitive enhancement, memory improvement, and peak mental performance.',
       availability: 'Available today'
     },
@@ -64,7 +64,7 @@ const LBWCoaching = () => {
       rating: 4.8,
       sessions: 210,
       price: 85,
-      image: '👩‍🏫',
+      image: '‍',
       bio: 'Integrative approach combining nutrition, mindfulness, and brain training.',
       availability: 'Next available: 2 days'
     }
@@ -74,7 +74,7 @@ const LBWCoaching = () => {
     {
       id: 'brain',
       title: 'Brain Coaching',
-      icon: '🧠',
+      icon: '',
       description: 'Focus enhancement, executive function, and cognitive performance optimization.',
       price: 'Starting at $80/session',
       color: 'blue'
@@ -82,7 +82,7 @@ const LBWCoaching = () => {
     {
       id: 'nervous',
       title: 'Nervous System Coaching',
-      icon: '🌿',
+      icon: '',
       description: 'Stress regulation, trauma recovery, and nervous system optimization.',
       price: 'Starting at $90/session',
       color: 'green'
@@ -90,7 +90,7 @@ const LBWCoaching = () => {
     {
       id: 'qeeg',
       title: 'qEEG Consultation',
-      icon: '⚡',
+      icon: '',
       description: 'Brain mapping analysis and neurofeedback treatment planning.',
       price: 'Starting at $150/session',
       color: 'purple'
@@ -184,7 +184,7 @@ const LBWCoaching = () => {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                🧠 ADHD
+                 ADHD
               </button>
               <button
                 onClick={() => setSelectedSpecialty('memory')}
@@ -194,7 +194,7 @@ const LBWCoaching = () => {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                💭 Memory
+                 Memory
               </button>
               <button
                 onClick={() => setSelectedSpecialty('stress')}
@@ -204,7 +204,7 @@ const LBWCoaching = () => {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                🌿 Stress
+                 Stress
               </button>
               <button
                 onClick={() => setSelectedSpecialty('wellness')}
@@ -214,7 +214,7 @@ const LBWCoaching = () => {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                ⚡ Wellness
+                 Wellness
               </button>
             </div>
           </div>

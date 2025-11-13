@@ -43,9 +43,9 @@ export default function ContentPage() {
             <Card className="p-6 mb-8 bg-gradient-to-r from-brain-100 to-wellness-100">
               <div className="flex items-center space-x-4">
                 <div className="text-4xl">
-                  {user.improvementFocus === 'adhd' ? '🎯' :
-                   user.improvementFocus === 'memory' ? '🧠' :
-                   user.improvementFocus === 'stress' ? '🧘‍♀️' : '🌟'}
+                  {user.improvementFocus === 'adhd' ? 'TARGET:' :
+                   user.improvementFocus === 'memory' ? '' :
+                   user.improvementFocus === 'stress' ? '‍️' : ''}
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -79,7 +79,7 @@ export default function ContentPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="p-4 border border-gray-200 rounded-lg hover:border-brain-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">📚</span>
+                  <span className="text-xl"></span>
                   <span className="font-medium text-gray-900">Research Library</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -92,7 +92,7 @@ export default function ContentPage() {
 
               <div className="p-4 border border-gray-200 rounded-lg hover:border-wellness-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">🎓</span>
+                  <span className="text-xl"></span>
                   <span className="font-medium text-gray-900">Courses</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -105,7 +105,7 @@ export default function ContentPage() {
 
               <div className="p-4 border border-gray-200 rounded-lg hover:border-calm-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">👥</span>
+                  <span className="text-xl"></span>
                   <span className="font-medium text-gray-900">Community</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -118,7 +118,7 @@ export default function ContentPage() {
 
               <div className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">📱</span>
+                  <span className="text-xl">MOBILE:</span>
                   <span className="font-medium text-gray-900">Mobile App</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -131,7 +131,7 @@ export default function ContentPage() {
 
               <div className="p-4 border border-gray-200 rounded-lg hover:border-orange-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">🔬</span>
+                  <span className="text-xl"></span>
                   <span className="font-medium text-gray-900">Lab Tests</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -144,7 +144,7 @@ export default function ContentPage() {
 
               <div className="p-4 border border-gray-200 rounded-lg hover:border-green-300 transition-colors">
                 <div className="flex items-center space-x-3 mb-2">
-                  <span className="text-xl">💊</span>
+                  <span className="text-xl"></span>
                   <span className="font-medium text-gray-900">Supplements</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
@@ -163,7 +163,7 @@ export default function ContentPage() {
             <div className="grid md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-brain-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-brain-600 text-2xl">🎯</span>
+                  <span className="text-brain-600 text-2xl">TARGET:</span>
                 </div>
                 <h4 className="font-medium text-gray-900 mb-2">Focus & Attention</h4>
                 <p className="text-sm text-gray-600">
@@ -173,7 +173,7 @@ export default function ContentPage() {
 
               <div className="text-center">
                 <div className="w-16 h-16 bg-wellness-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-wellness-600 text-2xl">🧠</span>
+                  <span className="text-wellness-600 text-2xl"></span>
                 </div>
                 <h4 className="font-medium text-gray-900 mb-2">Memory & Cognition</h4>
                 <p className="text-sm text-gray-600">
@@ -183,7 +183,7 @@ export default function ContentPage() {
 
               <div className="text-center">
                 <div className="w-16 h-16 bg-calm-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-calm-600 text-2xl">🧘‍♀️</span>
+                  <span className="text-calm-600 text-2xl">‍️</span>
                 </div>
                 <h4 className="font-medium text-gray-900 mb-2">Stress & Mood</h4>
                 <p className="text-sm text-gray-600">
@@ -193,7 +193,7 @@ export default function ContentPage() {
 
               <div className="text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-green-600 text-2xl">🌟</span>
+                  <span className="text-green-600 text-2xl"></span>
                 </div>
                 <h4 className="font-medium text-gray-900 mb-2">Complete Wellness</h4>
                 <p className="text-sm text-gray-600">

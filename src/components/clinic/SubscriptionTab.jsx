@@ -38,15 +38,15 @@ const SubscriptionTab = () => {
   const loadUsageStats = async () => {
     try {
       if (user?.clinicId) {
-        console.log('📊 CLINIC: Loading usage stats for clinic:', user.clinicId);
+        console.log('DATA: CLINIC: Loading usage stats for clinic:', user.clinicId);
         const stats = await RazorpayService.getUsageStats(user.clinicId);
-        console.log('✅ CLINIC: Usage stats loaded:', stats);
+        console.log('SUCCESS: CLINIC: Usage stats loaded:', stats);
         setUsageStats(stats);
       } else {
         console.warn('No clinicId found for user:', user);
       }
     } catch (error) {
-      console.error('❌ CLINIC: Error loading usage stats:', error);
+      console.error('ERROR: CLINIC: Error loading usage stats:', error);
       // Set default stats on error to prevent crash
       setUsageStats({
         clinic: null,
@@ -62,8 +62,8 @@ const SubscriptionTab = () => {
   };
 
   const handlePurchaseClick = () => {
-    console.log('🛒 Purchase clicked with user data:', user);
-    console.log('🏥 Clinic info that will be passed:', {
+    console.log(' Purchase clicked with user data:', user);
+    console.log('CLINIC: Clinic info that will be passed:', {
       id: user?.clinicId,
       name: user?.clinicName || user?.name,
       email: user?.email,

@@ -24,7 +24,7 @@ const ForgotPasswordForm = () => {
     try {
       setIsLoading(true);
 
-      console.log('🔐 Password reset request:', { email: data.email });
+      console.log('AUTH: Password reset request:', { email: data.email });
 
       // Step 1: Find clinic by email
       const clinics = await DatabaseService.get('clinics') || [];
@@ -36,7 +36,7 @@ const ForgotPasswordForm = () => {
         return;
       }
 
-      console.log('✅ Clinic found:', { email: clinic.email, hasPassword: !!clinic.password });
+      console.log('SUCCESS: Clinic found:', { email: clinic.email, hasPassword: !!clinic.password });
 
       // Step 2: Verify current password
       if (clinic.password && data.currentPassword !== clinic.password) {
@@ -68,7 +68,7 @@ const ForgotPasswordForm = () => {
       const supabase = SupabaseService.supabase;
       if (supabase && SupabaseService.isAvailable()) {
         try {
-          console.log('🔐 Updating Supabase Auth password...');
+          console.log('AUTH: Updating Supabase Auth password...');
 
           // First login with current credentials to get session
           const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
@@ -83,31 +83,31 @@ const ForgotPasswordForm = () => {
             });
 
             if (updateError) {
-              console.warn('⚠️ Supabase Auth password update failed:', updateError.message);
+              console.warn('WARNING: Supabase Auth password update failed:', updateError.message);
             } else {
-              console.log('✅ Supabase Auth password updated successfully');
+              console.log('SUCCESS: Supabase Auth password updated successfully');
             }
 
             // Logout after updating
             await supabase.auth.signOut();
           } else {
-            console.warn('⚠️ Could not login to Supabase to update password');
+            console.warn('WARNING: Could not login to Supabase to update password');
           }
         } catch (authError) {
-          console.warn('⚠️ Supabase Auth update failed:', authError);
+          console.warn('WARNING: Supabase Auth update failed:', authError);
           // Continue to update local database anyway
         }
       }
 
       // Step 5: Update password in clinics table
-      console.log('🔐 Updating password in clinics table...');
+      console.log('AUTH: Updating password in clinics table...');
       await DatabaseService.update('clinics', clinic.id, { password: data.newPassword });
-      console.log('✅ Password updated in database successfully');
+      console.log('SUCCESS: Password updated in database successfully');
 
       setEmailSent(true);
       setIsLoading(false);
     } catch (error) {
-      console.error('❌ Password reset failed:', error);
+      console.error('ERROR: Password reset failed:', error);
       setError('root', { message: error.message || 'Failed to reset password' });
       setIsLoading(false);
     }

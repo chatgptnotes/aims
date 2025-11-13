@@ -170,7 +170,7 @@ const AlertDashboard = () => {
                 Alerts & Monitoring
               </h1>
               <p className="text-xl text-slate-600 font-medium">
-                System alerts and monitoring dashboard 🚨
+                System alerts and monitoring dashboard ALERT:
               </p>
               <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
                 <div className="flex items-center space-x-2">

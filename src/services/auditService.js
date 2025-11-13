@@ -34,7 +34,7 @@ class AuditService {
    */
   async logAction(actionData) {
     try {
-      console.log('📋 Logging action:', actionData.action, actionData.entityType);
+      console.log('INFO: Logging action:', actionData.action, actionData.entityType);
 
       // Get current user and session info
       const { data: { user } } = await supabase.auth.getUser();
@@ -67,10 +67,10 @@ class AuditService {
       // Insert into audit_logs table
       const result = await DatabaseService.add('audit_logs', auditEntry);
 
-      console.log('✅ Action logged successfully:', result.id);
+      console.log('SUCCESS: Action logged successfully:', result.id);
       return result;
     } catch (error) {
-      console.error('❌ Error logging action:', error);
+      console.error('ERROR: Error logging action:', error);
       // Don't throw error - audit failures shouldn't break the main flow
       return null;
     }
@@ -204,7 +204,7 @@ class AuditService {
    */
   async logDownload(downloadData) {
     try {
-      console.log('📥 Logging download:', downloadData.file_name);
+      console.log(' Logging download:', downloadData.file_name);
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -244,7 +244,7 @@ class AuditService {
       // Insert into download_logs table
       const result = await DatabaseService.add('download_logs', downloadEntry);
 
-      console.log('✅ Download logged successfully:', result.id);
+      console.log('SUCCESS: Download logged successfully:', result.id);
 
       // Also log to main audit log
       await this.logAction({
@@ -257,7 +257,7 @@ class AuditService {
 
       return result;
     } catch (error) {
-      console.error('❌ Error logging download:', error);
+      console.error('ERROR: Error logging download:', error);
       return null;
     }
   }
@@ -292,7 +292,7 @@ class AuditService {
         status: 'failure'
       });
     } catch (error) {
-      console.error('❌ Error logging failed download:', error);
+      console.error('ERROR: Error logging failed download:', error);
     }
   }
 
@@ -307,7 +307,7 @@ class AuditService {
    */
   async logAccess(accessData) {
     try {
-      console.log('🔍 Logging access:', accessData.action);
+      console.log('DEBUG: Logging access:', accessData.action);
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -342,10 +342,10 @@ class AuditService {
       // Insert into access_logs table
       const result = await DatabaseService.add('access_logs', accessEntry);
 
-      console.log('✅ Access logged successfully:', result.id);
+      console.log('SUCCESS: Access logged successfully:', result.id);
       return result;
     } catch (error) {
-      console.error('❌ Error logging access:', error);
+      console.error('ERROR: Error logging access:', error);
       return null;
     }
   }
@@ -430,7 +430,7 @@ class AuditService {
 
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching audit logs:', error);
+      console.error('ERROR: Error fetching audit logs:', error);
       throw error;
     }
   }
@@ -464,7 +464,7 @@ class AuditService {
 
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching download logs:', error);
+      console.error('ERROR: Error fetching download logs:', error);
       throw error;
     }
   }
@@ -492,7 +492,7 @@ class AuditService {
 
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching access logs:', error);
+      console.error('ERROR: Error fetching access logs:', error);
       throw error;
     }
   }
@@ -512,7 +512,7 @@ class AuditService {
 
       throw new Error('Unsupported export format');
     } catch (error) {
-      console.error('❌ Error exporting audit logs:', error);
+      console.error('ERROR: Error exporting audit logs:', error);
       throw error;
     }
   }

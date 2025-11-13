@@ -29,7 +29,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
 
   const loadRealTimeData = async () => {
     try {
-      console.log('👑 SuperAdmin loading all system data...');
+      console.log('SUPERADMIN: SuperAdmin loading all system data...');
       
       // Get all data from DatabaseService - SuperAdmin can see everything
       const clinics = await DatabaseService.get('clinics');
@@ -38,7 +38,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
       const payments = await DatabaseService.get('payments');
       const superAdmins = await DatabaseService.get('superAdmins');
 
-      console.log('📊 SuperAdmin system overview:', {
+      console.log('DATA: SuperAdmin system overview:', {
         clinics: clinics.length,
         patients: patients.length,
         reports: reports.length,
@@ -192,129 +192,73 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100 p-6 space-y-8">
-      {/* Hospital-Themed Welcome Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-white via-[#CAE0FF]/30 to-indigo-50/50 backdrop-blur-xl border border-white/40 rounded-3xl shadow-2xl">
-        {/* Medical Pattern Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm0 0c0 11.046 8.954 20 20 20s20-8.954 20-20-8.954-20-20-20-20 8.954-20 20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
-        </div>
-        
-        <div className="relative p-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-2xl flex items-center justify-center shadow-xl">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-black text-[#323956]">
-                    NeuroSense360
-                  </h1>
-                  <p className="text-lg text-slate-600 font-medium">
-                    Healthcare Management Platform
-                  </p>
-                </div>
-              </div>
-              <p className="text-xl text-slate-700 font-medium max-w-2xl">
-                Welcome to your comprehensive healthcare management dashboard. Monitor clinics, track patient reports, and manage your medical network efficiently.
-              </p>
-              <div className="flex items-center space-x-6 text-sm text-slate-600 mt-4">
-                <div className="flex items-center space-x-2 px-3 py-1.5 bg-[#E4EFFF] rounded-full border border-[#CAE0FF]">
-                  <div className="w-2 h-2 bg-[#323956] rounded-full animate-pulse"></div>
-                  <span className="font-medium">System Online</span>
-                </div>
-                <div className="flex items-center space-x-2 px-3 py-1.5 bg-[#E4EFFF] rounded-full border border-[#CAE0FF]">
-                  <Clock className="h-3 w-3 text-[#323956]" />
-                  <span className="font-medium">Last refresh: {new Date().toLocaleTimeString()}</span>
-                </div>
-                <div className="flex items-center space-x-2 px-3 py-1.5 bg-[#E4EFFF] rounded-full border border-[#CAE0FF]">
-                  <Database className="h-3 w-3 text-[#323956]" />
-                  <span className="font-medium">Real-time Data</span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden lg:block relative">
-              <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-[#323956] to-[#232D3C] flex items-center justify-center shadow-2xl">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <Activity className="h-10 w-10 text-white" />
-                </div>
-              </div>
-              <div className="absolute -top-3 -right-3 w-10 h-10 bg-[#F5D05D] rounded-full flex items-center justify-center shadow-lg border-4 border-white">
-                <CheckCircle className="h-5 w-5 text-white" />
-              </div>
+    <div className="space-y-6">
+      {/* Welcome Section - Clean Design */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Dashboard Overview
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Healthcare Management Platform
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md border border-green-200 dark:border-green-700">
+              <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+              <span className="font-medium">System Online</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Healthcare Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Stats Grid - Clean Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div 
-              key={stat.name} 
-              className="group relative overflow-hidden bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:bg-gradient-to-br hover:from-white hover:via-[#CAE0FF]/50 hover:to-indigo-50/30"
+            <div
+              key={stat.name}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-gray-900/20 transition-shadow"
             >
-              {/* Animated Gradient Border */}
-              <div className={`absolute inset-0 bg-gradient-to-r rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
-                stat.color === 'blue' ? 'from-[#323956] via-[#232D3C] to-[#323956]' :
-                stat.color === 'green' ? 'from-[#323956] via-[#232D3C] to-[#323956]' :
-                stat.color === 'yellow' ? 'from-[#F5D05D] via-[#d9b84a] to-[#F5D05D]' :
-                stat.color === 'red' ? 'from-red-500 via-pink-500 to-red-600' :
-                'from-[#323956] via-[#232D3C] to-[#323956]'
-              }`}></div>
-              <div className="absolute inset-[2px] bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 rounded-[22px]"></div>
-              
-              <div className="relative p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        stat.color === 'blue' ? 'bg-[#323956]' :
-                        stat.color === 'green' ? 'bg-[#323956]' :
-                        stat.color === 'yellow' ? 'bg-[#F5D05D]' :
-                        stat.color === 'red' ? 'bg-red-500' :
-                        'bg-[#323956]'
-                      }`}></div>
-                      <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">{stat.name}</p>
-                    </div>
-                    <p className="text-4xl font-black text-slate-800 mb-2 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text group-hover:from-[#323956] group-hover:to-[#232D3C]">{stat.value}</p>
-                    {stat.subtitle && (
-                      <p className="text-sm text-slate-500 font-medium">{stat.subtitle}</p>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">{stat.name}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</p>
+                  {stat.subtitle && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500">{stat.subtitle}</p>
+                  )}
+
+                  <div className="mt-3 flex items-center text-xs">
+                    {stat.changeType === 'warning' ? (
+                      <div className="flex items-center text-red-600 dark:text-red-400">
+                        <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                        <span className="font-medium">{stat.change}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-green-600 dark:text-green-400">
+                        <TrendingUp className="h-3.5 w-3.5 mr-1" />
+                        <span className="font-medium">{stat.change}</span>
+                      </div>
                     )}
                   </div>
-                  <div className={`p-5 rounded-2xl shadow-xl ring-4 ring-white/20 group-hover:ring-[#CAE0FF]/40 transition-all duration-300 ${
-                    stat.color === 'blue' ? 'bg-gradient-to-br from-[#323956] to-[#232D3C]' :
-                    stat.color === 'green' ? 'bg-gradient-to-br from-[#323956] to-[#232D3C]' :
-                    stat.color === 'yellow' ? 'bg-gradient-to-br from-[#F5D05D] to-[#d9b84a]' :
-                    stat.color === 'red' ? 'bg-gradient-to-br from-red-500 via-pink-500 to-red-600' :
-                    'bg-gradient-to-br from-[#323956] to-[#232D3C]'
-                  } group-hover:scale-110 group-hover:shadow-2xl`}>
-                    <Icon className="h-8 w-8 text-white" />
-                  </div>
                 </div>
-                
-                <div className="flex items-center space-x-3">
-                  {stat.changeType === 'warning' ? (
-                    <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 shadow-sm">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                      <span className="text-sm font-bold text-red-700">{stat.change}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-100 rounded-xl border border-green-200 shadow-sm">
-                      <TrendingUp className="h-4 w-4 text-[#323956]" />
-                      <span className="text-sm font-bold text-green-700">{stat.change}</span>
-                    </div>
-                  )}
-                  {stat.changeType !== 'warning' && (
-                    <span className="text-xs text-slate-500 font-medium">vs last month</span>
-                  )}
+                <div className={`p-3 rounded-lg ${
+                  stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/30' :
+                  stat.color === 'green' ? 'bg-green-50 dark:bg-green-900/30' :
+                  stat.color === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/30' :
+                  stat.color === 'red' ? 'bg-red-50 dark:bg-red-900/30' :
+                  'bg-gray-50 dark:bg-gray-700'
+                }`}>
+                  <Icon className={`h-6 w-6 ${
+                    stat.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                    stat.color === 'green' ? 'text-green-600 dark:text-green-400' :
+                    stat.color === 'yellow' ? 'text-yellow-600 dark:text-yellow-400' :
+                    stat.color === 'red' ? 'text-red-600 dark:text-red-400' :
+                    'text-gray-600 dark:text-gray-400'
+                  }`} />
                 </div>
               </div>
             </div>
@@ -322,175 +266,140 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Healthcare System Overview */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#E4EFFF]0 via-purple-500 to-indigo-500 opacity-5"></div>
-          <div className="relative p-8">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#323956] to-[#232D3C] rounded-xl flex items-center justify-center shadow-lg">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-800">Healthcare System Overview</h3>
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* System Overview */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div className="flex items-center space-x-3 mb-5">
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#323956] rounded-lg flex items-center justify-center">
-                    <CheckCircle className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-800">System Status</span>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">System Overview</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-[#323956] rounded-full animate-pulse"></div>
-                  <span className="text-sm font-bold text-green-700">Operational</span>
-                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">System Status</span>
               </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#E4EFFF] to-indigo-50 rounded-2xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#323956] rounded-lg flex items-center justify-center">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-800">Active Users</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-[#323956] rounded-full animate-pulse"></div>
-                  <span className="text-sm font-bold text-blue-700">127 online</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200 shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#F5D05D] rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-800">Pending Alerts</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-[#F5D05D] rounded-full animate-pulse"></div>
-                  <span className="text-sm font-bold text-yellow-700">3 alerts</span>
-                </div>
-              </div>
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">Operational</span>
+            </div>
 
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#E4EFFF] to-[#CAE0FF] rounded-2xl border border-[#CAE0FF] shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#323956] rounded-lg flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-slate-800">Reports Today</span>
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                  <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-[#323956] rounded-full animate-pulse"></div>
-                  <span className="text-sm font-bold text-[#323956]">47 reports</span>
-                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Users</span>
               </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">127 online</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pending Alerts</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">3 alerts</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Reports Today</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">47 reports</span>
             </div>
           </div>
         </div>
 
-        {/* Recent Healthcare Activities */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 opacity-5"></div>
-          <div className="relative p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#323956] to-[#232D3C] rounded-xl flex items-center justify-center shadow-lg">
-                  <Activity className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800">Recent Activities</h3>
+        {/* Recent Activities */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <button
-                onClick={onRefresh}
-                className="px-4 py-2 bg-gradient-to-r from-[#323956] to-[#232D3C] text-white rounded-xl text-sm font-semibold hover:from-[#232D3C] hover:to-[#323956] transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                View All
-              </button>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
             </div>
-            <div className="space-y-4">
-              {recentActivities.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex items-start space-x-4 p-4 bg-white/60 rounded-2xl border border-white/40 shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className={`p-3 rounded-xl shadow-lg ${getIconColor(activity.color)}`}>
-                      <Icon className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 mb-1">{activity.message}</p>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-3 w-3 text-slate-400" />
-                        <p className="text-xs text-slate-500 font-medium">{activity.time}</p>
-                      </div>
+            <button
+              onClick={onRefresh}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+            >
+              View All
+            </button>
+          </div>
+          <div className="space-y-3">
+            {recentActivities.map((activity) => {
+              const Icon = activity.icon;
+              return (
+                <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <div className={`p-2 rounded-lg ${getIconColor(activity.color)}`}>
+                    <Icon className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{activity.message}</p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Healthcare Quick Actions */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/50 to-[#E4EFFF]/30 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-5"></div>
-        <div className="relative p-8">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-2xl flex items-center justify-center shadow-xl">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
+      {/* Quick Actions */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button
+            onClick={() => navigate('/admin/clinics')}
+            className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-3">
+              <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-800">Quick Actions</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <button
-              onClick={() => navigate('/admin?tab=clinics')}
-              className="group relative overflow-hidden bg-gradient-to-br from-white to-[#E4EFFF] border-2 border-[#CAE0FF] rounded-2xl p-6 hover:border-[#323956] hover:from-[#E4EFFF] hover:to-[#CAE0FF] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl"
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#323956] to-[#232D3C] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Building2 className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-sm font-bold text-slate-800 group-hover:text-[#323956] transition-colors">Add Clinic</span>
-              </div>
-            </button>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Add Clinic</span>
+          </button>
 
-            <button
-              onClick={() => navigate('/admin?tab=reports')}
-              className="group relative overflow-hidden bg-gradient-to-br from-white to-[#E4EFFF] border-2 border-[#CAE0FF] rounded-2xl p-6 hover:border-[#323956] hover:from-[#E4EFFF] hover:to-[#CAE0FF] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl"
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#323956] to-[#232D3C] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <FileText className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-sm font-bold text-slate-800 group-hover:text-[#323956] transition-colors">Upload Report</span>
-              </div>
-            </button>
+          <button
+            onClick={() => navigate('/admin/reports')}
+            className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-3">
+              <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Upload Report</span>
+          </button>
 
-            <button
-              onClick={() => navigate('/admin?tab=analytics')}
-              className="group relative overflow-hidden bg-gradient-to-br from-white to-[#E4EFFF] border-2 border-[#CAE0FF] rounded-2xl p-6 hover:border-[#323956] hover:from-[#E4EFFF] hover:to-[#CAE0FF] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl"
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#323956] to-[#232D3C] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Eye className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-sm font-bold text-slate-800 group-hover:text-[#323956] transition-colors">View Analytics</span>
-              </div>
-            </button>
+          <button
+            onClick={() => navigate('/admin/analytics')}
+            className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-3">
+              <Eye className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">View Analytics</span>
+          </button>
 
-            <button
-              onClick={() => navigate('/admin?tab=alerts')}
-              className="group relative overflow-hidden bg-gradient-to-br from-white to-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 hover:border-[#F5D05D] hover:from-yellow-50 hover:to-yellow-100 transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-xl"
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <AlertTriangle className="h-8 w-8 text-white" />
-                </div>
-                <span className="text-sm font-bold text-slate-800 group-hover:text-yellow-700 transition-colors">Check Alerts</span>
-              </div>
-            </button>
-          </div>
+          <button
+            onClick={() => navigate('/admin/alerts')}
+            className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mb-3">
+              <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Check Alerts</span>
+          </button>
         </div>
       </div>
     </div>

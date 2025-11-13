@@ -37,14 +37,14 @@ const LoginForm = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
-    console.log('🔥 LoginForm: Form submitted with data:', data);
+    console.log('HOT: LoginForm: Form submitted with data:', data);
     
     try {
       const result = await login(data, 'email');
-      console.log('🎯 LoginForm: Login result:', result);
+      console.log('TARGET: LoginForm: Login result:', result);
       
       if (result && result.success) {
-        console.log('✅ LoginForm: Login successful, navigating based on user role');
+        console.log('SUCCESS: LoginForm: Login successful, navigating based on user role');
         
         // Determine redirect path based on user role
         let redirectPath = '/dashboard'; // Default to dashboard
@@ -69,14 +69,14 @@ const LoginForm = () => {
         const from = location.state?.from?.pathname || redirectPath;
         navigate(from, { replace: true });
       } else {
-        console.log('❌ LoginForm: Login failed:', result?.error);
+        console.log('ERROR: LoginForm: Login failed:', result?.error);
         setError('root', { 
           type: 'manual', 
           message: result?.error || 'Invalid email or password' 
         });
       }
     } catch (error) {
-      console.error('🚨 LoginForm: Unexpected error:', error);
+      console.error('ALERT: LoginForm: Unexpected error:', error);
       setError('root', { 
         type: 'manual', 
         message: error?.message || 'Login failed. Please try again.' 

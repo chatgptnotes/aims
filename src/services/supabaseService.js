@@ -37,7 +37,7 @@ class SupabaseService {
     this.hasValidConfig = hasValidSupabaseConfig;
 
     if (!this.hasValidConfig) {
-      console.warn('⚠️ Supabase is not configured. Running in demo mode.');
+      console.warn('WARNING: Supabase is not configured. Running in demo mode.');
       console.warn('To enable Supabase, set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
     } else {
       this.testConnection();
@@ -54,9 +54,9 @@ class SupabaseService {
     if (!this.isAvailable()) return;
 
     try {
-      console.log('🔌 Testing Supabase connection...');
-      console.log('🔗 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-      console.log('🔑 Anon Key (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
+      console.log(' Testing Supabase connection...');
+      console.log(' Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+      console.log('KEY: Anon Key (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
 
       // Test basic connection using clinics table (which we know exists)
       const { data, error } = await this.supabase
@@ -65,12 +65,12 @@ class SupabaseService {
         .limit(1);
 
       if (error) {
-        console.log('⚠️ Connection test failed:', error.message);
+        console.log('WARNING: Connection test failed:', error.message);
       } else {
-        console.log('✅ Supabase connection test successful');
+        console.log('SUCCESS: Supabase connection test successful');
       }
     } catch (error) {
-      console.error('❌ Supabase connection test failed:', error);
+      console.error('ERROR: Supabase connection test failed:', error);
     }
   }
 
@@ -85,14 +85,14 @@ class SupabaseService {
       }
 
       if (error.code === 'PGRST106' || error.message.includes('does not exist')) {
-        console.log(`🔧 Table ${tableName} doesn't exist, creating...`);
+        console.log(`CONFIG: Table ${tableName} doesn't exist, creating...`);
         await this.createTable(tableName);
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error(`❌ Error checking table ${tableName}:`, error);
+      console.error(`ERROR: Error checking table ${tableName}:`, error);
       return false;
     }
   }
@@ -155,17 +155,17 @@ class SupabaseService {
 
     const schema = schemas[tableName];
     if (!schema) {
-      console.log(`⚠️ No schema defined for table: ${tableName}`);
+      console.log(`WARNING: No schema defined for table: ${tableName}`);
       return;
     }
 
     try {
-      console.log(`🔧 Creating table: ${tableName}`);
+      console.log(`CONFIG: Creating table: ${tableName}`);
       // Note: This won't work with standard Supabase client, but we'll log the schema
-      console.log(`📝 SQL Schema for ${tableName}:`, schema);
-      console.log(`⚠️ Please run this SQL in Supabase Dashboard > SQL Editor`);
+      console.log(`NOTE: SQL Schema for ${tableName}:`, schema);
+      console.log(`WARNING: Please run this SQL in Supabase Dashboard > SQL Editor`);
     } catch (error) {
-      console.error(`❌ Failed to create table ${tableName}:`, error);
+      console.error(`ERROR: Failed to create table ${tableName}:`, error);
     }
   }
 
@@ -173,7 +173,7 @@ class SupabaseService {
     if (!this.isAvailable()) return;
 
     try {
-      console.log('🚀 Initializing Supabase tables...');
+      console.log('START: Initializing Supabase tables...');
 
       // Check only existing tables from our schema
       const existingTables = ['clinics', 'patients', 'profiles', 'organizations', 'org_memberships', 'subscriptions', 'reports'];
@@ -182,16 +182,16 @@ class SupabaseService {
         try {
           const { data, error } = await this.supabase.from(table).select('id').limit(1);
           if (error) {
-            console.log(`⚠️ Table ${table} error:`, error.code, error.message);
+            console.log(`WARNING: Table ${table} error:`, error.code, error.message);
           } else {
-            console.log(`✅ Table ${table} is accessible - found ${data?.length || 0} records`);
+            console.log(`SUCCESS: Table ${table} is accessible - found ${data?.length || 0} records`);
           }
         } catch (tableError) {
-          console.log(`⚠️ Table ${table} check failed:`, tableError.message);
+          console.log(`WARNING: Table ${table} check failed:`, tableError.message);
         }
       }
     } catch (error) {
-      console.error('❌ Error initializing Supabase tables:', error);
+      console.error('ERROR: Error initializing Supabase tables:', error);
     }
   }
 
@@ -200,40 +200,40 @@ class SupabaseService {
     if (!this.isAvailable()) return [];
 
     try {
-      console.log(`📊 Fetching data from Supabase table: ${table}`);
+      console.log(`DATA: Fetching data from Supabase table: ${table}`);
       const { data, error } = await this.supabase
         .from(table)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error(`❌ Error fetching from ${table}:`, error);
+        console.error(`ERROR: Error fetching from ${table}:`, error);
         return [];
       }
 
-      console.log(`✅ Fetched ${data?.length || 0} items from ${table}`);
+      console.log(`SUCCESS: Fetched ${data?.length || 0} items from ${table}`);
       return data || [];
     } catch (error) {
-      console.error(`❌ Error in get operation for ${table}:`, error);
+      console.error(`ERROR: Error in get operation for ${table}:`, error);
       return [];
     }
   }
 
   async add(table, item) {
     if (!this.isAvailable()) {
-      console.warn('⚠️ Supabase not available, returning demo data');
+      console.warn('WARNING: Supabase not available, returning demo data');
       return { ...item, id: 'demo-' + Date.now() };
     }
 
     try {
-      console.log(`➕ Adding item to Supabase table: ${table}`, item);
+      console.log(` Adding item to Supabase table: ${table}`, item);
 
       // Remove any undefined fields
       const cleanedItem = Object.fromEntries(
         Object.entries(item).filter(([_, v]) => v !== undefined)
       );
 
-      console.log(`🔧 Cleaned item for ${table}:`, cleanedItem);
+      console.log(`CONFIG: Cleaned item for ${table}:`, cleanedItem);
 
       // First try to create table if it doesn't exist
       await this.ensureTableExists(table);
@@ -245,15 +245,15 @@ class SupabaseService {
         .single();
 
       if (error) {
-        console.error(`❌ Error adding to ${table}:`, error);
-        console.error(`❌ Error code:`, error.code);
-        console.error(`❌ Error message:`, error.message);
-        console.error(`❌ Error details:`, error.details);
-        console.error(`❌ Error hint:`, error.hint);
+        console.error(`ERROR: Error adding to ${table}:`, error);
+        console.error(`ERROR: Error code:`, error.code);
+        console.error(`ERROR: Error message:`, error.message);
+        console.error(`ERROR: Error details:`, error.details);
+        console.error(`ERROR: Error hint:`, error.hint);
 
         // If table doesn't exist, try to create it
         if (error.code === 'PGRST106' || error.message.includes('does not exist')) {
-          console.log(`🔧 Attempting to create table: ${table}`);
+          console.log(`CONFIG: Attempting to create table: ${table}`);
           await this.createTable(table);
           // Retry the insert
           const { data: retryData, error: retryError } = await this.supabase
@@ -266,30 +266,30 @@ class SupabaseService {
             throw retryError;
           }
 
-          console.log(`✅ Successfully added to ${table} after creating table:`, retryData);
+          console.log(`SUCCESS: Successfully added to ${table} after creating table:`, retryData);
           return retryData;
         }
 
         throw error;
       }
 
-      console.log(`✅ Successfully added to ${table}:`, data);
+      console.log(`SUCCESS: Successfully added to ${table}:`, data);
       return data;
     } catch (error) {
-      console.error(`❌ Error in add operation for ${table}:`, error);
-      console.error(`❌ Full error object:`, JSON.stringify(error, null, 2));
+      console.error(`ERROR: Error in add operation for ${table}:`, error);
+      console.error(`ERROR: Full error object:`, JSON.stringify(error, null, 2));
       throw error;
     }
   }
 
   async update(table, id, updates) {
     if (!this.isAvailable()) {
-      console.warn('⚠️ Supabase not available, returning demo data');
+      console.warn('WARNING: Supabase not available, returning demo data');
       return { id, ...updates };
     }
 
     try {
-      console.log(`📝 Updating item in Supabase table: ${table}`, { id, updates });
+      console.log(`NOTE: Updating item in Supabase table: ${table}`, { id, updates });
 
       // Remove any undefined fields
       const cleanedUpdates = Object.fromEntries(
@@ -307,41 +307,55 @@ class SupabaseService {
         .single();
 
       if (error) {
-        console.error(`❌ Error updating ${table}:`, error);
+        console.error(`ERROR: Error updating ${table}:`, error);
         throw error;
       }
 
-      console.log(`✅ Successfully updated ${table}:`, data);
+      console.log(`SUCCESS: Successfully updated ${table}:`, data);
       return data;
     } catch (error) {
-      console.error(`❌ Error in update operation for ${table}:`, error);
+      console.error(`ERROR: Error in update operation for ${table}:`, error);
       throw error;
     }
   }
 
   async delete(table, id) {
     if (!this.isAvailable()) {
-      console.warn('⚠️ Supabase not available, simulating delete');
+      console.warn('WARNING: Supabase not available, simulating delete');
       return true;
     }
 
     try {
-      console.log(`🗑️ Deleting item from Supabase table: ${table}`, { id });
+      console.log(`DELETE: Deleting item from Supabase table: ${table}`, { id });
 
-      const { error } = await this.supabase
+      const { data, error } = await this.supabase
         .from(table)
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) {
-        console.error(`❌ Error deleting from ${table}:`, error);
-        throw error;
+        console.error(`ERROR: Supabase DELETE Error:`, {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          table: table,
+          id: id
+        });
+
+        // Check for RLS policy error
+        if (error.code === '42501' || error.message.includes('policy')) {
+          throw new Error(`Permission denied: Please check Supabase RLS policies for ${table} table. Error: ${error.message}`);
+        }
+
+        throw new Error(`Supabase error: ${error.message}`);
       }
 
-      console.log(`✅ Successfully deleted from ${table}`);
+      console.log(`SUCCESS: Successfully deleted from ${table}:`, data);
       return true;
     } catch (error) {
-      console.error(`❌ Error in delete operation for ${table}:`, error);
+      console.error(`ERROR: Error in delete operation for ${table}:`, error);
       throw error;
     }
   }
@@ -356,19 +370,19 @@ class SupabaseService {
         .eq('id', id);
 
       if (error) {
-        console.error(`❌ Error finding by ID in ${table}:`, error);
+        console.error(`ERROR: Error finding by ID in ${table}:`, error);
         return null;
       }
 
       // Return first item if found, null if empty
       if (!data || data.length === 0) {
-        console.log(`ℹ️  No data found in ${table} for id: ${id}`);
+        console.log(`INFO:  No data found in ${table} for id: ${id}`);
         return null;
       }
 
       return data[0];
     } catch (error) {
-      console.error(`❌ Error in findById for ${table}:`, error);
+      console.error(`ERROR: Error in findById for ${table}:`, error);
       return null;
     }
   }
@@ -383,13 +397,13 @@ class SupabaseService {
         .eq(field, value);
 
       if (error) {
-        console.error(`❌ Error finding by ${field} in ${table}:`, error);
+        console.error(`ERROR: Error finding by ${field} in ${table}:`, error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error(`❌ Error in findBy for ${table}:`, error);
+      console.error(`ERROR: Error in findBy for ${table}:`, error);
       return [];
     }
   }
@@ -406,13 +420,13 @@ class SupabaseService {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        console.error(`❌ Error finding one by ${field} in ${table}:`, error);
+        console.error(`ERROR: Error finding one by ${field} in ${table}:`, error);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error(`❌ Error in findOne for ${table}:`, error);
+      console.error(`ERROR: Error in findOne for ${table}:`, error);
       return null;
     }
   }
@@ -572,7 +586,7 @@ class SupabaseService {
   // Auth methods
   async signUp(email, password, userData = {}) {
     if (!this.isAvailable()) {
-      console.warn('⚠️ Supabase not available, returning demo user');
+      console.warn('WARNING: Supabase not available, returning demo user');
       return { user: { email, ...userData }, session: null };
     }
 
@@ -588,14 +602,14 @@ class SupabaseService {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('❌ Error signing up:', error);
+      console.error('ERROR: Error signing up:', error);
       throw error;
     }
   }
 
   async signIn(email, password) {
     if (!this.isAvailable()) {
-      console.warn('⚠️ Supabase not available, returning demo session');
+      console.warn('WARNING: Supabase not available, returning demo session');
       return { user: { email }, session: null };
     }
 
@@ -608,7 +622,7 @@ class SupabaseService {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('❌ Error signing in:', error);
+      console.error('ERROR: Error signing in:', error);
       throw error;
     }
   }
@@ -620,7 +634,7 @@ class SupabaseService {
       const { error } = await this.supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
-      console.error('❌ Error signing out:', error);
+      console.error('ERROR: Error signing out:', error);
       throw error;
     }
   }
@@ -632,7 +646,7 @@ class SupabaseService {
       const { data: { user } } = await this.supabase.auth.getUser();
       return user;
     } catch (error) {
-      console.error('❌ Error getting current user:', error);
+      console.error('ERROR: Error getting current user:', error);
       return null;
     }
   }

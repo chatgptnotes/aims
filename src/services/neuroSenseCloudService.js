@@ -12,9 +12,9 @@ class NeuroSenseCloudService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('☁️ NeuroSense Cloud: Connected');
+      console.log('️ NeuroSense Cloud: Connected');
     } else {
-      console.warn('⚠️ NeuroSense Cloud: Offline mode');
+      console.warn('WARNING: NeuroSense Cloud: Offline mode');
       this.supabase = null;
     }
 
@@ -48,7 +48,7 @@ class NeuroSenseCloudService {
   async initializeCloudStorage() {
     try {
       if (!this.supabase) {
-        console.log('📁 Cloud Storage: Using local fallback');
+        console.log(' Cloud Storage: Using local fallback');
         return;
       }
 
@@ -59,7 +59,7 @@ class NeuroSenseCloudService {
         .listBuckets();
 
       if (error) {
-        console.log('📁 Cloud Storage: Cannot access buckets (may not be configured yet)');
+        console.log(' Cloud Storage: Cannot access buckets (may not be configured yet)');
         return;
       }
 
@@ -68,16 +68,16 @@ class NeuroSenseCloudService {
       const missingBuckets = requiredBuckets.filter(name => !existingBucketNames.includes(name));
 
       if (missingBuckets.length > 0) {
-        console.log('📁 Missing storage buckets:', missingBuckets);
-        console.log('ℹ️  Please create these buckets manually in Supabase Dashboard → Storage');
-        console.log('ℹ️  Or the app will use local storage fallback');
+        console.log(' Missing storage buckets:', missingBuckets);
+        console.log('INFO:  Please create these buckets manually in Supabase Dashboard → Storage');
+        console.log('INFO:  Or the app will use local storage fallback');
       } else {
-        console.log('☁️ All required storage buckets are available');
+        console.log('️ All required storage buckets are available');
       }
 
-      console.log('☁️ Cloud storage initialized successfully');
+      console.log('️ Cloud storage initialized successfully');
     } catch (error) {
-      console.log('📁 Cloud storage not available, using local fallback');
+      console.log(' Cloud storage not available, using local fallback');
     }
   }
 
@@ -86,7 +86,7 @@ class NeuroSenseCloudService {
    */
   async uploadEDFFile(file, patientId, sessionId, metadata = {}) {
     try {
-      console.log('📤 Uploading EDF file to NeuroSense Cloud...');
+      console.log(' Uploading EDF file to NeuroSense Cloud...');
 
       if (!this.supabase) {
         throw new Error('Cloud service not available');
@@ -134,7 +134,7 @@ class NeuroSenseCloudService {
 
       if (recordError) throw recordError;
 
-      console.log('✅ EDF file uploaded to cloud successfully');
+      console.log('SUCCESS: EDF file uploaded to cloud successfully');
 
       // Trigger cloud processing
       const processingJob = await this.startCloudProcessing(recordData.id, fileName);
@@ -147,7 +147,7 @@ class NeuroSenseCloudService {
       };
 
     } catch (error) {
-      console.error('❌ Cloud upload failed:', error);
+      console.error('ERROR: Cloud upload failed:', error);
       throw new Error(`Cloud upload failed: ${error.message}`);
     }
   }
@@ -157,7 +157,7 @@ class NeuroSenseCloudService {
    */
   async startCloudProcessing(fileId, filePath) {
     try {
-      console.log('⚡ Starting cloud processing...');
+      console.log(' Starting cloud processing...');
 
       // Create processing job record
       const { data: jobData, error: jobError } = await this.supabase
@@ -186,7 +186,7 @@ class NeuroSenseCloudService {
       };
 
     } catch (error) {
-      console.error('❌ Failed to start cloud processing:', error);
+      console.error('ERROR: Failed to start cloud processing:', error);
       throw error;
     }
   }
@@ -236,10 +236,10 @@ class NeuroSenseCloudService {
         reports: reports
       });
 
-      console.log('✅ Cloud processing completed successfully');
+      console.log('SUCCESS: Cloud processing completed successfully');
 
     } catch (error) {
-      console.error('❌ Cloud processing failed:', error);
+      console.error('ERROR: Cloud processing failed:', error);
       await this.updateJobStatus(jobId, 'failed', error.message);
     }
   }
@@ -266,11 +266,11 @@ class NeuroSenseCloudService {
 
       if (error) throw error;
 
-      console.log('☁️ Analysis results stored in cloud');
+      console.log('️ Analysis results stored in cloud');
       return data;
 
     } catch (error) {
-      console.error('❌ Failed to store analysis in cloud:', error);
+      console.error('ERROR: Failed to store analysis in cloud:', error);
       throw error;
     }
   }
@@ -315,11 +315,11 @@ class NeuroSenseCloudService {
         });
       }
 
-      console.log(`📊 Generated ${reports.length} cloud reports`);
+      console.log(`DATA: Generated ${reports.length} cloud reports`);
       return reports;
 
     } catch (error) {
-      console.error('❌ Report generation failed:', error);
+      console.error('ERROR: Report generation failed:', error);
       return [];
     }
   }
@@ -355,7 +355,7 @@ class NeuroSenseCloudService {
       };
 
     } catch (error) {
-      console.error('❌ PDF generation failed:', error);
+      console.error('ERROR: PDF generation failed:', error);
       return { path: null };
     }
   }
@@ -398,7 +398,7 @@ class NeuroSenseCloudService {
       };
 
     } catch (error) {
-      console.error('❌ CSV generation failed:', error);
+      console.error('ERROR: CSV generation failed:', error);
       return { path: null };
     }
   }
@@ -521,7 +521,7 @@ class NeuroSenseCloudService {
       };
 
     } catch (error) {
-      console.error('❌ Interactive report generation failed:', error);
+      console.error('ERROR: Interactive report generation failed:', error);
       return { path: null };
     }
   }
@@ -555,7 +555,7 @@ class NeuroSenseCloudService {
       if (error) throw error;
 
     } catch (error) {
-      console.error('❌ Failed to update job status:', error);
+      console.error('ERROR: Failed to update job status:', error);
     }
   }
 
@@ -578,7 +578,7 @@ class NeuroSenseCloudService {
       return data;
 
     } catch (error) {
-      console.error('❌ Failed to get job status:', error);
+      console.error('ERROR: Failed to get job status:', error);
       return { status: 'error', message: error.message };
     }
   }
@@ -608,11 +608,11 @@ class NeuroSenseCloudService {
 
       URL.revokeObjectURL(url);
 
-      console.log('✅ Report downloaded successfully');
+      console.log('SUCCESS: Report downloaded successfully');
       return { success: true };
 
     } catch (error) {
-      console.error('❌ Download failed:', error);
+      console.error('ERROR: Download failed:', error);
       return { success: false, error: error.message };
     }
   }
@@ -644,7 +644,7 @@ class NeuroSenseCloudService {
       return data || [];
 
     } catch (error) {
-      console.error('❌ Failed to fetch cloud history:', error);
+      console.error('ERROR: Failed to fetch cloud history:', error);
       return [];
     }
   }
@@ -679,12 +679,12 @@ class NeuroSenseCloudService {
             .delete()
             .lt('created_at', cutoffDate.toISOString());
 
-          console.log(`🧹 Cleaned up ${filePaths.length} old cloud files`);
+          console.log(`CLEANUP: Cleaned up ${filePaths.length} old cloud files`);
         }
       }
 
     } catch (error) {
-      console.error('❌ Cleanup failed:', error);
+      console.error('ERROR: Cleanup failed:', error);
     }
   }
 

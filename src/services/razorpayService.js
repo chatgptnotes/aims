@@ -8,7 +8,7 @@ const RAZORPAY_SECRET = import.meta.env.VITE_RAZORPAY_SECRET || import.meta.env.
 class RazorpayService {
   constructor() {
     // Debug environment variable loading
-    console.log('🔍 DEBUG: Environment Variables Check:');
+    console.log('DEBUG: DEBUG: Environment Variables Check:');
     console.log('VITE_RAZORPAY_KEY_ID:', import.meta.env.VITE_RAZORPAY_KEY_ID ? 'FOUND' : 'MISSING');
     console.log('VITE_RAZORPAY_SECRET:', import.meta.env.VITE_RAZORPAY_SECRET ? 'FOUND' : 'MISSING');
     console.log('VITE_RAZORPAY_KEY_SECRET:', import.meta.env.VITE_RAZORPAY_KEY_SECRET ? 'FOUND' : 'MISSING');
@@ -16,7 +16,7 @@ class RazorpayService {
     this.keyId = RAZORPAY_KEY_ID || null;
     this.secret = RAZORPAY_SECRET || null;
     
-    console.log('🔍 DEBUG: Processed Values:');
+    console.log('DEBUG: DEBUG: Processed Values:');
     console.log('keyId:', this.keyId ? this.keyId.substring(0, 12) + '...' : 'NULL');
     console.log('secret:', this.secret ? 'SET' : 'NULL');
     
@@ -27,12 +27,12 @@ class RazorpayService {
     
     // Production initialization
     if (this.hasRealKeys) {
-      console.log('✅ PRODUCTION: Razorpay initialized with live credentials');
-      console.log('🔐 PRODUCTION: Key ID verified:', this.keyId.substring(0, 12) + '...');
+      console.log('SUCCESS: PRODUCTION: Razorpay initialized with live credentials');
+      console.log('AUTH: PRODUCTION: Key ID verified:', this.keyId.substring(0, 12) + '...');
     } else {
-      console.error('❌ PRODUCTION: Razorpay credentials missing or invalid');
-      console.error('🔧 Required: Set VITE_RAZORPAY_KEY_ID and VITE_RAZORPAY_KEY_SECRET');
-      console.error('📝 Format: VITE_RAZORPAY_KEY_ID should start with "rzp_live_" or "rzp_test_"');
+      console.error('ERROR: PRODUCTION: Razorpay credentials missing or invalid');
+      console.error('CONFIG: Required: Set VITE_RAZORPAY_KEY_ID and VITE_RAZORPAY_KEY_SECRET');
+      console.error('NOTE: Format: VITE_RAZORPAY_KEY_ID should start with "rzp_live_" or "rzp_test_"');
     }
     
     // Initialize Razorpay SDK
@@ -43,32 +43,32 @@ class RazorpayService {
     this.maxRetries = 3;
     this.timeoutMs = 300000; // 5 minutes
     
-    console.log(`🌍 PRODUCTION: Environment detected as: ${this.environment}`);
+    console.log(` PRODUCTION: Environment detected as: ${this.environment}`);
   }
 
   // Initialize Razorpay script
   initializeRazorpay() {
     return new Promise((resolve, reject) => {
       if (window.Razorpay) {
-        console.log('✅ Razorpay script already loaded');
+        console.log('SUCCESS: Razorpay script already loaded');
         resolve(window.Razorpay);
         return;
       }
 
-      console.log('🔄 Loading Razorpay script...');
+      console.log('REFRESH: Loading Razorpay script...');
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => {
-        console.log('✅ Razorpay script loaded successfully');
+        console.log('SUCCESS: Razorpay script loaded successfully');
         if (window.Razorpay) {
           resolve(window.Razorpay);
         } else {
-          console.error('❌ Razorpay script loaded but window.Razorpay is undefined');
+          console.error('ERROR: Razorpay script loaded but window.Razorpay is undefined');
           reject(new Error('Razorpay script loaded but not accessible'));
         }
       };
       script.onerror = (error) => {
-        console.error('❌ Failed to load Razorpay script:', error);
+        console.error('ERROR: Failed to load Razorpay script:', error);
         reject(new Error('Failed to load Razorpay script'));
       };
       document.head.appendChild(script);
@@ -78,7 +78,7 @@ class RazorpayService {
   // Create payment order - PRODUCTION MODE
   async createOrder(orderData) {
     try {
-      console.log('🔄 PRODUCTION: createOrder called with:', orderData);
+      console.log('REFRESH: PRODUCTION: createOrder called with:', orderData);
       const { clinicId, packageInfo, clinicInfo } = orderData;
       
       // Input validation
@@ -94,7 +94,7 @@ class RazorpayService {
       
       // Validate that we have real Razorpay keys
       if (!this.hasRealKeys) {
-        console.error('❌ Razorpay keys validation failed:');
+        console.error('ERROR: Razorpay keys validation failed:');
         console.error('keyId:', this.keyId ? 'Present' : 'Missing');
         console.error('secret:', this.secret ? 'Present' : 'Missing');
         throw new Error('Production Razorpay keys not configured. Please check environment variables.');
@@ -104,14 +104,14 @@ class RazorpayService {
       const orderId = 'neuro360_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       
       // PRODUCTION: Create real Razorpay order directly
-      console.log('💳 PRODUCTION: Creating real Razorpay order...');
+      console.log(' PRODUCTION: Creating real Razorpay order...');
       const order = await this.createRealRazorpayOrder(orderId, packageInfo, clinicId);
-      console.log('✅ PRODUCTION: Real Razorpay order created:', order.id);
+      console.log('SUCCESS: PRODUCTION: Real Razorpay order created:', order.id);
       return order;
       
     } catch (error) {
-      console.error('❌ PRODUCTION: Error in createOrder:', error.message);
-      console.error('❌ Full error:', error);
+      console.error('ERROR: PRODUCTION: Error in createOrder:', error.message);
+      console.error('ERROR: Full error:', error);
       
       // Re-throw with user-friendly message
       if (error.message.includes('keys not configured')) {
@@ -127,7 +127,7 @@ class RazorpayService {
   // Create frontend-only Razorpay order (without backend)
   async createRealRazorpayOrder(orderId, packageInfo, clinicId) {
     try {
-      console.log('💳 FRONTEND-ONLY: Creating Razorpay order without backend');
+      console.log(' FRONTEND-ONLY: Creating Razorpay order without backend');
       
       // Create order structure for frontend-only implementation
       // Note: In production with backend, this would be an API call to your server
@@ -158,11 +158,11 @@ class RazorpayService {
         notes: orderData.notes
       };
 
-      console.log('✅ FRONTEND-ONLY: Order structure created for direct payment:', order);
+      console.log('SUCCESS: FRONTEND-ONLY: Order structure created for direct payment:', order);
       return order;
       
     } catch (error) {
-      console.error('❌ FRONTEND-ONLY: Failed to create order structure:', error);
+      console.error('ERROR: FRONTEND-ONLY: Failed to create order structure:', error);
       throw new Error('Failed to initialize payment. Please try again.');
     }
   }
@@ -171,34 +171,34 @@ class RazorpayService {
 
   // Process payment - PRODUCTION VERSION
   processPayment(order, clinicInfo, onSuccess, onFailure) {
-    console.log('🚀 PRODUCTION: processPayment called');
-    console.log('📋 Order:', order);
-    console.log('🏥 Clinic info:', clinicInfo);
+    console.log('START: PRODUCTION: processPayment called');
+    console.log('INFO: Order:', order);
+    console.log('CLINIC: Clinic info:', clinicInfo);
     
     // Production validation
     if (!order) {
-      console.error('❌ PRODUCTION: No order provided');
+      console.error('ERROR: PRODUCTION: No order provided');
       toast.error('Payment initialization failed. Please try again.');
       onFailure?.(new Error('No order provided'));
       return;
     }
     
     if (!this.hasRealKeys) {
-      console.error('❌ PRODUCTION: Razorpay keys not configured');
+      console.error('ERROR: PRODUCTION: Razorpay keys not configured');
       toast.error('Payment system not configured. Please contact support.');
       onFailure?.(new Error('Payment system not configured'));
       return;
     }
     
     if (!onSuccess) {
-      console.error('❌ PRODUCTION: No success callback provided');
+      console.error('ERROR: PRODUCTION: No success callback provided');
       return;
     }
     
-    console.log('✅ PRODUCTION: Validation passed');
+    console.log('SUCCESS: PRODUCTION: Validation passed');
     
     try {
-      console.log('🔄 PRODUCTION: Setting up payment options...');
+      console.log('REFRESH: PRODUCTION: Setting up payment options...');
 
       // FRONTEND-ONLY: Direct payment without order_id (for frontend-only implementation)
       const options = {
@@ -210,7 +210,7 @@ class RazorpayService {
         image: '/favicon.ico',
         // Note: No order_id for direct payment mode
         handler: async (response) => {
-          console.log('✅ FRONTEND-ONLY: Payment successful, processing...');
+          console.log('SUCCESS: FRONTEND-ONLY: Payment successful, processing...');
           await this.handlePaymentSuccess(response, order, onSuccess);
         },
         prefill: {
@@ -223,7 +223,7 @@ class RazorpayService {
         },
         modal: {
           ondismiss: () => {
-            console.log('⚠️ FRONTEND-ONLY: Payment modal closed by user');
+            console.log('WARNING: FRONTEND-ONLY: Payment modal closed by user');
             toast.info('Payment cancelled');
             onFailure?.(new Error('Payment cancelled by user'));
           }
@@ -243,7 +243,7 @@ class RazorpayService {
         }
       };
 
-      console.log('💳 PRODUCTION: Payment options created:', {
+      console.log(' PRODUCTION: Payment options created:', {
         ...options,
         key: '***HIDDEN***' // Don't log the actual key
       });
@@ -254,7 +254,7 @@ class RazorpayService {
       }
 
       // Open real Razorpay checkout
-      console.log('💳 PRODUCTION: Opening Razorpay checkout...');
+      console.log(' PRODUCTION: Opening Razorpay checkout...');
       toast.loading('Opening payment gateway...', { duration: 2000 });
       
       const rzp = new window.Razorpay(options);
@@ -267,7 +267,7 @@ class RazorpayService {
       rzp.open();
       
     } catch (error) {
-      console.error('❌ PRODUCTION: Error processing payment:', error);
+      console.error('ERROR: PRODUCTION: Error processing payment:', error);
       toast.error('Failed to open payment gateway. Please try again.');
       onFailure?.(error);
     }
@@ -277,7 +277,7 @@ class RazorpayService {
 
   // Handle successful payment - FRONTEND-ONLY VERSION
   async handlePaymentSuccess(response, order, onSuccess) {
-    console.log('✅ FRONTEND-ONLY: Payment successful:', response);
+    console.log('SUCCESS: FRONTEND-ONLY: Payment successful:', response);
 
     try {
       // For direct payment mode, only payment_id is guaranteed
@@ -339,15 +339,15 @@ class RazorpayService {
         }
       };
 
-      console.log('💾 FRONTEND-ONLY: Storing payment data:', paymentData);
+      console.log('STORAGE: FRONTEND-ONLY: Storing payment data:', paymentData);
 
       // Update clinic subscription first
       await this.updateClinicSubscription(paymentData);
-      console.log('✅ Clinic subscription updated successfully');
+      console.log('SUCCESS: Clinic subscription updated successfully');
 
       // Store payment record in database
       await this.storePaymentRecord(paymentData);
-      console.log('✅ Payment record stored in database successfully');
+      console.log('SUCCESS: Payment record stored in database successfully');
 
       // Send success notification
       toast.success(`Payment successful! ${paymentData.reports} reports added to your account.`, {
@@ -357,10 +357,10 @@ class RazorpayService {
       // Find the package info for the callback (reuse existing packageInfo)
       // const packageInfo already declared above
       
-      console.log('💳 FRONTEND-ONLY: Calling onSuccess callback with:', { paymentData, packageInfo });
+      console.log(' FRONTEND-ONLY: Calling onSuccess callback with:', { paymentData, packageInfo });
       
       // Log successful transaction for analytics
-      console.log('📊 FRONTEND-ONLY: Payment completed successfully', {
+      console.log('DATA: FRONTEND-ONLY: Payment completed successfully', {
         paymentId: paymentData.paymentId,
         amount: paymentData.amount,
         clinicId: paymentData.clinicId,
@@ -370,14 +370,14 @@ class RazorpayService {
       onSuccess?.(paymentData, packageInfo);
 
     } catch (error) {
-      console.error('❌ FRONTEND-ONLY: Error handling payment success:', error);
+      console.error('ERROR: FRONTEND-ONLY: Error handling payment success:', error);
       toast.error('Payment completed but failed to update account. Please contact support with payment ID: ' + (response.razorpay_payment_id || 'N/A'));
     }
   }
 
   // Handle payment failure - PRODUCTION VERSION
   handlePaymentFailure(response, onFailure) {
-    console.log('❌ PRODUCTION: Payment failed:', response);
+    console.log('ERROR: PRODUCTION: Payment failed:', response);
     
     // Extract detailed error information
     const error = response.error || {};
@@ -388,7 +388,7 @@ class RazorpayService {
     const errorReason = error.reason || 'unknown';
     
     // Log detailed error for debugging
-    console.error('💳 PRODUCTION: Payment failure details:', {
+    console.error(' PRODUCTION: Payment failure details:', {
       code: errorCode,
       description: errorDescription,
       source: errorSource,
@@ -451,7 +451,7 @@ class RazorpayService {
     try {
       const { clinicId, packageId, amount } = paymentData;
 
-      console.log('🔄 Updating clinic subscription:', { clinicId, packageId });
+      console.log('REFRESH: Updating clinic subscription:', { clinicId, packageId });
 
       // Get package details
       const packages = this.getReportPackages();
@@ -471,13 +471,13 @@ class RazorpayService {
           lastPaymentAt: new Date().toISOString()
         });
 
-        console.log(`✅ Updated clinic ${clinic.name} - Added ${packageInfo.reports} reports (Total: ${newAllowance})`);
+        console.log(`SUCCESS: Updated clinic ${clinic.name} - Added ${packageInfo.reports} reports (Total: ${newAllowance})`);
       } else {
-        console.error('❌ Clinic not found:', clinicId);
+        console.error('ERROR: Clinic not found:', clinicId);
         throw new Error('Clinic not found');
       }
     } catch (error) {
-      console.error('❌ Error updating clinic subscription:', error);
+      console.error('ERROR: Error updating clinic subscription:', error);
       throw error;
     }
   }
@@ -505,15 +505,15 @@ class RazorpayService {
       };
 
       // Store in database (payment_history table via 'payments' mapping)
-      console.log('💾 STORAGE: Saving payment record to database:', paymentRecord.paymentId);
-      console.log('💾 Payment record data:', JSON.stringify(paymentRecord, null, 2));
+      console.log('STORAGE: STORAGE: Saving payment record to database:', paymentRecord.paymentId);
+      console.log('STORAGE: Payment record data:', JSON.stringify(paymentRecord, null, 2));
 
       try {
         const savedPayment = await DatabaseService.add('payments', paymentRecord);
-        console.log('✅ STORAGE: Payment successfully saved to database:', savedPayment);
+        console.log('SUCCESS: STORAGE: Payment successfully saved to database:', savedPayment);
       } catch (dbError) {
-        console.error('❌ STORAGE: Database save failed:', dbError);
-        console.error('❌ Error details:', dbError.message);
+        console.error('ERROR: STORAGE: Database save failed:', dbError);
+        console.error('ERROR: Error details:', dbError.message);
         // Don't throw - continue to save subscription record
       }
       
@@ -537,19 +537,19 @@ class RazorpayService {
       };
       
       // Store subscription in database
-      console.log('💾 STORAGE: Saving subscription record:', subscriptionRecord);
+      console.log('STORAGE: STORAGE: Saving subscription record:', subscriptionRecord);
       try {
         const savedSubscription = await DatabaseService.add('subscriptions', subscriptionRecord);
-        console.log('✅ STORAGE: Subscription successfully saved to database:', savedSubscription);
+        console.log('SUCCESS: STORAGE: Subscription successfully saved to database:', savedSubscription);
       } catch (dbError) {
-        console.error('❌ STORAGE: Subscription save failed:', dbError);
-        console.error('❌ Error details:', dbError.message);
+        console.error('ERROR: STORAGE: Subscription save failed:', dbError);
+        console.error('ERROR: Error details:', dbError.message);
       }
 
-      console.log('💾 PRODUCTION: Payment and subscription records stored:', paymentData.paymentId);
+      console.log('STORAGE: PRODUCTION: Payment and subscription records stored:', paymentData.paymentId);
       
     } catch (error) {
-      console.error('❌ PRODUCTION: Failed to store payment record:', error);
+      console.error('ERROR: PRODUCTION: Failed to store payment record:', error);
       throw new Error('Failed to save payment information');
     }
   }
@@ -579,7 +579,7 @@ class RazorpayService {
       throw new Error('Invalid clinic ID');
     }
     
-    console.log('✅ PRODUCTION: Payment data validation passed');
+    console.log('SUCCESS: PRODUCTION: Payment data validation passed');
   }
 
   // Get client IP (for security logging)
@@ -652,33 +652,33 @@ class RazorpayService {
   // Get payment history for a clinic
   async getPaymentHistory(clinicId) {
     try {
-      console.log('📋 STORAGE: Fetching payment history for clinic:', clinicId);
+      console.log('INFO: STORAGE: Fetching payment history for clinic:', clinicId);
       
       // Try database first, fallback to localStorage
       let payments = [];
 
       try {
         payments = await DatabaseService.findBy('payments', 'clinicId', clinicId);
-        console.log('✅ STORAGE: Retrieved from database:', payments.length, 'payments');
+        console.log('SUCCESS: STORAGE: Retrieved from database:', payments.length, 'payments');
       } catch (dbError) {
-        console.warn('⚠️ STORAGE: Database failed, using localStorage:', dbError.message);
+        console.warn('WARNING: STORAGE: Database failed, using localStorage:', dbError.message);
         payments = DatabaseService.findBy('payments', 'clinicId', clinicId);
-        console.log('✅ STORAGE: Retrieved from localStorage:', payments.length, 'payments');
+        console.log('SUCCESS: STORAGE: Retrieved from localStorage:', payments.length, 'payments');
       }
       
       // Ensure payments is an array before sorting
       if (!Array.isArray(payments)) {
-        console.warn('⚠️ getPaymentHistory: payments is not array, returning empty array');
+        console.warn('WARNING: getPaymentHistory: payments is not array, returning empty array');
         return [];
       }
       
       // Sort by creation date (newest first)
       const sortedPayments = payments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      console.log('📊 STORAGE: Returning sorted payment history:', sortedPayments.length, 'payments');
+      console.log('DATA: STORAGE: Returning sorted payment history:', sortedPayments.length, 'payments');
       
       return sortedPayments;
     } catch (error) {
-      console.error('❌ Error getting payment history:', error);
+      console.error('ERROR: Error getting payment history:', error);
       return [];
     }
   }
@@ -687,7 +687,7 @@ class RazorpayService {
   async getUsageStats(clinicId) {
     try {
       if (!clinicId) {
-        console.warn('⚠️ getUsageStats: No clinicId provided');
+        console.warn('WARNING: getUsageStats: No clinicId provided');
         return {
           clinic: null,
           reportsUsed: 0,
@@ -712,7 +712,7 @@ class RazorpayService {
         paymentHistory: payments
       };
     } catch (error) {
-      console.error('❌ Error getting usage stats:', error);
+      console.error('ERROR: Error getting usage stats:', error);
       return {
         clinic: null,
         reportsUsed: 0,

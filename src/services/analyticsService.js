@@ -11,9 +11,9 @@ class AnalyticsService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('✅ Analytics Service: Supabase connected');
+      console.log('SUCCESS: Analytics Service: Supabase connected');
     } else {
-      console.warn('⚠️ Analytics Service: Supabase not configured, using mock data');
+      console.warn('WARNING: Analytics Service: Supabase not configured, using mock data');
       this.supabase = null;
     }
   }
@@ -23,7 +23,7 @@ class AnalyticsService {
    */
   async getSystemAnalytics() {
     try {
-      console.log('📊 Fetching system analytics...');
+      console.log('DATA: Fetching system analytics...');
 
       if (!this.supabase) {
         return this.getMockAnalytics();
@@ -48,7 +48,7 @@ class AnalyticsService {
       const organizations = organizationsResult.status === 'fulfilled' ? organizationsResult.value.data || [] : [];
       const payments = paymentsResult.status === 'fulfilled' ? paymentsResult.value : [];
 
-      console.log('📊 Real data fetched:', {
+      console.log('DATA: Real data fetched:', {
         clinics: clinics.length,
         profiles: profiles.length,
         organizations: organizations.length,
@@ -57,7 +57,7 @@ class AnalyticsService {
 
       return this.calculateAnalytics(clinics, profiles, organizations, payments);
     } catch (error) {
-      console.error('❌ Error fetching analytics:', error);
+      console.error('ERROR: Error fetching analytics:', error);
       return this.getMockAnalytics();
     }
   }
@@ -149,7 +149,7 @@ class AnalyticsService {
         dataSource: 'supabase'
       };
     } catch (error) {
-      console.error('❌ Error calculating analytics:', error);
+      console.error('ERROR: Error calculating analytics:', error);
       return this.getMockAnalytics();
     }
   }
@@ -192,7 +192,7 @@ class AnalyticsService {
           null
       };
     } catch (error) {
-      console.error(`❌ Error fetching analytics for clinic ${clinicId}:`, error);
+      console.error(`ERROR: Error fetching analytics for clinic ${clinicId}:`, error);
       return this.getMockClinicAnalytics(clinicId);
     }
   }
@@ -212,7 +212,7 @@ class AnalyticsService {
       // For now, return mock data with real structure
       return this.generateMockTimeSeries(metric, dates);
     } catch (error) {
-      console.error('❌ Error fetching time series data:', error);
+      console.error('ERROR: Error fetching time series data:', error);
       return this.generateMockTimeSeries(metric, this.generateDateRange(days));
     }
   }

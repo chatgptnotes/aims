@@ -37,24 +37,24 @@ const PaymentHistory = ({ selectedClinic }) => {
 
   const loadData = async () => {
     try {
-      console.log('💰 SUPER ADMIN: Loading all clinics payment history...');
+      console.log('MONEY: SUPER ADMIN: Loading all clinics payment history...');
       
       let allPayments = [];
       let clinicsData = [];
       
       try {
         // Load from Supabase database
-        console.log('💾 Loading from Supabase database...');
+        console.log('STORAGE: Loading from Supabase database...');
         allPayments = await DatabaseService.get('payments') || [];
         clinicsData = await DatabaseService.get('clinics') || [];
-        console.log('✅ Supabase: Loaded', allPayments.length, 'payments from', clinicsData.length, 'clinics');
+        console.log('SUCCESS: Supabase: Loaded', allPayments.length, 'payments from', clinicsData.length, 'clinics');
       } catch (dbError) {
-        console.warn('⚠️ Supabase database error:', dbError.message);
+        console.warn('WARNING: Supabase database error:', dbError.message);
 
         // Fallback to empty arrays
         allPayments = [];
         clinicsData = [];
-        console.log('⚠️ Using empty data arrays due to database error');
+        console.log('WARNING: Using empty data arrays due to database error');
       }
       
       // Filter by selected clinic if specified
@@ -76,9 +76,9 @@ const PaymentHistory = ({ selectedClinic }) => {
       setPayments(enhancedPayments);
       setClinics(clinicsData);
       
-      console.log('📊 SUPER ADMIN: Final processed payments:', enhancedPayments.length);
+      console.log('DATA: SUPER ADMIN: Final processed payments:', enhancedPayments.length);
     } catch (error) {
-      console.error('❌ SUPER ADMIN: Error loading payment data:', error);
+      console.error('ERROR: SUPER ADMIN: Error loading payment data:', error);
       toast.error('Error loading payment data: ' + error.message);
     } finally {
       setLoading(false);
@@ -122,7 +122,7 @@ const PaymentHistory = ({ selectedClinic }) => {
   };
 
   const handleViewPaymentDetails = (payment) => {
-    console.log('📋 SUPER ADMIN: Viewing payment details:', payment.paymentId);
+    console.log('INFO: SUPER ADMIN: Viewing payment details:', payment.paymentId);
     setSelectedPayment(payment);
     setShowPaymentDetails(true);
   };
@@ -196,46 +196,7 @@ const PaymentHistory = ({ selectedClinic }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-100 p-6 space-y-8">
-      {/* Modern Header Section */}
-      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-green-600/10 to-blue-600/10"></div>
-        <div className="relative p-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-3">
-              <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
-                Payment History
-              </h1>
-              <p className="text-xl text-slate-600 font-medium">
-                {selectedClinic 
-                  ? `💰 Payment history for ${clinics.find(c => c.id === selectedClinic)?.name}`
-                  : 'All payment transactions across clinics 📊'
-                }
-              </p>
-              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span>{payments.length} Transactions</span>
-                </div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div className="flex items-center space-x-2">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Razorpay Integration</span>
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:block relative">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-2xl">
-                <DollarSign className="h-12 w-12 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#323956] rounded-full flex items-center justify-center shadow-lg">
-                <CheckCircle className="h-5 w-5 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Modern Revenue Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="group relative overflow-hidden bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">

@@ -103,7 +103,7 @@ export default function LandingPage() {
                 {/* Video Placeholder (shown when video fails to load) */}
                 <div className="hidden w-full h-full bg-gradient-to-br from-brain-600 to-wellness-600 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <div className="text-6xl mb-4">🎬</div>
+                    <div className="text-6xl mb-4"></div>
                     <h3 className="text-xl font-semibold mb-2">Brain Wellness Introduction Video</h3>
                     <p className="text-brain-100 text-sm">
                       Video coming soon - Upload your video to /public/videos/
@@ -125,7 +125,7 @@ export default function LandingPage() {
               className="mt-8 grid md:grid-cols-3 gap-6 text-left"
             >
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="text-brain-400 text-2xl mb-3">🎯</div>
+                <div className="text-brain-400 text-2xl mb-3">TARGET:</div>
                 <h3 className="text-white font-semibold mb-2">Personalized Assessment</h3>
                 <p className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6">
                   Comprehensive evaluation of your cognitive strengths and areas for improvement.
@@ -133,7 +133,7 @@ export default function LandingPage() {
               </div>
               
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="text-wellness-400 text-2xl mb-3">🧠</div>
+                <div className="text-wellness-400 text-2xl mb-3"></div>
                 <h3 className="text-white font-semibold mb-2">Targeted Training</h3>
                 <p className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6">
                   Evidence-based exercises designed specifically for your brain wellness goals.
@@ -141,7 +141,7 @@ export default function LandingPage() {
               </div>
               
               <div className="bg-gray-800 rounded-lg p-6">
-                <div className="text-calm-400 text-2xl mb-3">👥</div>
+                <div className="text-calm-400 text-2xl mb-3"></div>
                 <h3 className="text-white font-semibold mb-2">Expert Coaching</h3>
                 <p className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6">
                   Professional guidance from certified brain wellness and nervous system specialists.
@@ -244,7 +244,7 @@ export default function LandingPage() {
           >
             {[
               {
-                icon: "🧠",
+                icon: "",
                 bgColor: "bg-brain-100",
                 textColor: "text-brain-600",
                 borderColor: "border-brain-100",
@@ -252,7 +252,7 @@ export default function LandingPage() {
                 description: "Comprehensive tools and strategies for attention enhancement and executive function improvement."
               },
               {
-                icon: "💡",
+                icon: "IDEA:",
                 bgColor: "bg-wellness-100",
                 textColor: "text-wellness-600",
                 borderColor: "border-wellness-100",
@@ -260,7 +260,7 @@ export default function LandingPage() {
                 description: "Evidence-based memory training and cognitive exercises to boost recall and retention."
               },
               {
-                icon: "🧘‍♀️",
+                icon: "‍️",
                 bgColor: "bg-calm-100",
                 textColor: "text-calm-600",
                 borderColor: "border-calm-100",

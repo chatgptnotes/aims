@@ -11,9 +11,9 @@ class AIAnalysisService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('✅ AI Analysis Service: Connected to NeuroSense Cloud');
+      console.log('SUCCESS: AI Analysis Service: Connected to NeuroSense Cloud');
     } else {
-      console.warn('⚠️ AI Analysis Service: Using offline mode');
+      console.warn('WARNING: AI Analysis Service: Using offline mode');
       this.supabase = null;
     }
 
@@ -41,7 +41,7 @@ class AIAnalysisService {
    */
   async processEDFFile(edfData, patientId, sessionId) {
     try {
-      console.log('🧠 Processing EDF file with AI algorithms...');
+      console.log(' Processing EDF file with AI algorithms...');
 
       // Step 1: Parse EDF header and validate
       const edfInfo = await this.parseEDFHeader(edfData);
@@ -91,11 +91,11 @@ class AIAnalysisService {
       // Store in database
       await this.storeAnalysisResults(analysisReport);
 
-      console.log('✅ EDF file processed successfully');
+      console.log('SUCCESS: EDF file processed successfully');
       return analysisReport;
 
     } catch (error) {
-      console.error('❌ EDF processing failed:', error);
+      console.error('ERROR: EDF processing failed:', error);
       throw new Error(`AI Analysis failed: ${error.message}`);
     }
   }
@@ -408,7 +408,7 @@ class AIAnalysisService {
    */
   async storeAnalysisResults(analysisReport) {
     if (!this.supabase) {
-      console.log('📝 Analysis stored locally (offline mode)');
+      console.log('NOTE: Analysis stored locally (offline mode)');
       return;
     }
 
@@ -423,9 +423,9 @@ class AIAnalysisService {
         });
 
       if (error) throw error;
-      console.log('✅ Analysis results stored in database');
+      console.log('SUCCESS: Analysis results stored in database');
     } catch (error) {
-      console.error('❌ Failed to store analysis:', error);
+      console.error('ERROR: Failed to store analysis:', error);
     }
   }
 

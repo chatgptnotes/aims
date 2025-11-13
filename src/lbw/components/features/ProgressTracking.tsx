@@ -194,7 +194,7 @@ export default function ProgressTracking() {
               </div>
               <div className="text-base text-gray-700 dark:text-gray-200 font-medium leading-6">Today's Activities</div>
               <div className="text-xs text-green-600 mt-1">
-                ✅ Target: 3-5 daily
+                SUCCESS: Target: 3-5 daily
               </div>
             </Card>
 
@@ -204,7 +204,7 @@ export default function ProgressTracking() {
               </div>
               <div className="text-base text-gray-700 dark:text-gray-200 font-medium leading-6">Completed Cycles</div>
               <div className="text-xs text-blue-600 mt-1">
-                📈 {mockReassessmentCycles.filter(c => c.status === 'completed').length * 10} total days
+                GROWTH: {mockReassessmentCycles.filter(c => c.status === 'completed').length * 10} total days
               </div>
             </Card>
 
@@ -214,7 +214,7 @@ export default function ProgressTracking() {
               </div>
               <div className="text-base text-gray-700 dark:text-gray-200 font-medium leading-6">Days to Assessment</div>
               <div className="text-xs text-purple-600 mt-1">
-                🎯 Stay consistent!
+                TARGET: Stay consistent!
               </div>
             </Card>
           </div>

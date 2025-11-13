@@ -170,7 +170,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
             color: #555;
         }
         .features-list li:before {
-            content: "✓";
+            content: "";
             color: #48bb78;
             font-weight: bold;
             margin-right: 10px;
@@ -242,7 +242,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
 <body>
     <div class="invoice-container">
         <div class="invoice-header">
-            <div class="company-logo">🧠 NeuroSense360</div>
+            <div class="company-logo"> NeuroSense360</div>
             <div class="invoice-title">INVOICE</div>
             <div class="invoice-subtitle">EEG Management Platform</div>
         </div>
@@ -250,7 +250,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
         <div class="invoice-body">
             <div class="invoice-details">
                 <div class="detail-section">
-                    <h3>📄 Invoice Details</h3>
+                    <h3>FILE: Invoice Details</h3>
                     <div class="detail-row">
                         <span class="detail-label">Invoice No:</span>
                         <span class="detail-value">${invoiceData.invoiceNumber}</span>
@@ -270,7 +270,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
                 </div>
                 
                 <div class="detail-section">
-                    <h3>🏥 Bill To</h3>
+                    <h3>CLINIC: Bill To</h3>
                     <div class="detail-row">
                         <span class="detail-label">Clinic:</span>
                         <span class="detail-value">Sai clinic</span>
@@ -331,7 +331,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
             
             <div class="invoice-details">
                 <div class="detail-section">
-                    <h3>💳 Payment Information</h3>
+                    <h3> Payment Information</h3>
                     <div class="detail-row">
                         <span class="detail-label">Payment Date:</span>
                         <span class="detail-value">${invoiceData.purchaseDate}</span>
@@ -343,7 +343,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
                 </div>
                 
                 <div class="detail-section">
-                    <h3>📅 Subscription Details</h3>
+                    <h3> Subscription Details</h3>
                     <div class="detail-row">
                         <span class="detail-label">Valid From:</span>
                         <span class="detail-value">${purchaseDate.date}</span>
@@ -587,7 +587,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
               <div>
                 <span className="text-gray-600">Verification:</span>
                 <div className="font-medium text-green-600 mt-1">
-                  {paymentDetails.verified ? '✓ Verified' : 'Pending'}
+                  {paymentDetails.verified ? ' Verified' : 'Pending'}
                 </div>
               </div>
             </div>

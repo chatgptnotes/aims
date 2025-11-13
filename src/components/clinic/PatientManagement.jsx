@@ -95,30 +95,30 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
       parsedUser = storedUser ? JSON.parse(storedUser) : null;
     } catch (e) {}
 
-    console.log('🏥 PatientManagement - clinicId from prop:', propClinicId);
-    console.log('🏥 PatientManagement - clinicId from user context:', user?.clinicId);
-    console.log('🏥 PatientManagement - clinicId from localStorage:', parsedUser?.clinicId);
-    console.log('🏥 PatientManagement - user.id from localStorage:', parsedUser?.id);
-    console.log('🏥 PatientManagement - user.role from localStorage:', parsedUser?.role);
-    console.log('🏥 PatientManagement - FINAL clinicId:', clinicId);
-    console.log('🏥 PatientManagement - user context:', user);
+    console.log('CLINIC: PatientManagement - clinicId from prop:', propClinicId);
+    console.log('CLINIC: PatientManagement - clinicId from user context:', user?.clinicId);
+    console.log('CLINIC: PatientManagement - clinicId from localStorage:', parsedUser?.clinicId);
+    console.log('CLINIC: PatientManagement - user.id from localStorage:', parsedUser?.id);
+    console.log('CLINIC: PatientManagement - user.role from localStorage:', parsedUser?.role);
+    console.log('CLINIC: PatientManagement - FINAL clinicId:', clinicId);
+    console.log('CLINIC: PatientManagement - user context:', user);
   }, [clinicId, propClinicId, user]);
 
   const loadPatients = useCallback(async () => {
     try {
       if (!clinicId) {
-        console.warn('⚠️ loadPatients: No clinicId provided');
+        console.warn('WARNING: loadPatients: No clinicId provided');
         setPatients([]);
         setLoading(false);
         return;
       }
 
-      console.log('📊 Loading patients for clinic:', clinicId);
+      console.log('DATA: Loading patients for clinic:', clinicId);
 
       // Load patients directly for this clinic using org_id
       const patientsData = await DatabaseService.getPatientsByClinic(clinicId);
 
-      console.log(`✅ Loaded ${patientsData?.length || 0} patients for clinic ${clinicId}`);
+      console.log(`SUCCESS: Loaded ${patientsData?.length || 0} patients for clinic ${clinicId}`);
 
       setPatients(patientsData || []);
 
@@ -136,7 +136,7 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
 
       setPatientReports(reportsMap);
     } catch (error) {
-      console.error('❌ Error loading patients:', error);
+      console.error('ERROR: Error loading patients:', error);
       toast.error('Error loading patients');
       setPatients([]);
     } finally {
@@ -154,41 +154,41 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
 
   const handleCreatePatient = async (data) => {
     try {
-      console.log('📝 Creating patient with clinicId:', clinicId, 'data:', data);
+      console.log('NOTE: Creating patient with clinicId:', clinicId, 'data:', data);
 
       if (!clinicId) {
-        console.error('❌ No clinic ID found!');
-        console.error('❌ propClinicId:', propClinicId);
-        console.error('❌ user:', user);
+        console.error('ERROR: No clinic ID found!');
+        console.error('ERROR: propClinicId:', propClinicId);
+        console.error('ERROR: user:', user);
         toast.error('Clinic ID not found. Please logout and login again.');
         return;
       }
 
       // Ensure organization exists before creating patient
       try {
-        console.log('🔍 Checking if organization exists:', clinicId);
+        console.log('DEBUG: Checking if organization exists:', clinicId);
         const orgExists = await DatabaseService.findById('organizations', clinicId);
 
         if (!orgExists) {
-          console.log('🏢 Creating organization entry for clinic:', clinicId);
+          console.log(' Creating organization entry for clinic:', clinicId);
           await DatabaseService.add('organizations', {
             id: clinicId,
             name: user?.clinicName || user?.name || 'Clinic',
             created_at: new Date().toISOString()
           });
-          console.log('✅ Organization created successfully');
+          console.log('SUCCESS: Organization created successfully');
         } else {
-          console.log('✅ Organization already exists');
+          console.log('SUCCESS: Organization already exists');
         }
       } catch (orgError) {
-        console.error('⚠️ Organization check/create failed:', orgError);
+        console.error('WARNING: Organization check/create failed:', orgError);
         // Continue anyway - maybe org exists but findById failed
       }
 
       // Create Supabase authentication account for patient
       let authCreated = false;
       try {
-        console.log('🔐 Creating Supabase auth account for patient:', data.email);
+        console.log('AUTH: Creating Supabase auth account for patient:', data.email);
         const authResult = await DatabaseService.createPatientAuth(data.email, data.password, {
           full_name: data.name,
           role: 'patient',
@@ -197,10 +197,10 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
 
         if (authResult && authResult.user) {
           authCreated = true;
-          console.log('✅ Patient auth account created:', authResult.user.id);
+          console.log('SUCCESS: Patient auth account created:', authResult.user.id);
         }
       } catch (authError) {
-        console.error('⚠️ Failed to create auth account:', authError);
+        console.error('WARNING: Failed to create auth account:', authError);
 
         // Check if user already exists
         if (authError.message && authError.message.includes('already registered')) {
@@ -230,11 +230,11 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
       // Show success message with login credentials (only if auth was created)
       if (authCreated) {
         const credentialsMessage = `
-✅ Patient created successfully!
+SUCCESS: Patient created successfully!
 
 Login Credentials:
-📧 Email: ${data.email}
-🔑 Password: ${data.password}
+EMAIL: Email: ${data.email}
+KEY: Password: ${data.password}
 
 Share these credentials with the patient so they can login to view their reports.
         `.trim();
@@ -255,7 +255,7 @@ Share these credentials with the patient so they can login to view their reports
       reset();
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Error creating patient:', error);
+      console.error('ERROR: Error creating patient:', error);
       toast.error('Error creating patient: ' + (error.message || 'Unknown error'));
     }
   };
@@ -273,7 +273,7 @@ Share these credentials with the patient so they can login to view their reports
         date_of_birth: data.dateOfBirth || null
       };
 
-      console.log('📝 Updating patient with mapped data:', patientData);
+      console.log('NOTE: Updating patient with mapped data:', patientData);
       await DatabaseService.update('patients', selectedPatient.id, patientData);
       toast.success('Patient updated successfully');
       loadPatients();
@@ -304,7 +304,7 @@ Share these credentials with the patient so they can login to view their reports
   const handleDownloadReport = async (report) => {
     try {
       if (report.s3Key) {
-        console.log('📥 Generating download URL for S3 file:', report.s3Key);
+        console.log(' Generating download URL for S3 file:', report.s3Key);
         
         // Generate signed URL for download
         const downloadUrl = await StorageService.getSignedUrl(report.storagePath || report.s3Key, 300); // 5 minutes
@@ -318,13 +318,13 @@ Share these credentials with the patient so they can login to view their reports
         link.click();
         document.body.removeChild(link);
         
-        toast.success('📥 Download started!');
+        toast.success(' Download started!');
       } else {
         // Fallback for files not stored in S3
         toast.error('File not available for download');
       }
     } catch (error) {
-      console.error('❌ Error downloading file:', error);
+      console.error('ERROR: Error downloading file:', error);
       toast.error('Failed to download file');
     }
   };
@@ -342,7 +342,7 @@ Share these credentials with the patient so they can login to view their reports
         address: patient.address || '',
         notes: patient.notes || patient.medical_history?.notes || ''
       };
-      console.log('📝 Mapping patient data for edit form:', { patient, formData });
+      console.log('NOTE: Mapping patient data for edit form:', { patient, formData });
       reset(formData);
     } else {
       reset({});
@@ -357,9 +357,9 @@ Share these credentials with the patient so they can login to view their reports
   };
 
   const openUploadModal = (patient) => {
-    console.log('📂 Opening upload modal for patient:', patient);
+    console.log('FOLDER: Opening upload modal for patient:', patient);
     if (!patient) {
-      console.error('❌ Cannot open upload modal: patient is undefined');
+      console.error('ERROR: Cannot open upload modal: patient is undefined');
       toast.error('Please select a patient first');
       return;
     }
@@ -368,7 +368,7 @@ Share these credentials with the patient so they can login to view their reports
     const patientName = getPatientName(patient);
 
     if (!patient.id || !patientName) {
-      console.error('❌ Patient object incomplete:', patient);
+      console.error('ERROR: Patient object incomplete:', patient);
       toast.error('Invalid patient data');
       return;
     }
@@ -380,7 +380,7 @@ Share these credentials with the patient so they can login to view their reports
       age: getPatientAge(patient) // Add age field for completeness
     };
 
-    console.log('✅ Opening upload modal with normalized patient:', normalizedPatient);
+    console.log('SUCCESS: Opening upload modal with normalized patient:', normalizedPatient);
     setPatientForUpload(normalizedPatient);
     setShowUploadModal(true);
   };
@@ -427,7 +427,7 @@ Share these credentials with the patient so they can login to view their reports
       closePatientListModal();
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Error bulk adding patients:', error);
+      console.error('ERROR: Error bulk adding patients:', error);
       toast.error('Error adding patients');
     }
   };
@@ -526,61 +526,61 @@ Share these credentials with the patient so they can login to view their reports
       </div>
 
       {/* Patients Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-medium text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Patients ({filteredPatients.length})
           </h3>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Contact
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Demographics
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Reports
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Added
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredPatients.map((patient) => {
                 const reports = patientReports[patient.id] || [];
                 
                 return (
-                  <tr key={patient.id} className="hover:bg-gray-50">
+                  <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                          <Users className="h-5 w-5 text-primary-600" />
+                        <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-primary-600 dark:text-blue-400" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{getPatientName(patient)}</div>
-                          <div className="text-sm text-gray-500">ID: {patient.id?.slice(0, 8) || 'N/A'}</div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{getPatientName(patient)}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.id?.slice(0, 8) || 'N/A'}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{patient.email || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{patient.phone || 'N/A'}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{patient.email || 'N/A'}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{patient.phone || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{getPatientAge(patient)} years</div>
-                      <div className="text-sm text-gray-500 capitalize">{patient.gender || 'N/A'}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{getPatientAge(patient)} years</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">{patient.gender || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
@@ -589,49 +589,49 @@ Share these credentials with the patient so they can login to view their reports
                             <button
                               key={report.id}
                               onClick={() => handleDownloadReport(report)}
-                              className="block text-sm text-primary-600 hover:underline cursor-pointer"
+                              className="block text-sm text-primary-600 dark:text-blue-400 hover:underline cursor-pointer"
                               title={`Download ${report.title || report.fileName}`}
                             >
                               {report.fileName || 'Report'}
                               {report.storedInCloud && (
-                                <span className="ml-1 text-xs text-[#323956]">☁️</span>
+                                <span className="ml-1 text-xs text-[#323956] dark:text-blue-400">️</span>
                               )}
                             </button>
                           ))
                         ) : (
-                          <span className="text-sm text-gray-500">No reports</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">No reports</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(patient.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => openUploadModal(patient)}
-                          className="text-[#323956] hover:text-blue-900"
+                          className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                           title="Upload Report"
                         >
                           <Upload className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => viewPatientDetails(patient)}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="text-primary-600 dark:text-blue-400 hover:text-primary-900 dark:hover:text-blue-300"
                           title="View Details"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => openModal(patient)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                           title="Edit Patient"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePatient(patient.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                           title="Delete Patient"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1103,7 +1103,7 @@ const PatientListModal = ({ onAddPatients, onClose }) => {
         }
         
         setPreviewData(patients);
-        toast.success(`✅ Found ${patients.length} valid patients in CSV file`);
+        toast.success(`SUCCESS: Found ${patients.length} valid patients in CSV file`);
         
       } catch (error) {
         console.error('Error parsing CSV:', error);
@@ -1156,7 +1156,7 @@ const PatientListModal = ({ onAddPatients, onClose }) => {
         </div>
 
         <div className="mb-6 p-4 bg-[#E4EFFF] rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">📋 Instructions:</h4>
+          <h4 className="font-medium text-blue-900 mb-2">INFO: Instructions:</h4>
           <p className="text-sm text-blue-800 mb-2">
             Upload a CSV file with patient data. The file should contain:
           </p>
@@ -1177,7 +1177,7 @@ const PatientListModal = ({ onAddPatients, onClose }) => {
               download
               className="text-[#323956] hover:text-blue-800 underline text-sm"
             >
-              📥 Download Sample CSV Template
+               Download Sample CSV Template
             </a>
           </div>
         </div>
@@ -1200,7 +1200,7 @@ const PatientListModal = ({ onAddPatients, onClose }) => {
                 />
                 <label htmlFor="csvFileInput" className="cursor-pointer">
                   <div className="text-gray-600">
-                    <div className="text-4xl mb-2">📁</div>
+                    <div className="text-4xl mb-2"></div>
                     <p className="text-lg font-medium">Click to upload CSV file</p>
                     <p className="text-sm">or drag and drop</p>
                     <p className="text-xs text-gray-500 mt-2">Supports .csv files only</p>
@@ -1211,7 +1211,7 @@ const PatientListModal = ({ onAddPatients, onClose }) => {
               <div className="border border-gray-300 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="text-[#323956] text-2xl">✅</div>
+                    <div className="text-[#323956] text-2xl">SUCCESS:</div>
                     <div>
                       <p className="font-medium text-gray-900">{fileName}</p>
                       <p className="text-sm text-gray-600">

@@ -222,10 +222,10 @@ export default function BrainFitnessScore({ assessments = [], onRecommendationCl
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Score Breakdown</h3>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              { key: 'focus', label: 'Focus & Attention', color: 'brain', icon: '🎯' },
-              { key: 'memory', label: 'Memory & Cognition', color: 'wellness', icon: '🧠' },
-              { key: 'mood', label: 'Mood & Emotional', color: 'calm', icon: '😊' },
-              { key: 'stress', label: 'Stress Management', color: 'purple', icon: '🧘‍♀️' }
+              { key: 'focus', label: 'Focus & Attention', color: 'brain', icon: 'TARGET:' },
+              { key: 'memory', label: 'Memory & Cognition', color: 'wellness', icon: '' },
+              { key: 'mood', label: 'Mood & Emotional', color: 'calm', icon: '' },
+              { key: 'stress', label: 'Stress Management', color: 'purple', icon: '‍️' }
             ].map((metric) => {
               const score = currentScore[metric.key as keyof ScoreBreakdown]
               const prevScore = previousScore?.[metric.key as keyof ScoreBreakdown]

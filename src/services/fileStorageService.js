@@ -113,7 +113,7 @@ class FileStorageService {
    */
   async uploadLogo(file, clinicId, logoType = 'primary') {
     try {
-      console.log(`🖼️ Uploading ${logoType} logo for clinic ${clinicId}`);
+      console.log(`IMAGE: Uploading ${logoType} logo for clinic ${clinicId}`);
 
       // Validate file
       const validation = this.validateFile(file);
@@ -124,9 +124,9 @@ class FileStorageService {
       // Compress if needed
       let processedFile = file;
       if (file.size > 1024 * 1024) { // 1MB
-        console.log('📦 Compressing large image...');
+        console.log(' Compressing large image...');
         processedFile = await this.compressImage(file);
-        console.log(`📦 Compressed from ${file.size} to ${processedFile.size} bytes`);
+        console.log(` Compressed from ${file.size} to ${processedFile.size} bytes`);
       }
 
       // Generate unique filename
@@ -148,7 +148,7 @@ class FileStorageService {
         base64Data, // In production, this would be a cloud URL
       };
 
-      console.log('✅ Logo uploaded successfully:', fileMetadata.filename);
+      console.log('SUCCESS: Logo uploaded successfully:', fileMetadata.filename);
 
       return {
         success: true,
@@ -157,7 +157,7 @@ class FileStorageService {
       };
 
     } catch (error) {
-      console.error('❌ Logo upload failed:', error);
+      console.error('ERROR: Logo upload failed:', error);
       return {
         success: false,
         error: error.message || 'Failed to upload logo'
@@ -170,7 +170,7 @@ class FileStorageService {
    */
   async deleteLogo(logoId, clinicId) {
     try {
-      console.log(`🗑️ Deleting logo ${logoId} for clinic ${clinicId}`);
+      console.log(`DELETE: Deleting logo ${logoId} for clinic ${clinicId}`);
 
       // In production, this would delete from cloud storage
       // For now, we'll just log the deletion
@@ -180,7 +180,7 @@ class FileStorageService {
         message: 'Logo deleted successfully'
       };
     } catch (error) {
-      console.error('❌ Logo deletion failed:', error);
+      console.error('ERROR: Logo deletion failed:', error);
       return {
         success: false,
         error: error.message || 'Failed to delete logo'

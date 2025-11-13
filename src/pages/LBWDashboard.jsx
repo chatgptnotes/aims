@@ -8,10 +8,10 @@ const LBWDashboard = () => {
   const [brainScore, setBrainScore] = useState(75);
 
   const quickActions = [
-    { title: 'Daily Check-in', desc: 'Log your mood and progress', icon: '📝', path: '/lbw/progress' },
-    { title: 'New Assessment', desc: 'Take a brain wellness test', icon: '🧪', path: '/assessments' },
-    { title: 'Book Coaching', desc: 'Schedule a session', icon: '👥', path: '/coaching' },
-    { title: 'Learn Something', desc: 'Explore new content', icon: '📚', path: '/lbw/content' }
+    { title: 'Daily Check-in', desc: 'Log your mood and progress', icon: 'NOTE:', path: '/lbw/progress' },
+    { title: 'New Assessment', desc: 'Take a brain wellness test', icon: '', path: '/assessments' },
+    { title: 'Book Coaching', desc: 'Schedule a session', icon: '', path: '/coaching' },
+    { title: 'Learn Something', desc: 'Explore new content', icon: '', path: '/lbw/content' }
   ];
 
   const recentActivity = [
@@ -78,7 +78,7 @@ const LBWDashboard = () => {
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Welcome back, {userName}! 👋
+              Welcome back, {userName}! 
             </h1>
             <p className="text-lg text-gray-600">
               Here's your brain wellness overview for today
@@ -183,10 +183,10 @@ const LBWDashboard = () => {
                     <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                          {activity.type === 'assessment' && '🧪'}
-                          {activity.type === 'coaching' && '👥'}
-                          {activity.type === 'progress' && '🏆'}
-                          {activity.type === 'content' && '📚'}
+                          {activity.type === 'assessment' && ''}
+                          {activity.type === 'coaching' && ''}
+                          {activity.type === 'progress' && 'WINNER:'}
+                          {activity.type === 'content' && ''}
                         </div>
                         <div>
                           <div className="font-medium text-gray-900">{activity.title}</div>

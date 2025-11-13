@@ -12,9 +12,9 @@ class FileManagementService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('✅ File Management Service: Supabase connected');
+      console.log('SUCCESS: File Management Service: Supabase connected');
     } else {
-      console.warn('⚠️ File Management Service: Using mock data');
+      console.warn('WARNING: File Management Service: Using mock data');
       this.supabase = null;
     }
   }
@@ -81,7 +81,7 @@ class FileManagementService {
    */
   async downloadReport(reportId, patientId, type = 'pdf') {
     try {
-      console.log(`📄 Generating ${type.toUpperCase()} report for patient ${patientId}`);
+      console.log(`FILE: Generating ${type.toUpperCase()} report for patient ${patientId}`);
 
       const reportData = await this.generateReportData(reportId, patientId);
       const branding = await brandingService.getClinicBranding(reportData.clinicId);
@@ -114,7 +114,7 @@ class FileManagementService {
 
       URL.revokeObjectURL(url);
 
-      console.log('✅ Report downloaded successfully');
+      console.log('SUCCESS: Report downloaded successfully');
       return { success: true, filename: link.download };
     } catch (error) {
       console.error('Error downloading report:', error);
@@ -283,7 +283,7 @@ class FileManagementService {
   generateQEEGContent(reportData) {
     return `
       <div class="section">
-        <h2>🧠 Brain Activity Metrics</h2>
+        <h2> Brain Activity Metrics</h2>
         ${reportData.metrics?.map(metric => `
           <div class="metric">
             <div class="metric-value">${metric.value}</div>
@@ -293,12 +293,12 @@ class FileManagementService {
       </div>
 
       <div class="section">
-        <h2>📊 Analysis Results</h2>
+        <h2>DATA: Analysis Results</h2>
         <p>${reportData.analysis || 'Analysis data not available'}</p>
       </div>
 
       <div class="section">
-        <h2>💡 Recommendations</h2>
+        <h2>IDEA: Recommendations</h2>
         ${reportData.recommendations?.map(rec => `
           <div class="recommendation">
             <strong>${rec.category}:</strong> ${rec.text}
@@ -311,14 +311,14 @@ class FileManagementService {
   generateCarePlanContent(reportData) {
     return `
       <div class="section">
-        <h2>🎯 Treatment Goals</h2>
+        <h2>TARGET: Treatment Goals</h2>
         <ul>
           ${reportData.goals?.map(goal => `<li>${goal}</li>`).join('') || '<li>No goals defined</li>'}
         </ul>
       </div>
 
       <div class="section">
-        <h2>🔄 Interventions</h2>
+        <h2>REFRESH: Interventions</h2>
         ${reportData.interventions?.map(intervention => `
           <div style="margin-bottom: 15px;">
             <strong>${intervention.type}:</strong> ${intervention.description}
@@ -327,7 +327,7 @@ class FileManagementService {
       </div>
 
       <div class="section">
-        <h2>📅 Treatment Schedule</h2>
+        <h2> Treatment Schedule</h2>
         <p>${reportData.schedule || 'Schedule to be determined'}</p>
       </div>
     `;

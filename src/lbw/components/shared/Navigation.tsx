@@ -11,12 +11,12 @@ export default function Navigation() {
   }
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/assessment', label: 'Assessments', icon: '📝' },
-    { path: '/content', label: 'Content', icon: '📚' },
-    { path: '/coaching', label: 'Coaching', icon: '🧠' },
-    { path: '/qeeg', label: 'qEEG', icon: '⚡' },
-    { path: '/progress', label: 'Progress', icon: '📊' },
+    { path: '/dashboard', label: 'Dashboard', icon: '' },
+    { path: '/assessment', label: 'Assessments', icon: 'NOTE:' },
+    { path: '/content', label: 'Content', icon: '' },
+    { path: '/coaching', label: 'Coaching', icon: '' },
+    { path: '/qeeg', label: 'qEEG', icon: '' },
+    { path: '/progress', label: 'Progress', icon: 'DATA:' },
   ]
 
   // Don't show navigation on landing page or onboarding

@@ -36,7 +36,7 @@ const SubscriptionPopup = ({ isOpen, onClose, clinicId, currentUsage, onSubscrib
 
     try {
       setIsProcessing(true);
-      console.log('🚀 POPUP: Starting real Razorpay payment for:', selectedPlan.name);
+      console.log('START: POPUP: Starting real Razorpay payment for:', selectedPlan.name);
       
       // Create order data for Razorpay
       const orderData = {
@@ -51,14 +51,14 @@ const SubscriptionPopup = ({ isOpen, onClose, clinicId, currentUsage, onSubscrib
 
       // Create Razorpay order
       const order = await RazorpayService.createOrder(orderData);
-      console.log('✅ POPUP: Razorpay order created:', order.id);
+      console.log('SUCCESS: POPUP: Razorpay order created:', order.id);
 
       // Process payment with real Razorpay
       RazorpayService.processPayment(
         order,
         orderData.clinicInfo,
         async (paymentData, packageInfo) => {
-          console.log('✅ POPUP: Payment successful:', paymentData);
+          console.log('SUCCESS: POPUP: Payment successful:', paymentData);
           
           // Update clinic subscription after successful payment
           const subscriptionData = {
@@ -83,14 +83,14 @@ const SubscriptionPopup = ({ isOpen, onClose, clinicId, currentUsage, onSubscrib
           setIsProcessing(false);
         },
         (error) => {
-          console.error('❌ POPUP: Payment failed:', error);
+          console.error('ERROR: POPUP: Payment failed:', error);
           toast.error('Payment failed. Please try again.');
           setIsProcessing(false);
         }
       );
       
     } catch (error) {
-      console.error('❌ POPUP: Subscription error:', error);
+      console.error('ERROR: POPUP: Subscription error:', error);
       toast.error('Failed to process payment. Please try again.');
       setIsProcessing(false);
     }

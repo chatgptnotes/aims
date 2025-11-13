@@ -14,7 +14,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
 
   // Enhanced close handler with cleanup
   const handleClose = () => {
-    console.log('🔄 DASHBOARD: Closing payment modal - cleanup states');
+    console.log('REFRESH: DASHBOARD: Closing payment modal - cleanup states');
     
     // Reset all states
     setIsProcessing(false);
@@ -91,22 +91,22 @@ Thank you for your business!
   };
 
   // Debug log to confirm this component is being used
-  console.log('✅ SIMPLE RAZORPAY CHECKOUT LOADED - NO MORE ERRORS!');
-  console.log('🎯 Component loaded with props:', { clinicInfo, onSuccess, onClose });
+  console.log('SUCCESS: SIMPLE RAZORPAY CHECKOUT LOADED - NO MORE ERRORS!');
+  console.log('TARGET: Component loaded with props:', { clinicInfo, onSuccess, onClose });
 
   // Use real Razorpay packages
   const packages = RazorpayService.getReportPackages();
 
   const handlePackageSelect = (packageInfo) => {
-    console.log('📦 Package selected:', packageInfo);
+    console.log(' Package selected:', packageInfo);
     setSelectedPackage(packageInfo);
     setStep('confirm');
   };
 
   const handleSimplePayment = async () => {
-    console.log('💳 DASHBOARD: Starting real Razorpay payment');
-    console.log('📋 Package:', selectedPackage);
-    console.log('🏥 Clinic:', clinicInfo);
+    console.log(' DASHBOARD: Starting real Razorpay payment');
+    console.log('INFO: Package:', selectedPackage);
+    console.log('CLINIC: Clinic:', clinicInfo);
 
     if (!selectedPackage) {
       toast.error('Please select a package');
@@ -116,7 +116,7 @@ Thank you for your business!
     // Validation
     if (!clinicInfo?.id) {
       toast.error('Clinic information missing. Please refresh and try again.');
-      console.error('❌ DASHBOARD: Missing clinic ID');
+      console.error('ERROR: DASHBOARD: Missing clinic ID');
       return;
     }
 
@@ -126,7 +126,7 @@ Thank you for your business!
 
       // Add timeout to prevent infinite loading
       const paymentTimeout = setTimeout(() => {
-        console.log('⏰ DASHBOARD: Payment timeout - resetting state');
+        console.log('TIMER: DASHBOARD: Payment timeout - resetting state');
         setIsProcessing(false);
         setStep('confirm');
         toast.error('Payment timeout. Please try again.');
@@ -139,18 +139,18 @@ Thank you for your business!
         clinicInfo: clinicInfo
       };
 
-      console.log('🔄 DASHBOARD: Creating order with data:', orderData);
+      console.log('REFRESH: DASHBOARD: Creating order with data:', orderData);
 
       // Create Razorpay order
       const order = await RazorpayService.createOrder(orderData);
-      console.log('✅ DASHBOARD: Razorpay order created:', order.id);
+      console.log('SUCCESS: DASHBOARD: Razorpay order created:', order.id);
 
       // Process payment with real Razorpay
       RazorpayService.processPayment(
         order,
         clinicInfo,
         async (paymentData, packageInfo) => {
-          console.log('✅ DASHBOARD: Payment successful:', paymentData);
+          console.log('SUCCESS: DASHBOARD: Payment successful:', paymentData);
           
           clearTimeout(paymentTimeout); // Clear timeout on success
           setIsProcessing(false);
@@ -164,7 +164,7 @@ Thank you for your business!
           onSuccess?.(paymentData, packageInfo);
         },
         (error) => {
-          console.error('❌ DASHBOARD: Payment failed:', error);
+          console.error('ERROR: DASHBOARD: Payment failed:', error);
           
           clearTimeout(paymentTimeout); // Clear timeout on failure
           setIsProcessing(false);
@@ -174,7 +174,7 @@ Thank you for your business!
       );
       
     } catch (error) {
-      console.error('❌ DASHBOARD: Payment error:', error);
+      console.error('ERROR: DASHBOARD: Payment error:', error);
       setIsProcessing(false);
       setStep('confirm'); // Go back to confirm step
       
@@ -200,7 +200,7 @@ Thank you for your business!
           {/* Cancel button */}
           <button
             onClick={() => {
-              console.log('🔄 DASHBOARD: User cancelled payment from loader');
+              console.log('REFRESH: DASHBOARD: User cancelled payment from loader');
               setIsProcessing(false);
               setStep('confirm');
               toast.info('Payment cancelled');
@@ -330,7 +330,7 @@ Thank you for your business!
                 <div className="mt-6 space-y-3">
                   {pkg.features.map((feature, index) => (
                     <div key={index} className="flex items-center text-sm">
-                      <div className="h-4 w-4 text-green-500 mr-3">✓</div>
+                      <div className="h-4 w-4 text-green-500 mr-3"></div>
                       <span>{feature}</span>
                     </div>
                   ))}

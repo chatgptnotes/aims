@@ -57,11 +57,11 @@ const DataAccess = () => {
   const loadRealData = async () => {
     setLoading(true);
     try {
-      console.log('🔄 Loading real clinic and patient data...');
+      console.log('REFRESH: Loading real clinic and patient data...');
 
       // Get real system analytics for clinic data
       const systemAnalytics = await analyticsService.getSystemAnalytics();
-      console.log('📊 System data loaded:', systemAnalytics.dataSource);
+      console.log('DATA: System data loaded:', systemAnalytics.dataSource);
 
       // For now, use enhanced mock data based on real structure
       setClinics(mockClinics);
@@ -72,7 +72,7 @@ const DataAccess = () => {
       }
 
     } catch (error) {
-      console.error('❌ Error loading data:', error);
+      console.error('ERROR: Error loading data:', error);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ const DataAccess = () => {
   // Enhanced file download functionality
   const handleDownloadFile = async (fileId, fileType, patientId = null) => {
     try {
-      console.log(`📥 Downloading file: ${fileId} (${fileType})`);
+      console.log(` Downloading file: ${fileId} (${fileType})`);
 
       const result = await fileManagementService.downloadReport(fileId, patientId, fileType);
 
@@ -100,7 +100,7 @@ const DataAccess = () => {
   // Generate new report
   const handleGenerateReport = async (type, patientId) => {
     try {
-      console.log(`📄 Generating ${type} report for patient ${patientId}`);
+      console.log(`FILE: Generating ${type} report for patient ${patientId}`);
 
       let reportData;
       switch (type) {
@@ -404,10 +404,10 @@ const DataAccess = () => {
   };
 
   const renderBreadcrumb = () => (
-    <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-6">
       <button
         onClick={handleBackToClinics}
-        className={`hover:text-[#323956] transition-colors ${viewMode === 'clinics' ? 'text-[#323956] font-medium' : ''}`}
+        className={`hover:text-[#323956] dark:hover:text-blue-400 transition-colors ${viewMode === 'clinics' ? 'text-[#323956] dark:text-blue-400 font-medium' : ''}`}
       >
         All Clinics
       </button>
@@ -416,7 +416,7 @@ const DataAccess = () => {
           <ChevronRight className="w-4 h-4" />
           <button
             onClick={handleBackToPatients}
-            className={`hover:text-[#323956] transition-colors ${viewMode === 'patients' ? 'text-[#323956] font-medium' : ''}`}
+            className={`hover:text-[#323956] dark:hover:text-blue-400 transition-colors ${viewMode === 'patients' ? 'text-[#323956] dark:text-blue-400 font-medium' : ''}`}
           >
             {selectedClinic.name}
           </button>
@@ -425,7 +425,7 @@ const DataAccess = () => {
       {selectedPatient && (
         <>
           <ChevronRight className="w-4 h-4" />
-          <span className="text-[#323956] font-medium">{selectedPatient.name}</span>
+          <span className="text-[#323956] dark:text-blue-400 font-medium">{selectedPatient.name}</span>
         </>
       )}
     </div>
@@ -434,16 +434,16 @@ const DataAccess = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Database className="w-6 h-6 text-gray-700" />
-            <h2 className="text-2xl font-bold text-gray-900">Data Access Center</h2>
-            <Shield className="w-5 h-5 text-[#323956]" title="Super Admin Access" />
+            <Database className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Data Access Center</h2>
+            <Shield className="w-5 h-5 text-[#323956] dark:text-blue-400" title="Super Admin Access" />
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
-            <Lock className="w-4 h-4 text-[#323956]" />
-            <span className="text-sm font-medium text-green-700">Full Access Enabled</span>
+          <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <Lock className="w-4 h-4 text-[#323956] dark:text-green-400" />
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">Full Access Enabled</span>
           </div>
         </div>
 
@@ -458,7 +458,7 @@ const DataAccess = () => {
               placeholder={`Search ${viewMode}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -466,7 +466,7 @@ const DataAccess = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All File Types</option>
               <option value="patient_profile">Patient Profiles</option>
@@ -480,7 +480,7 @@ const DataAccess = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Patients</option>
               <option value="active">Active</option>
@@ -492,9 +492,9 @@ const DataAccess = () => {
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading data...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading data...</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -505,22 +505,22 @@ const DataAccess = () => {
                 <div
                   key={clinic.id}
                   onClick={() => handleClinicSelect(clinic)}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer p-6"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer p-6"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-[#CAE0FF] rounded-lg flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-[#323956]" />
+                      <div className="w-12 h-12 bg-[#CAE0FF] dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-[#323956] dark:text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{clinic.name}</h3>
-                        <p className="text-sm text-gray-500">{clinic.location}</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{clinic.name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{clinic.location}</p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
                   </div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm text-gray-900 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-400" />
                       <span>{clinic.patientsCount} patients</span>
@@ -541,31 +541,31 @@ const DataAccess = () => {
 
           {/* Patients View */}
           {viewMode === 'patients' && (
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Patients at {selectedClinic?.name}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {filteredData().length} patients found
                 </p>
               </div>
 
-              <div className="divide-y">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredData().map(patient => (
                   <div
                     key={patient.id}
                     onClick={() => handlePatientSelect(patient)}
-                    className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-purple-600" />
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{patient.name}</h4>
-                          <p className="text-sm text-gray-500">{patient.email}</p>
+                          <h4 className="font-medium text-gray-900 dark:text-white">{patient.name}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{patient.email}</p>
                           <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
                             <span>{patient.age} years old</span>
                             <span>{patient.gender}</span>
@@ -575,8 +575,8 @@ const DataAccess = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right text-sm">
-                          <p className="text-gray-500">Last session</p>
-                          <p className="text-gray-900">{new Date(patient.lastSession).toLocaleDateString()}</p>
+                          <p className="text-gray-500 dark:text-gray-400">Last session</p>
+                          <p className="text-gray-900 dark:text-white">{new Date(patient.lastSession).toLocaleDateString()}</p>
                         </div>
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       </div>
@@ -589,27 +589,27 @@ const DataAccess = () => {
 
           {/* Files View */}
           {viewMode === 'files' && (
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Files for {selectedPatient?.name}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {filteredData().length} files available
                 </p>
               </div>
 
-              <div className="divide-y">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredData().map(file => (
                   <div key={file.id} className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           {getFileIcon(file.type)}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{file.name}</h4>
-                          <p className="text-sm text-gray-500">{getFileTypeLabel(file.type)}</p>
+                          <h4 className="font-medium text-gray-900 dark:text-white">{file.name}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{getFileTypeLabel(file.type)}</p>
                           <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
                             <span>{file.size}</span>
                             <span>Created: {new Date(file.created).toLocaleDateString()}</span>
@@ -620,14 +620,14 @@ const DataAccess = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => viewFile(file)}
-                          className="p-2 text-gray-500 hover:text-[#323956] hover:bg-[#E4EFFF] rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-[#323956] dark:hover:text-blue-400 hover:bg-[#E4EFFF] dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                           title="View file"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => downloadFile(file)}
-                          className="p-2 text-gray-500 hover:text-[#323956] hover:bg-green-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 dark:text-gray-400 hover:text-[#323956] dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                           title="Download file"
                         >
                           <Download className="w-4 h-4" />
@@ -642,10 +642,10 @@ const DataAccess = () => {
 
           {/* Empty State */}
           {filteredData().length === 0 && (
-            <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-              <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No data found</h3>
-              <p className="text-gray-500">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+              <FolderOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No data found</h3>
+              <p className="text-gray-500 dark:text-gray-400">
                 {searchTerm ? 'Try adjusting your search terms.' : 'No items to display.'}
               </p>
             </div>
@@ -655,54 +655,54 @@ const DataAccess = () => {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#CAE0FF] rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-[#323956]" />
+            <div className="w-10 h-10 bg-[#CAE0FF] dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-[#323956] dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Clinics</p>
-              <p className="text-xl font-bold text-gray-900">{clinics.length}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Clinics</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{clinics.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Patients</p>
-              <p className="text-xl font-bold text-gray-900">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Patients</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {clinics.reduce((sum, clinic) => sum + clinic.patientsCount, 0)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-[#323956]" />
+            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-[#323956] dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Reports</p>
-              <p className="text-xl font-bold text-gray-900">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Reports</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {clinics.reduce((sum, clinic) => sum + clinic.reportsCount, 0)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Database className="w-5 h-5 text-orange-600" />
+            <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+              <Database className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Data Access</p>
-              <p className="text-xl font-bold text-[#323956]">Full</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Data Access</p>
+              <p className="text-xl font-bold text-[#323956] dark:text-blue-400">Full</p>
             </div>
           </div>
         </div>
@@ -711,12 +711,12 @@ const DataAccess = () => {
       {/* qEEG File Viewer Modal */}
       {showQEEGViewer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-7xl w-full max-h-[95vh] overflow-y-auto">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">qEEG Analysis Viewer</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-7xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">qEEG Analysis Viewer</h3>
               <button
                 onClick={() => setShowQEEGViewer(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -735,12 +735,12 @@ const DataAccess = () => {
       {/* Care Plan Modal */}
       {showCarePlan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Personalized Care Plan</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personalized Care Plan</h3>
               <button
                 onClick={() => setShowCarePlan(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>

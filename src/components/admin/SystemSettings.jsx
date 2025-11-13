@@ -289,7 +289,7 @@ const SystemSettings = () => {
                 System Settings
               </h1>
               <p className="text-xl text-slate-600 font-medium">
-                Configure platform settings and preferences ⚙️
+                Configure platform settings and preferences ️
               </p>
             </div>
             <div className="hidden md:block relative">

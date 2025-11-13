@@ -34,11 +34,11 @@ export default function AssessmentPage() {
   }
 
   const assessmentIcons = {
-    'adhd-rating-scale': '🧠',
-    'gad-7': '😌',
-    'pss-10': '🧘‍♀️',
-    'memory-assessment': '💭',
-    'mood-assessment': '☀️'
+    'adhd-rating-scale': '',
+    'gad-7': '',
+    'pss-10': '‍️',
+    'memory-assessment': '',
+    'mood-assessment': '️'
   }
 
   const assessmentColors = {
@@ -64,7 +64,7 @@ export default function AssessmentPage() {
             {allAssessments.map((assessment) => {
               const iconKey = assessment.id as keyof typeof assessmentIcons
               const colorKey = assessment.id as keyof typeof assessmentColors
-              const icon = assessmentIcons[iconKey] || '📋'
+              const icon = assessmentIcons[iconKey] || 'INFO:'
               const color = assessmentColors[colorKey] || 'brain'
               
               // Define static class mappings

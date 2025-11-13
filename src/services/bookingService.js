@@ -11,9 +11,9 @@ class BookingService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('📅 Booking Service: Connected to database');
+      console.log(' Booking Service: Connected to database');
     } else {
-      console.warn('⚠️ Booking Service: Using offline mode');
+      console.warn('WARNING: Booking Service: Using offline mode');
       this.supabase = null;
     }
 
@@ -92,7 +92,7 @@ class BookingService {
 
       return availableSlots;
     } catch (error) {
-      console.error('❌ Failed to get available slots:', error);
+      console.error('ERROR: Failed to get available slots:', error);
       return this.getMockAvailableSlots(date);
     }
   }
@@ -159,11 +159,11 @@ class BookingService {
       // Create calendar entry
       await this.createCalendarEntry(appointment);
 
-      console.log('✅ Appointment booked successfully');
+      console.log('SUCCESS: Appointment booked successfully');
       return appointment;
 
     } catch (error) {
-      console.error('❌ Failed to book appointment:', error);
+      console.error('ERROR: Failed to book appointment:', error);
       throw new Error(`Booking failed: ${error.message}`);
     }
   }
@@ -202,7 +202,7 @@ class BookingService {
       }));
 
     } catch (error) {
-      console.error('❌ Failed to get patient appointments:', error);
+      console.error('ERROR: Failed to get patient appointments:', error);
       return this.getMockPatientAppointments(patientId);
     }
   }
@@ -240,7 +240,7 @@ class BookingService {
       }));
 
     } catch (error) {
-      console.error('❌ Failed to get clinic appointments:', error);
+      console.error('ERROR: Failed to get clinic appointments:', error);
       return this.getMockClinicAppointments(clinicId, date);
     }
   }
@@ -298,11 +298,11 @@ class BookingService {
       // Send reschedule notification
       await this.sendRescheduleNotification(updatedAppointment);
 
-      console.log('✅ Appointment rescheduled successfully');
+      console.log('SUCCESS: Appointment rescheduled successfully');
       return updatedAppointment;
 
     } catch (error) {
-      console.error('❌ Failed to reschedule appointment:', error);
+      console.error('ERROR: Failed to reschedule appointment:', error);
       throw new Error(`Reschedule failed: ${error.message}`);
     }
   }
@@ -332,11 +332,11 @@ class BookingService {
       // Send cancellation notification
       await this.sendCancellationNotification(cancelledAppointment);
 
-      console.log('✅ Appointment cancelled successfully');
+      console.log('SUCCESS: Appointment cancelled successfully');
       return cancelledAppointment;
 
     } catch (error) {
-      console.error('❌ Failed to cancel appointment:', error);
+      console.error('ERROR: Failed to cancel appointment:', error);
       throw new Error(`Cancellation failed: ${error.message}`);
     }
   }
@@ -365,7 +365,7 @@ class BookingService {
 
       return conflicts.length === 0;
     } catch (error) {
-      console.error('❌ Failed to check slot availability:', error);
+      console.error('ERROR: Failed to check slot availability:', error);
       return false;
     }
   }
@@ -427,7 +427,7 @@ class BookingService {
 
   async sendAppointmentConfirmation(appointment) {
     // In production, this would send email/SMS notifications
-    console.log('📧 Sending appointment confirmation:', {
+    console.log('EMAIL: Sending appointment confirmation:', {
       patientId: appointment.patient_id,
       date: appointment.appointment_date,
       time: appointment.start_time,
@@ -436,16 +436,16 @@ class BookingService {
   }
 
   async sendRescheduleNotification(appointment) {
-    console.log('📧 Sending reschedule notification:', appointment.id);
+    console.log('EMAIL: Sending reschedule notification:', appointment.id);
   }
 
   async sendCancellationNotification(appointment) {
-    console.log('📧 Sending cancellation notification:', appointment.id);
+    console.log('EMAIL: Sending cancellation notification:', appointment.id);
   }
 
   async createCalendarEntry(appointment) {
     // In production, this would integrate with calendar services
-    console.log('📅 Creating calendar entry:', appointment.id);
+    console.log(' Creating calendar entry:', appointment.id);
   }
 
   // Mock data methods for offline functionality
@@ -563,7 +563,7 @@ class BookingService {
 
       return stats;
     } catch (error) {
-      console.error('❌ Failed to get appointment stats:', error);
+      console.error('ERROR: Failed to get appointment stats:', error);
       return { total: 0, completed: 0, scheduled: 0, cancelled: 0, totalSpent: 0 };
     }
   }

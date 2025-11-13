@@ -47,11 +47,11 @@ export default function ProfilePage() {
 
   const getImprovementFocusIcon = (focus: string | undefined) => {
     switch (focus) {
-      case 'adhd': return '🎯'
-      case 'memory': return '🧠'
-      case 'stress': return '🧘‍♀️'
-      case 'wellness': return '🌟'
-      default: return '🎯'
+      case 'adhd': return 'TARGET:'
+      case 'memory': return ''
+      case 'stress': return '‍️'
+      case 'wellness': return ''
+      default: return 'TARGET:'
     }
   }
 

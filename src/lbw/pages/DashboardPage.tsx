@@ -47,7 +47,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.name || 'User'}! 👋
+            Welcome back, {user?.name || 'User'}! 
           </h1>
           <p className="text-gray-700 dark:text-gray-200 mt-2 text-base font-medium leading-6">Here's your brain wellness overview for today.</p>
         </motion.div>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                   className="block w-full p-3 text-left border border-gray-200 rounded-lg hover:border-brain-300 hover:bg-brain-50 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">📝</span>
+                    <span className="text-xl">NOTE:</span>
                     <div>
                       <div className="font-medium text-gray-900">Daily Check-in</div>
                       <div className="text-base text-gray-700 dark:text-gray-200 font-medium">Log your mood and progress</div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
                   className="block w-full p-3 text-left border border-gray-200 rounded-lg hover:border-wellness-300 hover:bg-wellness-50 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">🧪</span>
+                    <span className="text-xl"></span>
                     <div>
                       <div className="font-medium text-gray-900">Take Assessment</div>
                       <div className="text-base text-gray-700 dark:text-gray-200 font-medium">ADHD, stress, or memory test</div>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
                   className="block w-full p-3 text-left border border-gray-200 rounded-lg hover:border-calm-300 hover:bg-calm-50 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">🎯</span>
+                    <span className="text-xl">TARGET:</span>
                     <div>
                       <div className="font-medium text-gray-900">Start Activity</div>
                       <div className="text-base text-gray-700 dark:text-gray-200 font-medium">Breathing, exercise, or cognitive training</div>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
               <Card variant="interactive">
                 <CardHeader>
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xl">🎥</span>
+                    <span className="text-xl"></span>
                     <span className="text-base font-semibold text-brain-600">Featured Video</span>
                   </div>
                   <CardTitle className="text-lg">{dailyContent.video.title}</CardTitle>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
               <Card variant="interactive">
                 <CardHeader>
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xl">📚</span>
+                    <span className="text-xl"></span>
                     <span className="text-sm font-medium text-wellness-600">Featured Article</span>
                   </div>
                   <CardTitle className="text-lg">{dailyContent.article.title}</CardTitle>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
               <Card variant="interactive">
                 <CardHeader>
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xl">🎯</span>
+                    <span className="text-xl">TARGET:</span>
                     <span className="text-sm font-medium text-calm-600">Today's Task</span>
                   </div>
                   <CardTitle className="text-lg">{dailyContent.task.title}</CardTitle>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xl">🧘‍♀️</span>
+                    <span className="text-xl">‍️</span>
                     <span className="text-sm font-medium text-calm-600">Breathwork</span>
                   </div>
                   <CardTitle>{dailyContent.breathwork.title}</CardTitle>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-xl">🥗</span>
+                    <span className="text-xl"></span>
                     <span className="text-sm font-medium text-wellness-600">Brain Nutrition</span>
                   </div>
                   <CardTitle>{dailyContent.nutrition.title}</CardTitle>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
             ))}
           </div>
           <p className="text-sm text-gray-600">
-            You've been active for 4 out of 7 days this week. Keep it up! 🎉
+            You've been active for 4 out of 7 days this week. Keep it up! COMPLETE:
           </p>
         </motion.div>
       </div>

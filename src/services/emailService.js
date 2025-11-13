@@ -104,7 +104,7 @@ Next Steps:
 
 Best regards,
 Neuro360 Team
-📧 support@neuro360.com`;
+EMAIL: support@neuro360.com`;
 
       console.log('Sending real email via Web3Forms to:', emailData.to);
       console.log('Credentials being sent:', credentials);
@@ -127,7 +127,7 @@ Neuro360 Team
       const result = await response.json();
 
       if (response.ok && result.success) {
-        console.log('✅ Real email sent successfully via Web3Forms!');
+        console.log('SUCCESS: Real email sent successfully via Web3Forms!');
         return { 
           success: true, 
           provider: 'Web3Forms',
@@ -137,7 +137,7 @@ Neuro360 Team
         throw new Error(`Web3Forms error: ${result.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('❌ Web3Forms email sending failed:', error);
+      console.error('ERROR: Web3Forms email sending failed:', error);
       throw error;
     }
   }
@@ -155,7 +155,7 @@ OTP_Code: ${templateData.otp}
 Login_URL: ${templateData.loginUrl}
 OTP_Expires: ${templateData.expiryMinutes} minutes`;
 
-      console.log('📧 EMAIL CREDENTIALS TO SEND:');
+      console.log('EMAIL: EMAIL CREDENTIALS TO SEND:');
       console.log('=================================');
       console.log(credentials);
       console.log('=================================');
@@ -209,7 +209,7 @@ Neuro360 Team`);
         console.warn('Could not copy to clipboard:', error);
       }
 
-      console.log('✅ Direct email sent successfully via:', approaches.join(', '));
+      console.log('SUCCESS: Direct email sent successfully via:', approaches.join(', '));
       
       return { 
         success: true, 
@@ -219,7 +219,7 @@ Neuro360 Team`);
       };
       
     } catch (error) {
-      console.error('❌ Direct email sending failed:', error);
+      console.error('ERROR: Direct email sending failed:', error);
       throw error;
     }
   }
@@ -250,7 +250,7 @@ Neuro360 Team`);
           box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         ">
           <h2 style="color: #4F46E5; margin-bottom: 20px; text-align: center;">
-            📧 Email Credentials Ready
+            EMAIL: Email Credentials Ready
           </h2>
           
           <div style="background: #F3F4F6; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -270,7 +270,7 @@ Neuro360 Team`);
               border-radius: 5px;
               cursor: pointer;
               font-size: 14px;
-            ">📋 Copy Credentials</button>
+            ">INFO: Copy Credentials</button>
             
             <button onclick="document.getElementById('credentialsModal').remove()" style="
               background: #6B7280;
@@ -280,7 +280,7 @@ Neuro360 Team`);
               border-radius: 5px;
               cursor: pointer;
               font-size: 14px;
-            ">✅ Close</button>
+            ">SUCCESS: Close</button>
           </div>
           
           <p style="text-align: center; margin-top: 15px; color: #6B7280; font-size: 12px;">
@@ -330,37 +330,37 @@ Neuro360 Team`);
       
       // Also add a complete message field
       formData.append('Complete_Message', `
-🧠 NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
+ NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
 
 Dear ${templateData.contactPerson},
 
 Welcome to Neuro360! Your clinic account has been successfully created.
 
-🔐 LOGIN CREDENTIALS:
+AUTH: LOGIN CREDENTIALS:
 Username: ${templateData.username}
 Password: ${templateData.password}
 
-🛡️ ACCOUNT ACTIVATION:
+️ ACCOUNT ACTIVATION:
 OTP Code: ${templateData.otp}
-⏰ Expires in: ${templateData.expiryMinutes} minutes
+TIMER: Expires in: ${templateData.expiryMinutes} minutes
 
-🔗 LOGIN URL: ${templateData.loginUrl}
+ LOGIN URL: ${templateData.loginUrl}
 
-📋 NEXT STEPS:
+INFO: NEXT STEPS:
 1. Visit the login URL above
 2. Login with your credentials
 3. Enter the OTP code when prompted
 4. Complete your account setup
 5. Change your password for security
 
-⚠️ SECURITY REMINDERS:
+WARNING: SECURITY REMINDERS:
 - Change your password after first login
 - Keep credentials confidential
 - Activate within 15 minutes
 
 Best regards,
 Neuro360 Team
-📧 support@neuro360.com
+EMAIL: support@neuro360.com
       `);
 
       console.log('Sending FormSubmit email with credentials:', {
@@ -378,13 +378,13 @@ Neuro360 Team
       const result = await response.json();
       
       if (response.ok && result.success) {
-        console.log('✅ Email sent successfully via FormSubmit with credentials');
+        console.log('SUCCESS: Email sent successfully via FormSubmit with credentials');
         return { success: true, provider: 'FormSubmit' };
       } else {
         throw new Error(`FormSubmit error: ${result.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('❌ FormSubmit sending failed:', error);
+      console.error('ERROR: FormSubmit sending failed:', error);
       throw error;
     }
   }
@@ -427,29 +427,29 @@ Neuro360 Team
 
 Welcome to Neuro360! Your clinic account has been successfully created.
 
-🔐 LOGIN CREDENTIALS:
+AUTH: LOGIN CREDENTIALS:
 Username: ${templateData.username}
 Password: ${templateData.password}
 
-🛡️ ACCOUNT ACTIVATION:
+️ ACCOUNT ACTIVATION:
 OTP Code: ${templateData.otp}
-⏰ Expires in: ${templateData.expiryMinutes} minutes
+TIMER: Expires in: ${templateData.expiryMinutes} minutes
 
-📋 NEXT STEPS:
+INFO: NEXT STEPS:
 1. Visit ${templateData.loginUrl}
 2. Login with your credentials
 3. Enter the OTP code when prompted
 4. Complete your account setup
 5. Change your password for security
 
-⚠️ SECURITY REMINDERS:
+WARNING: SECURITY REMINDERS:
 - Change your password after first login
 - Keep credentials confidential
 - Activate within 15 minutes
 
 Best regards,
 Neuro360 Team
-📧 support@neuro360.com`);
+EMAIL: support@neuro360.com`);
 
     // Create mailto URL
     const mailtoUrl = `mailto:${emailData.to}?subject=${emailSubject}&body=${emailBody}`;
@@ -478,7 +478,7 @@ ${decodeURIComponent(emailBody)}`;
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(fullEmailContent);
-          console.log('✅ Email content copied to clipboard');
+          console.log('SUCCESS: Email content copied to clipboard');
         } else {
           // Fallback for non-secure context
           const textArea = document.createElement('textarea');
@@ -491,10 +491,10 @@ ${decodeURIComponent(emailBody)}`;
           textArea.select();
           document.execCommand('copy');
           document.body.removeChild(textArea);
-          console.log('✅ Email content copied to clipboard (fallback)');
+          console.log('SUCCESS: Email content copied to clipboard (fallback)');
         }
       } catch (clipboardError) {
-        console.warn('📋 Could not copy to clipboard:', clipboardError);
+        console.warn('INFO: Could not copy to clipboard:', clipboardError);
         // Don't throw error, just continue
       }
       
@@ -546,13 +546,13 @@ Neuro360 Team`
       console.log('EmailJS response:', response);
 
       if (response.status === 200 || response.text === 'OK') {
-        console.log('✅ Email sent successfully via EmailJS');
+        console.log('SUCCESS: Email sent successfully via EmailJS');
         return { success: true, provider: 'EmailJS' };
       } else {
         throw new Error(`EmailJS error: ${response.text || response.status}`);
       }
     } catch (error) {
-      console.error('❌ EmailJS sending failed:', error);
+      console.error('ERROR: EmailJS sending failed:', error);
       throw error;
     }
   }
@@ -656,7 +656,7 @@ Neuro360 Team`
 </head>
 <body>
     <div class="header">
-        <h1>🧠 Neuro360</h1>
+        <h1> Neuro360</h1>
         <p>Your Account Credentials & Activation</p>
     </div>
     
@@ -666,21 +666,21 @@ Neuro360 Team`
         <p>Welcome to Neuro360! Your clinic account has been successfully created. Please find your login credentials and activation details below:</p>
         
         <div class="credentials">
-            <h3>🔐 Login Credentials</h3>
+            <h3>AUTH: Login Credentials</h3>
             <p><strong>Username:</strong> ${data.username}</p>
             <p><strong>Password:</strong> <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${data.password}</code></p>
             <p><strong>Login URL:</strong> <a href="${data.loginUrl}">${data.loginUrl}</a></p>
         </div>
         
         <div class="otp">
-            <h3>🛡️ Account Activation Required</h3>
+            <h3>️ Account Activation Required</h3>
             <p>To activate your account, please use this OTP code:</p>
             <div class="otp-code">${data.otp}</div>
-            <p><small>⏰ This OTP expires in ${data.expiryMinutes} minutes</small></p>
+            <p><small>TIMER: This OTP expires in ${data.expiryMinutes} minutes</small></p>
         </div>
         
         <div class="warning">
-            <h4>⚠️ Important Security Notes:</h4>
+            <h4>WARNING: Important Security Notes:</h4>
             <ul>
                 <li>Please change your password after first login</li>
                 <li>Keep your login credentials secure and confidential</li>
@@ -691,7 +691,7 @@ Neuro360 Team`
         
         <a href="${data.loginUrl}" class="button">Login to Your Account</a>
         
-        <h3>📋 Next Steps:</h3>
+        <h3>INFO: Next Steps:</h3>
         <ol>
             <li>Click the login link above or visit ${data.loginUrl}</li>
             <li>Enter your username and password</li>
@@ -705,7 +705,7 @@ Neuro360 Team`
         <div class="footer">
             <p><strong>Neuro360 Team</strong><br>
             EEG Report Management Platform<br>
-            📧 support@neuro360.com | 📞 +1 (555) 123-4567</p>
+            EMAIL: support@neuro360.com |  +1 (555) 123-4567</p>
             
             <p><small>This is an automated email. Please do not reply to this message.</small></p>
         </div>
@@ -718,29 +718,29 @@ Neuro360 Team`
   // Generate plain text email content for console logging
   generateEmailText(data) {
     return `
-🧠 NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
+ NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
 
 Hello ${data.contactPerson},
 
 Welcome to Neuro360! Your clinic account has been successfully created.
 
-🔐 LOGIN CREDENTIALS:
+AUTH: LOGIN CREDENTIALS:
 Username: ${data.username}
 Password: ${data.password}
 Login URL: ${data.loginUrl}
 
-🛡️ ACCOUNT ACTIVATION REQUIRED:
+️ ACCOUNT ACTIVATION REQUIRED:
 OTP Code: ${data.otp}
-⏰ Expires in: ${data.expiryMinutes} minutes
+TIMER: Expires in: ${data.expiryMinutes} minutes
 
-📋 NEXT STEPS:
+INFO: NEXT STEPS:
 1. Visit ${data.loginUrl}
 2. Login with your credentials
 3. Enter the OTP code when prompted
 4. Complete your account setup
 5. Change your password for security
 
-⚠️ SECURITY REMINDERS:
+WARNING: SECURITY REMINDERS:
 - Change your password after first login
 - Keep credentials confidential
 - Activate within 15 minutes
@@ -748,7 +748,7 @@ OTP Code: ${data.otp}
 
 Best regards,
 Neuro360 Team
-📧 support@neuro360.com
+EMAIL: support@neuro360.com
     `;
   }
 

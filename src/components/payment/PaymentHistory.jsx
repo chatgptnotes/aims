@@ -35,12 +35,12 @@ const PaymentHistory = ({ clinicId }) => {
 
   const loadPaymentHistory = async () => {
     try {
-      console.log('📋 Loading payment history for clinic:', clinicId);
+      console.log('INFO: Loading payment history for clinic:', clinicId);
       const paymentHistory = await RazorpayService.getPaymentHistory(clinicId);
-      console.log('✅ Payment history loaded:', paymentHistory.length, 'payments');
+      console.log('SUCCESS: Payment history loaded:', paymentHistory.length, 'payments');
       setPayments(paymentHistory);
     } catch (error) {
-      console.error('❌ Error loading payment history:', error);
+      console.error('ERROR: Error loading payment history:', error);
       setPayments([]);
     } finally {
       setLoading(false);
@@ -125,7 +125,7 @@ const PaymentHistory = ({ clinicId }) => {
 
   // Handle viewing detailed transaction history
   const handleViewHistory = (payment) => {
-    console.log('📋 Viewing history for payment:', payment.paymentId);
+    console.log('INFO: Viewing history for payment:', payment.paymentId);
     setSelectedPayment(payment);
     setShowHistoryModal(true);
   };

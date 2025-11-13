@@ -14,21 +14,21 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log the error details
-    console.error('🚨 React Error Boundary caught an error:', error, errorInfo);
-    console.error('🚨 Error stack:', error.stack);
-    console.error('🚨 Component stack:', errorInfo.componentStack);
+    console.error('ALERT: React Error Boundary caught an error:', error, errorInfo);
+    console.error('ALERT: Error stack:', error.stack);
+    console.error('ALERT: Component stack:', errorInfo.componentStack);
     
     // Try to identify the specific component that crashed
     if (errorInfo.componentStack.includes('UploadReportModal')) {
-      console.error('🚨 Upload modal crashed!');
+      console.error('ALERT: Upload modal crashed!');
     }
     
     if (errorInfo.componentStack.includes('ClinicManagement')) {
-      console.error('🚨 Clinic Management component crashed!');
+      console.error('ALERT: Clinic Management component crashed!');
     }
     
     if (errorInfo.componentStack.includes('SuperAdminPanel')) {
-      console.error('🚨 Super Admin Panel crashed!');
+      console.error('ALERT: Super Admin Panel crashed!');
     }
     
     // Add navigation error detection
@@ -36,7 +36,7 @@ class ErrorBoundary extends React.Component {
         error.message.includes('TypeError') ||
         errorInfo.componentStack.includes('Router') ||
         errorInfo.componentStack.includes('Navigate')) {
-      console.error('🚨 Navigation/Routing error detected');
+      console.error('ALERT: Navigation/Routing error detected');
     }
     
     this.setState({

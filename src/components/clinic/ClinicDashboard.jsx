@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import DatabaseService from '../../services/databaseService';
 import DashboardLayout from '../layout/DashboardLayout';
@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 const ClinicDashboard = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [clinic, setClinic] = useState(null);
   const [patients, setPatients] = useState([]);
   const [reports, setReports] = useState([]);
@@ -21,8 +21,11 @@ const ClinicDashboard = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [isMounted, setIsMounted] = useState(true);
 
-  // Get active tab from URL params or default to overview
-  const activeTab = searchParams.get('tab') || 'overview';
+  // Get active tab from URL pathname
+  // Example: /clinic/patients -> activeTab = 'patients'
+  // Example: /clinic -> activeTab = 'overview'
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const activeTab = pathParts.length > 1 ? pathParts[1] : 'overview';
 
   // Helper function to get clinic ID from user
   const getClinicId = (user) => {
@@ -37,17 +40,17 @@ const ClinicDashboard = () => {
   useEffect(() => {
     try {
       const clinicId = getClinicId(user);
-      console.log('🔄 ClinicDashboard useEffect - user:', user?.name, 'clinicId:', clinicId, 'dataLoaded:', dataLoaded);
+      console.log('REFRESH: ClinicDashboard useEffect - user:', user?.name, 'clinicId:', clinicId, 'dataLoaded:', dataLoaded);
       if (user && clinicId && !dataLoaded) {
-        console.log('📊 Loading clinic data for the first time...');
+        console.log('DATA: Loading clinic data for the first time...');
         loadClinicData();
       } else if (user && !clinicId) {
-        console.warn('⚠️ User loaded but no clinicId found:', user);
+        console.warn('WARNING: User loaded but no clinicId found:', user);
         if (isMounted) {
           setLoading(false);
         }
       } else if (user && clinicId && dataLoaded) {
-        console.log('✅ Data already loaded, skipping reload');
+        console.log('SUCCESS: Data already loaded, skipping reload');
         if (isMounted) {
           setLoading(false);
         }
@@ -69,26 +72,26 @@ const ClinicDashboard = () => {
 
   const loadClinicData = async () => {
     try {
-      console.log('🏥 Loading clinic data for user:', user);
+      console.log('CLINIC: Loading clinic data for user:', user);
 
       const clinicId = getClinicId(user);
       if (!user || !clinicId) {
-        console.error('❌ No clinic ID found for user:', user);
+        console.error('ERROR: No clinic ID found for user:', user);
         setLoading(false);
         return;
       }
 
-      console.log('✅ Using clinicId:', clinicId, 'for user:', user?.name, 'role:', user?.role);
+      console.log('SUCCESS: Using clinicId:', clinicId, 'for user:', user?.name, 'role:', user?.role);
 
       // Get current user's clinic data only
       let currentClinic = await DatabaseService.findById('clinics', clinicId);
-      console.log('🏥 Fetched clinic from database:', currentClinic);
-      console.log('📞 Clinic phone:', currentClinic?.phone);
-      console.log('📍 Clinic address:', currentClinic?.address);
-      console.log('👤 Clinic contactPerson:', currentClinic?.contactPerson);
+      console.log('CLINIC: Fetched clinic from database:', currentClinic);
+      console.log(' Clinic phone:', currentClinic?.phone);
+      console.log(' Clinic address:', currentClinic?.address);
+      console.log(' Clinic contactPerson:', currentClinic?.contactPerson);
 
       if (!currentClinic) {
-        console.warn('⚠️ Clinic not found for ID:', clinicId, '- Creating new clinic record');
+        console.warn('WARNING: Clinic not found for ID:', clinicId, '- Creating new clinic record');
 
         // Create clinic record in database
         try {
@@ -107,15 +110,15 @@ const ClinicDashboard = () => {
           };
 
           currentClinic = await DatabaseService.add('clinics', newClinic);
-          console.log('✅ Created new clinic record:', currentClinic.name);
+          console.log('SUCCESS: Created new clinic record:', currentClinic.name);
         } catch (error) {
-          console.error('❌ Failed to create clinic record:', error);
+          console.error('ERROR: Failed to create clinic record:', error);
           setLoading(false);
           return;
         }
       }
 
-      console.log('✅ Found clinic:', currentClinic.name, 'for user:', user.name);
+      console.log('SUCCESS: Found clinic:', currentClinic.name, 'for user:', user.name);
       
       // Get ONLY this clinic's patients and reports
       let clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
@@ -123,7 +126,7 @@ const ClinicDashboard = () => {
       
       // If no patients in database but exist in localStorage, migrate them
       if (clinicPatients.length === 0) {
-        console.log('🔄 No patients in database, checking localStorage for migration...');
+        console.log('REFRESH: No patients in database, checking localStorage for migration...');
 
         const localStoragePatients = JSON.parse(localStorage.getItem('patients') || '[]');
         const localStorageReports = JSON.parse(localStorage.getItem('reports') || '[]');
@@ -135,15 +138,15 @@ const ClinicDashboard = () => {
         );
 
         if (clinicPatientsFromLocal.length > 0) {
-          console.log(`🚀 Migrating ${clinicPatientsFromLocal.length} patients to database...`);
+          console.log(`START: Migrating ${clinicPatientsFromLocal.length} patients to database...`);
           
           // Migrate patients
           for (const patient of clinicPatientsFromLocal) {
             try {
               await DatabaseService.add('patients', patient);
-              console.log(`✅ Migrated patient: ${patient.name}`);
+              console.log(`SUCCESS: Migrated patient: ${patient.name}`);
             } catch (error) {
-              console.error(`❌ Failed to migrate patient ${patient.name}:`, error);
+              console.error(`ERROR: Failed to migrate patient ${patient.name}:`, error);
             }
           }
           
@@ -164,9 +167,9 @@ const ClinicDashboard = () => {
               };
               
               await DatabaseService.add('reports', reportToMigrate);
-              console.log(`✅ Migrated report: ${report.fileName}`);
+              console.log(`SUCCESS: Migrated report: ${report.fileName}`);
             } catch (error) {
-              console.error(`❌ Failed to migrate report ${report.fileName}:`, error);
+              console.error(`ERROR: Failed to migrate report ${report.fileName}:`, error);
             }
           }
           
@@ -174,7 +177,7 @@ const ClinicDashboard = () => {
           clinicPatients = await DatabaseService.getPatientsByClinic(currentClinic.id);
           clinicReports = await DatabaseService.getReportsByClinic(currentClinic.id);
           
-          console.log(`✅ Migration complete! Patients: ${clinicPatients.length}, Reports: ${clinicReports.length}`);
+          console.log(`SUCCESS: Migration complete! Patients: ${clinicPatients.length}, Reports: ${clinicReports.length}`);
         }
       }
       
@@ -185,7 +188,7 @@ const ClinicDashboard = () => {
         reportsAllowed: currentClinic.reportsAllowed || 10
       };
       
-      console.log('📊 Clinic data loaded:', {
+      console.log('DATA: Clinic data loaded:', {
         clinic: currentClinic.name,
         patients: clinicPatients.length,
         reports: clinicReports.length
@@ -205,7 +208,7 @@ const ClinicDashboard = () => {
 
   // Separate refresh function that forces a reload
   const refreshClinicData = async () => {
-    console.log('🔄 Force refreshing clinic data...');
+    console.log('REFRESH: Force refreshing clinic data...');
     setDataLoaded(false); // This will trigger a reload
     await loadClinicData();
   };
@@ -215,7 +218,7 @@ const ClinicDashboard = () => {
       case 'overview':
         return <OverviewTab clinic={clinic} patients={patients} reports={reports} usage={usage} onRefresh={refreshClinicData} />;
       case 'patients':
-        console.log('🏥 Rendering PatientManagement with clinicId:', clinic?.id);
+        console.log('CLINIC: Rendering PatientManagement with clinicId:', clinic?.id);
         return <PatientManagement key={`patients-${clinic?.id}`} clinicId={clinic?.id} onUpdate={refreshClinicData} />;
       case 'reports':
         return <ReportViewer clinicId={clinic?.id} patients={patients} reports={reports} onUpdate={refreshClinicData} />;
@@ -251,7 +254,7 @@ const ClinicDashboard = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading Clinic Portal...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Clinic Portal...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -269,42 +272,42 @@ const ClinicDashboard = () => {
 
 // Usage Tracking Component
 const UsageTracking = ({ clinic, usage }) => {
-  const usagePercentage = clinic?.reportsUsed && clinic?.reportsAllowed 
-    ? (clinic.reportsUsed / clinic.reportsAllowed) * 100 
+  const usagePercentage = clinic?.reportsUsed && clinic?.reportsAllowed
+    ? (clinic.reportsUsed / clinic.reportsAllowed) * 100
     : 0;
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Usage Overview</h3>
-        
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Usage Overview</h3>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#323956]">{clinic?.reportsUsed || 0}</div>
-            <div className="text-sm text-gray-500">Reports Used</div>
+            <div className="text-3xl font-bold text-[#323956] dark:text-blue-400">{clinic?.reportsUsed || 0}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Reports Used</div>
           </div>
-          
+
           <div className="text-center">
-            <div className="text-3xl font-bold text-[#323956]">{clinic?.reportsAllowed || 10}</div>
-            <div className="text-sm text-gray-500">Reports Allowed</div>
+            <div className="text-3xl font-bold text-[#323956] dark:text-blue-400">{clinic?.reportsAllowed || 10}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Reports Allowed</div>
           </div>
-          
+
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">{Math.max(0, (clinic?.reportsAllowed || 10) - (clinic?.reportsUsed || 0))}</div>
-            <div className="text-sm text-gray-500">Remaining</div>
+            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{Math.max(0, (clinic?.reportsAllowed || 10) - (clinic?.reportsUsed || 0))}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Remaining</div>
           </div>
         </div>
 
         <div className="mt-6">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
             <span>Usage Progress</span>
             <span>{usagePercentage.toFixed(1)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div
               className={`h-2 rounded-full transition-all duration-300 ${
-                usagePercentage >= 90 ? 'bg-red-500' : 
-                usagePercentage >= 70 ? 'bg-yellow-500' : 'bg-[#323956]'
+                usagePercentage >= 90 ? 'bg-red-500 dark:bg-red-600' :
+                usagePercentage >= 70 ? 'bg-yellow-500 dark:bg-yellow-600' : 'bg-[#323956] dark:bg-blue-500'
               }`}
               style={{ width: `${Math.min(usagePercentage, 100)}%` }}
             ></div>
@@ -329,7 +332,7 @@ const ClinicSettings = ({ clinic }) => {
 
   useEffect(() => {
     if (clinic) {
-      console.log('🏥 Loading clinic data into form:', clinic);
+      console.log('CLINIC: Loading clinic data into form:', clinic);
       const clinicData = {
         name: clinic.name || '',
         contactPerson: clinic.contactPerson || clinic.contact_person || '',
@@ -337,7 +340,7 @@ const ClinicSettings = ({ clinic }) => {
         phone: clinic.phone || '',
         address: clinic.address || ''
       };
-      console.log('📝 Form data populated:', clinicData);
+      console.log('NOTE: Form data populated:', clinicData);
       setFormData(clinicData);
       setOriginalData(clinicData); // Store original data for change tracking
     }
@@ -393,11 +396,11 @@ const ClinicSettings = ({ clinic }) => {
 
       // Add alert to database
       await DatabaseService.add('alerts', alert);
-      console.log('✅ Profile change alert created for super admin');
+      console.log('SUCCESS: Profile change alert created for super admin');
       
       return true;
     } catch (error) {
-      console.error('❌ Failed to create profile change alert:', error);
+      console.error('ERROR: Failed to create profile change alert:', error);
       return false;
     }
   };
@@ -447,82 +450,82 @@ const ClinicSettings = ({ clinic }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Clinic Information</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Clinic Information</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Clinic Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinic Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter clinic name"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact Person</label>
             <input
               type="text"
               value={formData.contactPerson}
               onChange={(e) => handleInputChange('contactPerson', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter contact person name"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter email address"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter phone number"
             />
           </div>
         </div>
-        
+
         <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
           <textarea
             value={formData.address}
             onChange={(e) => handleInputChange('address', e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             placeholder="Enter clinic address"
           />
         </div>
 
         {hasChanges && (
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-sm text-yellow-800">
+          <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <p className="text-sm text-yellow-800 dark:text-yellow-400">
               <strong>Pending Changes:</strong> You have unsaved changes. Click "Save Changes" to update your profile.
             </p>
           </div>
         )}
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <button 
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
             onClick={handleSaveChanges}
             disabled={loading || !hasChanges}
             className={`px-6 py-2 rounded-lg transition-colors ${
               loading || !hasChanges
-                ? 'bg-gray-400 text-white cursor-not-allowed' 
-                : 'bg-primary-600 text-white hover:bg-primary-700'
+                ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed'
+                : 'bg-primary-600 dark:bg-blue-600 text-white hover:bg-primary-700 dark:hover:bg-blue-700'
             }`}
           >
             {loading ? (
@@ -534,9 +537,9 @@ const ClinicSettings = ({ clinic }) => {
               'Save Changes'
             )}
           </button>
-          
+
           {hasChanges && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Super Admin will be notified of these changes
             </p>
           )}

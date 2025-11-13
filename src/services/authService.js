@@ -43,7 +43,7 @@ api.interceptors.response.use(
 export const authService = {
   // Email/Password Authentication
   async loginWithEmail({ email, password }) {
-    console.log('🔐 Attempting login with:', { email, password: password ? 'provided' : 'missing' });
+    console.log('AUTH: Attempting login with:', { email, password: password ? 'provided' : 'missing' });
 
     // Input validation
     if (!email) {
@@ -55,10 +55,10 @@ export const authService = {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // ✅ CHECK STATIC CREDENTIALS FIRST (before Supabase)
+    // SUCCESS: CHECK STATIC CREDENTIALS FIRST (before Supabase)
     // STATIC SUPER ADMIN CREDENTIALS
     if (normalizedEmail === 'superadmin@neuro360.com' && password === 'admin123') {
-      console.log('✅ Static super admin login successful');
+      console.log('SUCCESS: Static super admin login successful');
       return {
         success: true,
         token: `local_token_${Date.now()}`,
@@ -75,7 +75,7 @@ export const authService = {
 
     // Test credentials
     if (normalizedEmail === 'admin@test.com' && password === 'admin123') {
-      console.log('✅ Test super admin login successful');
+      console.log('SUCCESS: Test super admin login successful');
       return {
         success: true,
         token: `local_token_${Date.now()}`,
@@ -91,7 +91,7 @@ export const authService = {
     }
 
     if (normalizedEmail === 'clinic@test.com' && password === 'clinic123') {
-      console.log('✅ Test clinic login successful');
+      console.log('SUCCESS: Test clinic login successful');
       return {
         success: true,
         token: `local_token_${Date.now()}`,
@@ -107,15 +107,15 @@ export const authService = {
     }
 
     try {
-      // ✅ PRIORITY 1: Check local database FIRST (clinics and super admins)
-      console.log('🔄 Checking local database authentication first...');
+      // SUCCESS: PRIORITY 1: Check local database FIRST (clinics and super admins)
+      console.log('REFRESH: Checking local database authentication first...');
 
       // Check super admins first
       const superAdmins = await DatabaseService.get('superAdmins') || [];
       const superAdmin = superAdmins.find(admin => admin.email === normalizedEmail && admin.password === password);
 
       if (superAdmin) {
-        console.log('✅ Super admin found in local database');
+        console.log('SUCCESS: Super admin found in local database');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -132,16 +132,16 @@ export const authService = {
 
       // Check clinics table with password
       const clinics = await DatabaseService.get('clinics') || [];
-      console.log('🔍 Searching for clinic with email:', normalizedEmail);
-      console.log('🔍 Total clinics found:', clinics.length);
+      console.log('DEBUG: Searching for clinic with email:', normalizedEmail);
+      console.log('DEBUG: Total clinics found:', clinics.length);
 
       const clinic = clinics.find(c => {
-        console.log('🔍 Checking clinic:', { email: c.email, hasPassword: !!c.password });
+        console.log('DEBUG: Checking clinic:', { email: c.email, hasPassword: !!c.password });
         return c.email === normalizedEmail && c.password === password;
       });
 
       if (clinic) {
-        console.log('✅ Clinic found in local database with matching password');
+        console.log('SUCCESS: Clinic found in local database with matching password');
 
         // Check if clinic is activated (check both isActivated and is_active)
         const isActive = clinic.isActivated || clinic.is_active;
@@ -174,14 +174,14 @@ export const authService = {
         };
       }
 
-      console.log('⚠️ No matching credentials in local database');
+      console.log('WARNING: No matching credentials in local database');
 
       // PRIORITY 2: Try Supabase Auth (fallback for legacy users)
       if (!supabase || !SupabaseService.isAvailable()) {
         throw new Error('Invalid email or password');
       }
 
-      console.log('🔄 Trying Supabase Auth as fallback...');
+      console.log('REFRESH: Trying Supabase Auth as fallback...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password
@@ -230,7 +230,7 @@ export const authService = {
         isActivated: true
       };
 
-      console.log('✅ Login successful via Supabase:', user.email);
+      console.log('SUCCESS: Login successful via Supabase:', user.email);
 
       return {
         success: true,
@@ -239,7 +239,7 @@ export const authService = {
       };
 
     } catch (error) {
-      console.error('🚨 Login error:', error.message);
+      console.error('ALERT: Login error:', error.message);
       throw error;
     }
   },
@@ -247,13 +247,13 @@ export const authService = {
   // TEMPORARY: Local authentication only (bypass Supabase)
   async localAuthenticationOnly(email, password) {
     try {
-      console.log('🔑 ========== LOCAL AUTHENTICATION DEBUG ==========');
-      console.log('🔑 Login attempt with email:', email);
-      console.log('🔑 Password provided:', password ? `[${password.length} characters]` : 'NO PASSWORD');
+      console.log('KEY: ========== LOCAL AUTHENTICATION DEBUG ==========');
+      console.log('KEY: Login attempt with email:', email);
+      console.log('KEY: Password provided:', password ? `[${password.length} characters]` : 'NO PASSWORD');
 
       // TEMPORARY BYPASS: Allow any login ending with @gmail.com and password Pass@123
       if (email.endsWith('@gmail.com') && password === 'Pass@123') {
-        console.log('✅ BYPASS: Gmail login with Pass@123 successful');
+        console.log('SUCCESS: BYPASS: Gmail login with Pass@123 successful');
         const clinicName = email.split('@')[0].toUpperCase();
         return {
           success: true,
@@ -271,7 +271,7 @@ export const authService = {
 
       // HARDCODED TEST CREDENTIALS for immediate testing
       if (email === 'admin@test.com' && password === 'admin123') {
-        console.log('✅ Test super admin login successful');
+        console.log('SUCCESS: Test super admin login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -287,7 +287,7 @@ export const authService = {
       }
 
       if (email === 'clinic@test.com' && password === 'clinic123') {
-        console.log('✅ Test clinic login successful');
+        console.log('SUCCESS: Test clinic login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -304,7 +304,7 @@ export const authService = {
 
       // STATIC SUPER ADMIN CREDENTIALS
       if (email === 'superadmin@neuro360.com' && password === 'admin123') {
-        console.log('✅ Static super admin login successful');
+        console.log('SUCCESS: Static super admin login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -321,7 +321,7 @@ export const authService = {
 
       // TEMPORARY: Add the clinics we know exist from the dashboard
       if (email === 'abc@gmail.com' && password === 'Pass@123') {
-        console.log('✅ ABC clinic hardcoded login successful');
+        console.log('SUCCESS: ABC clinic hardcoded login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -337,7 +337,7 @@ export const authService = {
       }
 
       if (email === 'bcd@gmail.com' && password === 'Pass@123') {
-        console.log('✅ BCD clinic hardcoded login successful');
+        console.log('SUCCESS: BCD clinic hardcoded login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -354,13 +354,13 @@ export const authService = {
 
       // Check super admins from database
       const superAdmins = await DatabaseService.get('superAdmins') || [];
-      console.log('🔍 Debug: Super admins found:', superAdmins.length);
-      console.log('🔍 Debug: Super admin emails:', superAdmins.map(a => a.email));
+      console.log('DEBUG: Debug: Super admins found:', superAdmins.length);
+      console.log('DEBUG: Debug: Super admin emails:', superAdmins.map(a => a.email));
 
       const superAdmin = superAdmins.find(admin => admin.email === email && admin.password === password);
 
       if (superAdmin) {
-        console.log('✅ Super admin found in local database');
+        console.log('SUCCESS: Super admin found in local database');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
@@ -376,25 +376,25 @@ export const authService = {
       }
 
       // Check clinics
-      console.log('🔍 Starting clinic data retrieval...');
+      console.log('DEBUG: Starting clinic data retrieval...');
       let clinics = [];
 
       try {
         clinics = await DatabaseService.get('clinics') || [];
-        console.log('🔍 Debug: Clinics found in database:', clinics.length);
-        console.log('🔍 Debug: Raw clinic data type:', typeof clinics);
-        console.log('🔍 Debug: Is array?', Array.isArray(clinics));
+        console.log('DEBUG: Debug: Clinics found in database:', clinics.length);
+        console.log('DEBUG: Debug: Raw clinic data type:', typeof clinics);
+        console.log('DEBUG: Debug: Is array?', Array.isArray(clinics));
       } catch (clinicFetchError) {
-        console.error('🚨 Error fetching clinics:', clinicFetchError);
+        console.error('ALERT: Error fetching clinics:', clinicFetchError);
         clinics = [];
       }
 
       if (clinics.length > 0) {
-        console.log('🔍 ========== CLINIC DATABASE DEBUG ==========');
-        console.log('🔍 Total clinics found:', clinics.length);
+        console.log('DEBUG: ========== CLINIC DATABASE DEBUG ==========');
+        console.log('DEBUG: Total clinics found:', clinics.length);
 
         clinics.forEach((c, index) => {
-          console.log(`🔍 Clinic ${index + 1}:`, {
+          console.log(`DEBUG: Clinic ${index + 1}:`, {
             id: c.id,
             name: c.name,
             email: c.email,
@@ -407,11 +407,11 @@ export const authService = {
           });
         });
       } else {
-        console.log('🔍 ========== NO CLINICS FOUND ==========');
+        console.log('DEBUG: ========== NO CLINICS FOUND ==========');
       }
 
-      console.log('🔍 Debug: Looking for clinic with email:', email);
-      console.log('🔍 Debug: Trying to match password length:', password ? password.length : 0);
+      console.log('DEBUG: Debug: Looking for clinic with email:', email);
+      console.log('DEBUG: Debug: Trying to match password length:', password ? password.length : 0);
 
       // Find clinic matching email and password
       const clinic = clinics.find(c =>
@@ -420,7 +420,7 @@ export const authService = {
       );
 
       if (clinic) {
-        console.log('✅ Clinic found in local database');
+        console.log('SUCCESS: Clinic found in local database');
 
         // Check if clinic is activated
         const isActive = clinic.isActivated || clinic.is_active;
@@ -450,14 +450,14 @@ export const authService = {
 
       throw new Error('Invalid email or password');
     } catch (error) {
-      console.error('🚨 Local authentication failed:', error.message);
+      console.error('ALERT: Local authentication failed:', error.message);
       throw new Error('Invalid email or password');
     }
   },
 
   async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone }) {
     try {
-      console.log('🔐 Attempting registration with:', { name, email, userType });
+      console.log('AUTH: Attempting registration with:', { name, email, userType });
 
       // Input validation
       if (!name || name.trim().length < 2) {
@@ -483,7 +483,7 @@ export const authService = {
         throw new Error('Supabase not configured - registration requires Supabase');
       }
 
-      console.log('📧 Calling Supabase auth.signUp...');
+      console.log('EMAIL: Calling Supabase auth.signUp...');
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password: password,
@@ -496,7 +496,7 @@ export const authService = {
         }
       });
 
-      console.log('📦 Supabase auth.signUp response:', {
+      console.log(' Supabase auth.signUp response:', {
         hasData: !!data,
         hasUser: !!data?.user,
         userId: data?.user?.id,
@@ -506,7 +506,7 @@ export const authService = {
       });
 
       if (error) {
-        console.error('❌ Supabase auth.signUp error:', error);
+        console.error('ERROR: Supabase auth.signUp error:', error);
 
         // Provide specific error messages
         if (error.message.includes('User already registered')) {
@@ -525,11 +525,11 @@ export const authService = {
       }
 
       if (!data.user) {
-        console.error('❌ No user returned from Supabase auth.signUp');
+        console.error('ERROR: No user returned from Supabase auth.signUp');
         throw new Error('Registration failed - no user returned from authentication service');
       }
 
-      console.log('✅ User created in Supabase Auth:', {
+      console.log('SUCCESS: User created in Supabase Auth:', {
         id: data.user.id,
         email: data.user.email,
         created_at: data.user.created_at,
@@ -557,7 +557,7 @@ export const authService = {
       if (userType === 'patient') {
         // For individual patients, create a personal organization and patient record
         try {
-          console.log('👤 Creating patient organization and patient record...');
+          console.log(' Creating patient organization and patient record...');
 
           // Create personal organization for the patient
           const personalOrgData = {
@@ -599,10 +599,10 @@ export const authService = {
             };
 
             await supabase.from('patients').insert(patientData);
-            console.log('✅ Patient record created in patients table');
+            console.log('SUCCESS: Patient record created in patients table');
           }
         } catch (patientError) {
-          console.warn('⚠️ Failed to create patient record:', patientError);
+          console.warn('WARNING: Failed to create patient record:', patientError);
           // Don't fail registration if patient record creation fails
         }
       }
@@ -653,11 +653,11 @@ export const authService = {
           };
 
           const savedClinic = await DatabaseService.add('clinics', clinicRequestData);
-          console.log('📋 Clinic registration request sent to super admin for approval');
-          console.log('✅ Saved clinic data:', savedClinic);
-          console.log('🔍 Clinic ID for verification:', savedClinic?.id);
+          console.log('INFO: Clinic registration request sent to super admin for approval');
+          console.log('SUCCESS: Saved clinic data:', savedClinic);
+          console.log('DEBUG: Clinic ID for verification:', savedClinic?.id);
         } catch (localDbError) {
-          console.warn('⚠️ Failed to create clinic request:', localDbError);
+          console.warn('WARNING: Failed to create clinic request:', localDbError);
           // Don't fail registration if local DB fails
         }
       }
@@ -665,7 +665,7 @@ export const authService = {
       // If super admin registration, create super_admin_profiles record
       if (userType === 'super_admin') {
         try {
-          console.log('👑 Creating super admin profile...');
+          console.log('SUPERADMIN: Creating super admin profile...');
 
           // Create super admin profile record
           const superAdminData = {
@@ -688,7 +688,7 @@ export const authService = {
           };
 
           await supabase.from('super_admin_profiles').insert(superAdminData);
-          console.log('✅ Super admin profile created successfully');
+          console.log('SUCCESS: Super admin profile created successfully');
 
           // Also store in local database for compatibility with existing code
           try {
@@ -708,19 +708,19 @@ export const authService = {
             };
 
             await DatabaseService.add('superAdmins', localSuperAdminData);
-            console.log('✅ Super admin added to local database');
+            console.log('SUCCESS: Super admin added to local database');
           } catch (localDbError) {
-            console.warn('⚠️ Failed to add super admin to local database:', localDbError);
+            console.warn('WARNING: Failed to add super admin to local database:', localDbError);
             // Don't fail registration if local DB fails
           }
 
         } catch (superAdminError) {
-          console.error('❌ Failed to create super admin profile:', superAdminError);
+          console.error('ERROR: Failed to create super admin profile:', superAdminError);
           throw new Error('Super admin registration failed: ' + superAdminError.message);
         }
       }
 
-      console.log('✅ Registration successful:', data.user.email);
+      console.log('SUCCESS: Registration successful:', data.user.email);
 
       // For clinic registrations, require super admin activation
       if (userType === 'clinic') {
@@ -750,7 +750,7 @@ export const authService = {
       };
 
     } catch (error) {
-      console.error('❌ Registration error:', error.message);
+      console.error('ERROR: Registration error:', error.message);
       throw new Error(error.message || 'Registration failed');
     }
   },

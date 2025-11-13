@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { testSupabaseConnection } from './utils/supabaseTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/Landing.jsx';
@@ -29,12 +30,12 @@ import DevelopmentModeHelper from './components/auth/DevelopmentModeHelper';
 
 
 function App() {
-  console.log('🚀 App component loading...');
+  console.log('START: App component loading...');
 
   // Test Supabase connection on app startup
   useEffect(() => {
     const runConnectionTest = async () => {
-      console.log('🚀 Neuro360 Multi-Auth System Starting...');
+      console.log('START: Neuro360 Multi-Auth System Starting...');
       await testSupabaseConnection();
     };
 
@@ -44,7 +45,7 @@ function App() {
   // Add global error handler
   React.useEffect(() => {
     const handleError = (event) => {
-      console.error('🚨 Global error caught:', event.error);
+      console.error('ALERT: Global error caught:', event.error);
       
       // Check if it's a navigation/routing error
       if (event.error && (
@@ -53,7 +54,7 @@ function App() {
         event.error.message.includes('Cannot read properties') ||
         event.error.name === 'ChunkLoadError'
       )) {
-        console.error('🚨 Navigation/Chunk loading error detected');
+        console.error('ALERT: Navigation/Chunk loading error detected');
         // Force reload to clear any stale state
         setTimeout(() => {
           window.location.reload();
@@ -62,7 +63,7 @@ function App() {
     };
     
     const handleUnhandledRejection = (event) => {
-      console.error('🚨 Unhandled promise rejection:', event.reason);
+      console.error('ALERT: Unhandled promise rejection:', event.reason);
       
       // Check for common navigation errors
       if (event.reason && (
@@ -70,7 +71,7 @@ function App() {
         String(event.reason).includes('Failed to fetch') ||
         String(event.reason).includes('Cannot read properties')
       )) {
-        console.error('🚨 Navigation promise rejection detected');
+        console.error('ALERT: Navigation promise rejection detected');
       }
     };
     
@@ -85,14 +86,15 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <div className="App w-full min-h-screen overflow-x-hidden">
+      <ThemeProvider>
+        <AuthProvider>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+          <div className="App w-full min-h-screen overflow-x-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
             <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -111,32 +113,103 @@ function App() {
             <Route path="/reset-password" element={<ResetPasswordForm />} />
             
             {/* Protected Routes */}
-            
+
             {/* Super Admin Routes */}
-            <Route 
-              path="/admin" 
+            <Route
+              path="/admin"
               element={
                 <ProtectedRoute requiredRole="super_admin">
                   <SuperAdminPanel />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+            <Route
+              path="/admin/clinics"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/payments"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/alerts"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Clinic Routes */}
-            <Route 
-              path="/clinic" 
+            <Route
+              path="/clinic"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
                   <ClinicDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+            <Route
+              path="/clinic/patients"
+              element={
+                <ProtectedRoute requiredRole="clinic_admin">
+                  <ClinicDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clinic/reports"
+              element={
+                <ProtectedRoute requiredRole="clinic_admin">
+                  <ClinicDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/clinic/subscription"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <SubscriptionManager />
+                  <ClinicDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clinic/usage"
+              element={
+                <ProtectedRoute requiredRole="clinic_admin">
+                  <ClinicDashboard />
                 </ProtectedRoute>
               }
             />
@@ -166,6 +239,38 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardRouter />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/profile"
+              element={
+                <ProtectedRoute>
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/activity"
+              element={
+                <ProtectedRoute>
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/notifications"
+              element={
+                <ProtectedRoute>
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/settings"
+              element={
+                <ProtectedRoute>
+                  <PatientDashboard />
                 </ProtectedRoute>
               }
             />
@@ -205,8 +310,9 @@ function App() {
           {/* Development Mode Helper */}
           <DevelopmentModeHelper />
           </div> {/* Close main App div */}
-        </Router>
-      </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

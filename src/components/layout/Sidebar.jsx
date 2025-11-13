@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import ProfileModal from './ProfileModal';
+import ThemeToggle from './ThemeToggle';
 
 const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const location = useLocation();
@@ -49,29 +50,29 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
     if (user?.role === 'super_admin') {
       return [
         { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/admin' },
-        { id: 'clinics', label: 'Clinic Management', icon: Building2, path: '/admin?tab=clinics' },
-        { id: 'reports', label: 'Patient Reports', icon: FileSpreadsheet, path: '/admin?tab=reports' },
-        { id: 'payments', label: 'Payment History', icon: CreditCard, path: '/admin?tab=payments' },
-        { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/admin?tab=analytics' },
-        { id: 'alerts', label: 'Alerts & Monitoring', icon: Monitor, path: '/admin?tab=alerts' },
-        { id: 'settings', label: 'System Settings', icon: Cog, path: '/admin?tab=settings' }
+        { id: 'clinics', label: 'Clinic Management', icon: Building2, path: '/admin/clinics' },
+        { id: 'reports', label: 'Patient Reports', icon: FileSpreadsheet, path: '/admin/reports' },
+        { id: 'payments', label: 'Payment History', icon: CreditCard, path: '/admin/payments' },
+        { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/admin/analytics' },
+        { id: 'alerts', label: 'Alerts & Monitoring', icon: Monitor, path: '/admin/alerts' },
+        { id: 'settings', label: 'System Settings', icon: Cog, path: '/admin/settings' }
       ];
     } else if (user?.role === 'clinic_admin') {
       return [
-        { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/clinic' },
-        { id: 'patients', label: 'Patient Management', icon: UserCheck, path: '/clinic?tab=patients' },
-        { id: 'reports', label: 'Reports & Files', icon: FileSpreadsheet, path: '/clinic?tab=reports' },
-        { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/clinic?tab=subscription' },
-        { id: 'usage', label: 'Usage Tracking', icon: TrendingUp, path: '/clinic?tab=usage' },
-        // { id: 'settings', label: 'Settings', icon: Cog, path: '/clinic?tab=settings' }
+        { id: 'overview', label: 'Dashboard', icon: Home, path: '/clinic' },
+        { id: 'patients', label: 'Patient Management', icon: UserCheck, path: '/clinic/patients' },
+        { id: 'reports', label: 'Reports & Files', icon: FileSpreadsheet, path: '/clinic/reports' },
+        { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/clinic/subscription' },
+        { id: 'usage', label: 'Usage Tracking', icon: TrendingUp, path: '/clinic/usage' },
+        // { id: 'settings', label: 'Settings', icon: Cog, path: '/clinic/settings' }
       ];
     } else {
       return [
         { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-        { id: 'profile', label: 'Profile', icon: UserCheck, path: '/dashboard?tab=profile' },
-        { id: 'activity', label: 'Activity', icon: Activity, path: '/dashboard?tab=activity' },
-        { id: 'notifications', label: 'Notifications', icon: Bell, path: '/dashboard?tab=notifications' },
-        { id: 'settings', label: 'Settings', icon: Cog, path: '/dashboard?tab=settings' }
+        { id: 'profile', label: 'Profile', icon: UserCheck, path: '/dashboard/profile' },
+        { id: 'activity', label: 'Activity', icon: Activity, path: '/dashboard/activity' },
+        { id: 'notifications', label: 'Notifications', icon: Bell, path: '/dashboard/notifications' },
+        { id: 'settings', label: 'Settings', icon: Cog, path: '/dashboard/settings' }
       ];
     }
   };
@@ -80,10 +81,6 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
 
   const isActive = (path) => {
     try {
-      if (path.includes('?tab=')) {
-        const [basePath, tab] = path.split('?tab=');
-        return location.pathname === basePath && location.search.includes(tab);
-      }
       return location.pathname === path;
     } catch (error) {
       console.warn('Error checking active path:', error);
@@ -182,135 +179,145 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
       </button>
 
       {/* Sidebar */}
-      <div className={`
-        fixed lg:relative inset-y-0 left-0 z-50
-        bg-[#323956] border-r border-[#232D3C] shadow-2xl
-        transition-all duration-500 ease-in-out
-        ${collapsed ? 'w-16 sm:w-20' : 'w-72 sm:w-80'}
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        flex flex-col h-full relative overflow-hidden
-      `}>
-        {/* Gradient Background Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#323956] via-[#232D3C] to-[#323956]"></div>
-        
-        {/* Modern Header */}
-        <div className="relative p-4 sm:p-6 border-b border-white/10">
+      <div
+        className={`
+          fixed lg:relative inset-y-0 left-0 z-50
+          bg-[#232D3C] border-r border-[#1a2332] shadow-lg
+          transition-all duration-300 ease-in-out
+          ${collapsed ? 'w-16 sm:w-20' : 'w-64'}
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          flex flex-col h-full relative overflow-hidden
+        `}
+        onMouseEnter={() => {
+          // Only apply hover behavior on desktop (lg breakpoint and above)
+          if (window.innerWidth >= 1024) {
+            setCollapsed(false);
+          }
+        }}
+        onMouseLeave={() => {
+          // Only apply hover behavior on desktop (lg breakpoint and above)
+          if (window.innerWidth >= 1024) {
+            setCollapsed(true);
+          }
+        }}
+      >
 
-                     {/* User Info */}
-           {!collapsed && user && (
-             <button
-               onClick={() => {
-                 try {
-                   console.log('👤 Profile clicked:', user);
-                   setIsProfileModalOpen(true);
-                 } catch (error) {
-                   console.error('Error handling profile click:', error);
-                 }
-               }}
-               className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 shadow-sm hover:bg-white/10 hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer group"
-             >
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="relative">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-xl sm:rounded-2xl flex items-center justify-center text-[#323956] font-bold text-xl sm:text-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="Profile"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-cover"
-                      />
-                    ) : (
-                      getProfileInitial()
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-[#323956] animate-pulse"></div>
+        {/* Clean Header */}
+        <div className="relative p-4 border-b border-[#1a2332]">
+
+          {/* Brand Logo */}
+          <div className="flex items-center justify-center">
+            {!collapsed && (
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
                 </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#F5D05D] transition-colors">
-                    {getDisplayName()}
-                  </p>
-                  <span className={`inline-block px-2 sm:px-3 py-1 text-xs font-semibold rounded-lg sm:rounded-xl border shadow-sm ${getRoleColor()} group-hover:shadow-md transition-all duration-300`}>
-                    {getRoleLabel()}
-                  </span>
-                </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-2 h-2 bg-[#F5D05D] rounded-full"></div>
-                </div>
+                <span className="text-white font-bold text-base">NeuroSense360</span>
               </div>
-            </button>
-          )}
-          
-                     {/* Collapsed User Avatar */}
-           {collapsed && user && (
-             <div className="mt-4 flex justify-center">
-               <button
-                 onClick={() => {
-                   try {
-                     console.log('👤 Profile clicked (collapsed):', user);
-                     setIsProfileModalOpen(true);
-                   } catch (error) {
-                     console.error('Error handling profile click:', error);
-                   }
-                 }}
-                 className="relative group cursor-pointer hover:scale-110 transition-all duration-300"
-                 title={`${getDisplayName()} - ${getRoleLabel()}`}
-               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-xl sm:rounded-2xl flex items-center justify-center text-[#323956] font-bold text-lg sm:text-xl shadow-lg group-hover:shadow-xl transition-all duration-300 overflow-hidden">
+            )}
+            {collapsed && (
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* User Info (Simplified) */}
+          {!collapsed && user && (
+            <button
+              onClick={() => {
+                try {
+                  setIsProfileModalOpen(true);
+                } catch (error) {
+                  console.error('Error handling profile click:', error);
+                }
+              }}
+              className="mt-4 p-3 bg-[#1a2332] hover:bg-[#2a3442] rounded-lg transition-colors cursor-pointer"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
                       alt="Profile"
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     getProfileInitial()
                   )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-[#323956] animate-pulse"></div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-white truncate">
+                    {getDisplayName()}
+                  </p>
+                  <span className="text-xs text-gray-400">
+                    {getRoleLabel()}
+                  </span>
+                </div>
+              </div>
+            </button>
+          )}
+
+          {/* Collapsed User Avatar */}
+          {collapsed && user && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => {
+                  try {
+                    setIsProfileModalOpen(true);
+                  } catch (error) {
+                    console.error('Error handling profile click:', error);
+                  }
+                }}
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity"
+                title={`${getDisplayName()} - ${getRoleLabel()}`}
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  getProfileInitial()
+                )}
               </button>
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="relative flex-1 p-4 sm:p-6 space-y-1.5 sm:space-y-2 overflow-y-auto">
+        <nav className="relative flex-1 p-3 space-y-1 overflow-y-auto">
           {navigationItems.map((item) => {
             try {
               const Icon = item.icon;
               const active = isActive(item.path);
-              
+
               return (
                 <Link
                   key={item.id}
                   to={item.path}
-                  className={`group flex items-center ${collapsed ? 'justify-center' : 'px-3 sm:px-4'} py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                  className={`flex items-center ${collapsed ? 'justify-center px-2' : 'px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-white/10 text-white border border-white/20 shadow-lg'
-                      : 'text-[#CAE0FF] hover:bg-white/5 hover:text-white hover:shadow-md border border-transparent hover:border-white/10'
+                      ? 'bg-[#1a2332] text-white'
+                      : 'text-gray-300 hover:bg-[#2a3442] hover:text-white'
                   }`}
                   title={collapsed ? item.label : ''}
                   onClick={() => {
                     try {
-                      // Close mobile menu on navigation
                       setMobileOpen(false);
-                      console.log('🚀 Navigating to:', item.path);
                     } catch (error) {
                       console.error('Navigation error:', error);
                     }
                   }}
                 >
-                  <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all duration-300 ${
-                    active
-                      ? 'bg-gradient-to-r from-[#F5D05D] to-[#d9b84a] text-[#323956] shadow-lg'
-                      : 'bg-white/5 group-hover:bg-[#F5D05D] text-[#CAE0FF] group-hover:text-[#323956]'
-                  }`}>
-                    <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0`} />
-                  </div>
+                  <Icon className="h-5 w-5 flex-shrink-0" />
                   {!collapsed && (
-                    <span className={`ml-3 transition-all duration-300 ${
-                      active ? 'text-white font-bold' : 'text-[#CAE0FF] group-hover:text-white'
-                    }`}>
-                      {item.label}
-                    </span>
+                    <span className="ml-3">{item.label}</span>
                   )}
                 </Link>
               );
@@ -322,36 +329,30 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
         </nav>
 
         {/* Footer */}
-        <div className="relative p-4 sm:p-6 border-t border-white/10">
+        <div className="relative p-3 border-t border-[#1a2332] space-y-2">
+          {/* Theme Toggle */}
+          <div className="flex justify-center">
+            <ThemeToggle />
+          </div>
+
           <button
             onClick={handleLogout}
-            className={`group w-full flex items-center ${collapsed ? 'justify-center' : 'px-3 sm:px-4'} py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#CAE0FF] hover:bg-white/5 hover:text-red-400 rounded-xl sm:rounded-2xl transition-all duration-300 hover:scale-105 border border-transparent hover:border-white/10 shadow-sm hover:shadow-md`}
+            className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'px-3'} py-2.5 text-sm font-medium text-gray-300 hover:bg-[#2a3442] hover:text-white rounded-lg transition-colors`}
             title={collapsed ? 'Logout' : ''}
           >
-            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-white/5 group-hover:bg-red-500/20 text-[#CAE0FF] group-hover:text-red-400 transition-all duration-300">
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-            </div>
+            <LogOut className="h-5 w-5 flex-shrink-0" />
             {!collapsed && (
-              <span className="ml-3 transition-all duration-300">Logout</span>
+              <span className="ml-3">Logout</span>
             )}
           </button>
 
           {!collapsed && (
-            <div className="mt-3 sm:mt-4 text-center">
-              <div className="inline-flex items-center space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/5 backdrop-blur-sm rounded-lg sm:rounded-xl border border-white/10">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-[#F5D05D] to-[#d9b84a] rounded-full animate-pulse"></div>
-                <p className="text-xs text-[#CAE0FF] font-medium">Version 1.0.0</p>
-              </div>
+            <div className="mt-3 text-center">
+              <p className="text-xs text-gray-500">Version 1.0.0</p>
             </div>
           )}
-
-          {collapsed && (
-            <div className="mt-3 sm:mt-4 flex justify-center">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-[#F5D05D] to-[#d9b84a] rounded-full animate-pulse"></div>
-            </div>
-          )}
-                 </div>
-       </div>
+        </div>
+      </div>
 
        {/* Profile Modal */}
        <ProfileModal 

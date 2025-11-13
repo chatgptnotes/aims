@@ -11,7 +11,7 @@ const LBWAssessments = () => {
       id: 'adhd-rating',
       title: 'ADHD Rating Scale',
       description: 'Comprehensive evaluation of attention, hyperactivity, and executive function symptoms',
-      icon: '🧠',
+      icon: '',
       color: 'pink',
       estimatedTime: 15,
       questions: 18,
@@ -21,7 +21,7 @@ const LBWAssessments = () => {
       id: 'gad-7',
       title: 'GAD-7 Anxiety Scale',
       description: 'Generalized Anxiety Disorder scale to assess anxiety symptoms and severity',
-      icon: '😌',
+      icon: '',
       color: 'yellow',
       estimatedTime: 5,
       questions: 7,
@@ -31,7 +31,7 @@ const LBWAssessments = () => {
       id: 'pss-10',
       title: 'Perceived Stress Scale (PSS-10)',
       description: 'Measures your stress levels and coping mechanisms over the past month',
-      icon: '🧘‍♀️',
+      icon: '‍️',
       color: 'orange',
       estimatedTime: 10,
       questions: 10,
@@ -41,7 +41,7 @@ const LBWAssessments = () => {
       id: 'memory-cognitive',
       title: 'Memory & Cognitive Assessment',
       description: 'Evaluate your working memory, recall abilities, and cognitive processing speed',
-      icon: '💭',
+      icon: '',
       color: 'teal',
       estimatedTime: 20,
       questions: 6,
@@ -51,7 +51,7 @@ const LBWAssessments = () => {
       id: 'mood-emotional',
       title: 'Mood & Emotional Regulation Assessment',
       description: 'Comprehensive mood evaluation including depression and emotional regulation',
-      icon: '☀️',
+      icon: '️',
       color: 'yellow',
       estimatedTime: 12,
       questions: 5,
@@ -114,19 +114,19 @@ const LBWAssessments = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap gap-2 justify-center">
           <span className="px-4 py-2 bg-pink-100 text-pink-700 rounded-full text-sm font-medium">
-            🧠 ADHD Support
+             ADHD Support
           </span>
           <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-            💭 Memory Enhancement
+             Memory Enhancement
           </span>
           <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
-            😌 Stress Management
+             Stress Management
           </span>
           <span className="px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
-            💡 Cognitive Training
+            IDEA: Cognitive Training
           </span>
           <span className="px-4 py-2 bg-[#CAE0FF] text-blue-700 rounded-full text-sm font-medium">
-            📊 Progress Tracking
+            DATA: Progress Tracking
           </span>
         </div>
       </div>
@@ -202,7 +202,7 @@ const LBWAssessments = () => {
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">🧠</span>
+                    <span className="text-xl"></span>
                     <div>
                       <h4 className="font-semibold text-gray-900">ADHD Assessment</h4>
                       <p className="text-sm text-gray-600">Completed 3 days ago • Score: 68/100</p>
@@ -217,7 +217,7 @@ const LBWAssessments = () => {
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">🧘‍♀️</span>
+                    <span className="text-xl">‍️</span>
                     <div>
                       <h4 className="font-semibold text-gray-900">Stress Scale (PSS)</h4>
                       <p className="text-sm text-gray-600">Completed 1 week ago • Score: 24/40</p>
@@ -232,7 +232,7 @@ const LBWAssessments = () => {
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">💭</span>
+                    <span className="text-xl"></span>
                     <div>
                       <h4 className="font-semibold text-gray-900">Memory Assessment</h4>
                       <p className="text-sm text-gray-600">Completed 2 weeks ago • Score: 82/100</p>

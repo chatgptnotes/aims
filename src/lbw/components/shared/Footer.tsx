@@ -74,19 +74,19 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold mb-4 text-white">Features</h4>
             <ul className="space-y-2">
               <li className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6 flex items-center space-x-2">
-                <span>🎯</span><span>ADHD Support</span>
+                <span>TARGET:</span><span>ADHD Support</span>
               </li>
               <li className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6 flex items-center space-x-2">
-                <span>🧠</span><span>Memory Enhancement</span>
+                <span></span><span>Memory Enhancement</span>
               </li>
               <li className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6 flex items-center space-x-2">
-                <span>😌</span><span>Stress Management</span>
+                <span></span><span>Stress Management</span>
               </li>
               <li className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6 flex items-center space-x-2">
-                <span>💡</span><span>Cognitive Training</span>
+                <span>IDEA:</span><span>Cognitive Training</span>
               </li>
               <li className="text-gray-100 dark:text-gray-200 text-base font-medium leading-6 flex items-center space-x-2">
-                <span>📊</span><span>Progress Analytics</span>
+                <span>DATA:</span><span>Progress Analytics</span>
               </li>
             </ul>
           </div>
@@ -112,15 +112,15 @@ const Footer: React.FC = () => {
             </div>
             <div className="flex items-center space-x-6 text-base text-gray-100 dark:text-gray-200 font-medium">
               <span className="flex items-center space-x-1">
-                <span>🔒</span>
+                <span>SECURE:</span>
                 <span>HIPAA Compliant</span>
               </span>
               <span className="flex items-center space-x-1">
-                <span>🧪</span>
+                <span></span>
                 <span>Evidence-Based</span>
               </span>
               <span className="flex items-center space-x-1">
-                <span>🏆</span>
+                <span>WINNER:</span>
                 <span>FDA Cleared</span>
               </span>
             </div>

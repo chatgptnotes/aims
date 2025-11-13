@@ -37,7 +37,7 @@ const AnalyticsDashboard = ({ analytics }) => {
       setClinics(clinicsData || []);
       setReports(reportsData || []);
     } catch (error) {
-      console.error('❌ Error loading data:', error);
+      console.error('ERROR: Error loading data:', error);
       setClinics([]);
       setReports([]);
     }
@@ -46,14 +46,14 @@ const AnalyticsDashboard = ({ analytics }) => {
   const loadRealAnalytics = async () => {
     try {
       setLoading(true);
-      console.log('📊 Loading real-time analytics data...');
+      console.log('DATA: Loading real-time analytics data...');
 
       const systemAnalytics = await analyticsService.getSystemAnalytics();
       setRealTimeData(systemAnalytics);
 
-      console.log('✅ Real-time analytics loaded:', systemAnalytics.dataSource);
+      console.log('SUCCESS: Real-time analytics loaded:', systemAnalytics.dataSource);
     } catch (error) {
-      console.error('❌ Error loading real analytics:', error);
+      console.error('ERROR: Error loading real analytics:', error);
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ const AnalyticsDashboard = ({ analytics }) => {
                 Analytics Dashboard
               </h1>
               <p className="text-xl text-slate-600 font-medium">
-                Comprehensive insights into platform usage and revenue 📈
+                Comprehensive insights into platform usage and revenue GROWTH:
               </p>
               <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
                 <div className="flex items-center space-x-2">

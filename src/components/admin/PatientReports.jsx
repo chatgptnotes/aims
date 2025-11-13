@@ -78,7 +78,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         return usage >= 10;
       }
     } catch (error) {
-      console.error('❌ Error checking report limit:', error);
+      console.error('ERROR: Error checking report limit:', error);
       return false; // Default to not limiting if there's an error
     }
   };
@@ -118,7 +118,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         };
       }
     } catch (error) {
-      console.error('❌ Error getting clinic usage info:', error);
+      console.error('ERROR: Error getting clinic usage info:', error);
       return {
         used: 0,
         allowed: 10,
@@ -141,7 +141,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
           const clinicPatients = await DatabaseService.getPatientsByClinic(watchedClinic);
           setPatients(clinicPatients || []);
         } catch (error) {
-          console.error('❌ Error loading clinic patients:', error);
+          console.error('ERROR: Error loading clinic patients:', error);
           setPatients([]);
         }
       };
@@ -156,7 +156,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       setError(null); // Clear any previous errors
       setLoading(true);
       
-      console.log('👑 SuperAdmin loading ALL patient reports from Supabase...');
+      console.log('SUPERADMIN: SuperAdmin loading ALL patient reports from Supabase...');
 
       // SuperAdmin can see ALL data from all clinics, or filter by selected clinic
       const reportsData = await DatabaseService.get('reports') || [];
@@ -164,7 +164,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       const patientsData = await DatabaseService.get('patients') || [];
       const subscriptionsData = await DatabaseService.get('subscriptions') || [];
 
-      console.log('📊 Fetched from Supabase:', {
+      console.log('DATA: Fetched from Supabase:', {
         reports: reportsData.length,
         clinics: clinicsData.length,
         patients: patientsData.length,
@@ -218,7 +218,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       setClinicUsage(usageMap);
       setSubscriptions(subscriptionMap);
     } catch (error) {
-      console.error('❌ Critical error loading admin patient reports:', error);
+      console.error('ERROR: Critical error loading admin patient reports:', error);
       setError(`Failed to load data: ${error.message}`);
       toast.error('Error loading patient reports data');
     } finally {
@@ -308,7 +308,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         // Validate file
         StorageService.validateFile(file);
         setSelectedFile(file);
-        console.log('✅ File selected:', file.name);
+        console.log('SUCCESS: File selected:', file.name);
       } catch (error) {
         toast.error(error.message);
         setSelectedFile(null);
@@ -354,7 +354,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
     setUploadProgress(0);
 
     try {
-      console.log('🚀 Starting file upload to S3...', {
+      console.log('START: Starting file upload to S3...', {
         file: selectedFile.name,
         clinicId: data.clinicId,
         patientId: data.patientId
@@ -383,7 +383,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log('✅ File uploaded to S3:', uploadResult);
+      console.log('SUCCESS: File uploaded to S3:', uploadResult);
 
       // Save report metadata to database
       // Actual Supabase reports table schema (from 004_simple_clinic_tables.sql):
@@ -420,8 +420,8 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         throw new Error('Failed to save report to database');
       }
       
-      console.log('✅ Report saved successfully:', savedReport.id);
-      toast.success(`📁 Report uploaded successfully to Cloud Storage!`);
+      console.log('SUCCESS: Report saved successfully:', savedReport.id);
+      toast.success(` Report uploaded successfully to Cloud Storage!`);
       loadData();
       setShowUploadModal(false);
       setSelectedFile(null);
@@ -429,7 +429,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       reset();
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Admin Upload Error:', error);
+      console.error('ERROR: Admin Upload Error:', error);
       console.error('Error context:', {
         message: error.message,
         formData: data,
@@ -455,12 +455,12 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         const report = reports.find(r => r.id === reportId);
         
         if (report && report.s3Key) {
-          console.log('🗑️ Deleting file from S3:', report.s3Key);
+          console.log('DELETE: Deleting file from S3:', report.s3Key);
           try {
             await StorageService.deleteFile(report.storagePath || report.s3Key);
-            console.log('✅ File deleted from S3');
+            console.log('SUCCESS: File deleted from S3');
           } catch (s3Error) {
-            console.warn('⚠️ Could not delete file from S3:', s3Error.message);
+            console.warn('WARNING: Could not delete file from S3:', s3Error.message);
             // Continue with database deletion even if S3 deletion fails
           }
         }
@@ -499,7 +499,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
   };
 
   const handleUploadResponse = (report) => {
-    console.log('📝 Opening response upload modal for report:', report.id);
+    console.log('NOTE: Opening response upload modal for report:', report.id);
     setSelectedReportForResponse(report);
     setShowResponseUploadModal(true);
   };
@@ -514,7 +514,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
     setUploadProgress(0);
 
     try {
-      console.log('🚀 Uploading response report to S3...', {
+      console.log('START: Uploading response report to S3...', {
         originalReport: selectedReportForResponse.id,
         responseFile: selectedFile.name,
         clinicId: selectedReportForResponse.clinicId
@@ -544,7 +544,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log('✅ Response file uploaded to S3:', uploadResult);
+      console.log('SUCCESS: Response file uploaded to S3:', uploadResult);
 
       // Save response report metadata to database
       // Actual Supabase reports table schema (from 004_simple_clinic_tables.sql):
@@ -583,8 +583,8 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         throw new Error('Failed to save response report to database');
       }
       
-      console.log('✅ Response report saved successfully:', savedResponse.id);
-      toast.success(`📝 Response report uploaded successfully for ${selectedReportForResponse.patientName}!`);
+      console.log('SUCCESS: Response report saved successfully:', savedResponse.id);
+      toast.success(`NOTE: Response report uploaded successfully for ${selectedReportForResponse.patientName}!`);
       
       // Reload data and close modal
       loadData();
@@ -595,7 +595,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       
       onUpdate?.();
     } catch (error) {
-      console.error('❌ Response Upload Error:', error);
+      console.error('ERROR: Response Upload Error:', error);
       const errorMessage = error.message || 'Unknown error occurred';
       toast.error(`Response upload failed: ${errorMessage}`);
       setUploadProgress(0);
@@ -605,7 +605,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
   };
 
   const handleViewReport = (report) => {
-    console.log('👀 Super Admin viewing report:', report.fileName);
+    console.log(' Super Admin viewing report:', report.fileName);
     setSelectedReportForView(report);
     setShowViewModal(true);
   };
@@ -661,13 +661,13 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
           setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
         }
         
-        toast.success(`📥 Downloading ${fileName}`);
+        toast.success(` Downloading ${fileName}`);
       } else {
         // No download method available
         toast.error(`Cannot download ${fileName}. File not found in S3 or local storage.`);
       }
     } catch (error) {
-      console.error('❌ Error downloading report:', error);
+      console.error('ERROR: Error downloading report:', error);
       toast.error(`Download failed: ${error.message}`);
     }
   };
@@ -720,62 +720,26 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100 p-6 space-y-8">
-      {/* Modern Header Section */}
-      <div className="relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-blue-600/10 to-purple-600/10"></div>
-        <div className="relative p-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-3">
-              <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Patient Reports
-              </h1>
-              <p className="text-xl text-slate-600 font-medium">
-                {superAdminSelectedClinic 
-                  ? `📊 Reports for ${clinics?.find(c => c?.id === superAdminSelectedClinic)?.name || 'Selected Clinic'}`
-                  : 'Upload and manage EEG reports for patients 🧠'
-                }
-              </p>
-              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span>{filteredReports?.length || 0} Reports</span>
-                </div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div>{clinics?.length || 0} Clinics</div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div className="flex items-center space-x-2">
-                  <Cloud className="h-4 w-4" />
-                  <span>Cloud Storage</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => {
-                  loadData();
-                  toast.success('Patient reports refreshed!');
-                }}
-                className="group relative overflow-hidden bg-slate-100/80 hover:bg-slate-200/80 backdrop-blur-sm text-slate-700 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <div className="flex items-center space-x-3">
-                  <Loader2 className="h-5 w-5" />
-                  <span>Refresh</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-              >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                <div className="relative flex items-center space-x-3">
-                  <Upload className="h-6 w-6" />
-                  <span>Upload Report</span>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end gap-3 mb-6">
+        <button
+          onClick={() => {
+            loadData();
+            toast.success('Patient reports refreshed!');
+          }}
+          className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg font-medium text-sm border border-gray-200 transition-colors shadow-sm"
+        >
+          <Loader2 className="h-4 w-4" />
+          <span>Refresh</span>
+        </button>
+        <button
+          onClick={() => setShowUploadModal(true)}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm"
+        >
+          <Upload className="h-4 w-4" />
+          <span>Upload Report</span>
+        </button>
       </div>
 
       {/* Usage Summary */}
@@ -916,77 +880,77 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       </div>
 
       {/* Reports Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-medium text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Reports ({filteredReports.length})
           </h3>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Report
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Clinic
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   File Info
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Uploaded
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {(filteredReports || []).map((report) => (
-                <tr key={report.id} className="hover:bg-gray-50">
+                <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-lg bg-[#CAE0FF] flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-[#323956]" />
+                      <div className="h-10 w-10 rounded-lg bg-[#CAE0FF] dark:bg-blue-900/30 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-[#323956] dark:text-blue-400" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{report.fileName}</div>
-                        <div className="text-sm text-gray-500">{report.title || 'EEG Report'}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{report.fileName}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{report.title || 'EEG Report'}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{report.patientName}</div>
+                    <div className="text-sm text-gray-900 dark:text-white">{report.patientName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{report.clinicName}</div>
+                    <div className="text-sm text-gray-900 dark:text-white">{report.clinicName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center">
+                    <div className="text-sm text-gray-900 dark:text-white flex items-center">
                       {report.fileType || 'PDF'}
                       {report.storedInCloud && (
-                        <Cloud className="h-4 w-4 ml-2 text-[#323956]" title="Stored in Cloud Storage" />
+                        <Cloud className="h-4 w-4 ml-2 text-[#323956] dark:text-blue-400" title="Stored in Cloud Storage" />
                       )}
                     </div>
-                    <div className="text-sm text-gray-500">{report.fileSize || 'N/A'}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{report.fileSize || 'N/A'}</div>
                     {report.s3Key && (
-                      <div className="text-xs text-[#323956] flex items-center mt-1">
+                      <div className="text-xs text-[#323956] dark:text-blue-400 flex items-center mt-1">
                         <Cloud className="h-3 w-3 mr-1" />
                         Cloud Storage
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-900 dark:text-white">
                       {new Date(report.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       by {report.uploadedBy || 'Unknown'}
                     </div>
                   </td>
@@ -994,7 +958,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleUploadResponse(report)}
-                        className="text-[#323956] hover:text-green-900"
+                        className="text-[#323956] dark:text-blue-400 hover:text-green-900 dark:hover:text-green-400"
                         title="Upload Response Report"
                       >
                         <Upload className="h-4 w-4" />
@@ -1002,7 +966,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                       {user?.role === 'super_admin' ? (
                         <button
                           onClick={() => handleViewReport(report)}
-                          className="text-[#323956] hover:text-blue-900"
+                          className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                           title="View Report Details"
                         >
                           <Eye className="h-4 w-4" />
@@ -1011,7 +975,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                         checkReportLimit(report.clinicId) ? (
                           <button
                             onClick={() => setShowSubscriptionPopup(true)}
-                            className="text-orange-600 hover:text-orange-900"
+                            className="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300"
                             title="Upgrade required to download"
                           >
                             <Lock className="h-4 w-4" />
@@ -1019,7 +983,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                         ) : (
                           <button
                             onClick={() => handleDownloadReport(report)}
-                            className="text-primary-600 hover:text-primary-900"
+                            className="text-primary-600 dark:text-blue-400 hover:text-primary-900 dark:hover:text-blue-300"
                             title="Download"
                           >
                             <Download className="h-4 w-4" />
@@ -1028,7 +992,7 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                       )}
                       <button
                         onClick={() => handleDeleteReport(report.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                         title="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -1323,7 +1287,7 @@ const UploadReportModal = ({
 }) => {
   // Safety check to prevent crashes
   if (!register || !handleSubmit || !watch) {
-    console.error('❌ UploadReportModal: Missing required form props');
+    console.error('ERROR: UploadReportModal: Missing required form props');
     return (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-6 max-w-md">
@@ -1343,9 +1307,9 @@ const UploadReportModal = ({
         try {
           const clinicPatients = await DatabaseService.getPatientsByClinic(watchedClinic);
           setAvailablePatients(clinicPatients || []);
-          console.log('🏥 Loaded patients for clinic:', watchedClinic, 'Count:', clinicPatients?.length || 0);
+          console.log('CLINIC: Loaded patients for clinic:', watchedClinic, 'Count:', clinicPatients?.length || 0);
         } catch (error) {
-          console.error('❌ Error loading patients for clinic:', error);
+          console.error('ERROR: Error loading patients for clinic:', error);
           setAvailablePatients([]);
         }
       } else {
@@ -1358,7 +1322,7 @@ const UploadReportModal = ({
 
   const handleFormSubmit = (data) => {
     try {
-      console.log('🚀 Admin form submitted with data:', data);
+      console.log('START: Admin form submitted with data:', data);
       console.log('Form validation errors:', Object.keys(errors).length > 0 ? errors : 'No errors');
       console.log('Available patients count:', availablePatients.length);
       console.log('Selected file:', selectedFile ? {
@@ -1370,7 +1334,7 @@ const UploadReportModal = ({
       onSubmit(data);
       reset();
     } catch (error) {
-      console.error('❌ Form submission error:', error);
+      console.error('ERROR: Form submission error:', error);
       toast.error(`Form submission failed: ${error.message}`);
     }
   };
@@ -1579,8 +1543,8 @@ const ReportViewModal = ({ report, onClose }) => {
       let content = null;
       let contentSource = 'not found';
       
-      console.log('🔍 Loading report content for:', report.fileName);
-      console.log('📋 Report data:', {
+      console.log('DEBUG: Loading report content for:', report.fileName);
+      console.log('INFO: Report data:', {
         id: report.id,
         s3Key: report.s3Key,
         fileUrl: report.fileUrl,
@@ -1592,7 +1556,7 @@ const ReportViewModal = ({ report, onClose }) => {
 
       if (filePath) {
         try {
-          console.log('🔍 Trying Supabase Storage with path:', filePath);
+          console.log('DEBUG: Trying Supabase Storage with path:', filePath);
 
           // Import StorageService
           const { default: StorageService } = await import('../../services/storageService');
@@ -1601,7 +1565,7 @@ const ReportViewModal = ({ report, onClose }) => {
           const fileUrl = await StorageService.getSignedUrl(filePath, 3600); // 1 hour expiry
 
           if (fileUrl) {
-            console.log('✅ Got signed URL from Supabase Storage:', fileUrl);
+            console.log('SUCCESS: Got signed URL from Supabase Storage:', fileUrl);
             // For PDF files, we can embed them directly
             if (report.fileName?.toLowerCase().endsWith('.pdf')) {
               content = fileUrl; // Store the URL to display PDF
@@ -1612,28 +1576,28 @@ const ReportViewModal = ({ report, onClose }) => {
             }
           }
         } catch (storageError) {
-          console.warn('⚠️ Error fetching from Supabase Storage:', storageError);
+          console.warn('WARNING: Error fetching from Supabase Storage:', storageError);
           console.error('Storage error details:', storageError);
         }
       } else {
-        console.warn('⚠️ No file path found in report data');
+        console.warn('WARNING: No file path found in report data');
       }
 
       // Method 2: Try file URL if available
       if (!content && report.fileUrl) {
-        console.log('🔍 Using file URL:', report.fileUrl);
+        console.log('DEBUG: Using file URL:', report.fileUrl);
         try {
           content = `URL Reference: ${report.fileUrl}`;
           contentSource = 'File URL';
-          console.log('✅ Using file URL as reference');
+          console.log('SUCCESS: Using file URL as reference');
         } catch (urlError) {
-          console.warn('⚠️ Error processing file URL:', urlError);
+          console.warn('WARNING: Error processing file URL:', urlError);
         }
       }
 
       // Method 3: Create informative message if no content found
       if (!content) {
-        console.log('🔍 No actual content found, creating informative message');
+        console.log('DEBUG: No actual content found, creating informative message');
         content = `No Content Available
 
 Report: ${report.fileName || 'Unknown'}
@@ -1658,8 +1622,8 @@ Recommendation: Contact the clinic to re-upload this report.`;
         contentSource = 'No Content Message';
       }
       
-      console.log('📄 Content loaded from:', contentSource);
-      console.log('📊 Content type:', typeof content, 'Length:', content?.length || 0);
+      console.log('FILE: Content loaded from:', contentSource);
+      console.log('DATA: Content type:', typeof content, 'Length:', content?.length || 0);
       
       setReportContent(content);
       
@@ -1667,7 +1631,7 @@ Recommendation: Contact the clinic to re-upload this report.`;
         setError('Report content not found. File may have been moved or deleted.');
       }
     } catch (error) {
-      console.error('❌ Error loading report content:', error);
+      console.error('ERROR: Error loading report content:', error);
       setError('Failed to load report content: ' + error.message);
     } finally {
       setLoading(false);
@@ -1869,21 +1833,21 @@ Recommendation: Contact the clinic to re-upload this report.`;
                          // Handle different content types
                          if (reportContent.startsWith('data:application/pdf')) {
                            return `PDF REPORT CONTENT\n\n` +
-                             `📄 File: ${report?.fileName || 'Unknown Report'}\n` +
-                             `👤 Patient: ${report?.patientName || 'Unknown Patient'}\n` +
-                             `🏥 Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
-                             `📅 Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n` +
-                             `📊 Size: ${reportContent.length} characters (Base64 encoded)\n\n` +
-                             `📋 REPORT TYPE: ${report?.reportType || 'Medical Report'}\n\n` +
+                             `FILE: File: ${report?.fileName || 'Unknown Report'}\n` +
+                             ` Patient: ${report?.patientName || 'Unknown Patient'}\n` +
+                             `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                             ` Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n` +
+                             `DATA: Size: ${reportContent.length} characters (Base64 encoded)\n\n` +
+                             `INFO: REPORT TYPE: ${report?.reportType || 'Medical Report'}\n\n` +
                              `═══════════════════════════════════════════════════════\n\n` +
-                             `🔍 PDF CONTENT PREVIEW:\n\n` +
+                             `DEBUG: PDF CONTENT PREVIEW:\n\n` +
                              `This is a PDF document containing medical report data.\n` +
                              `The PDF is properly encoded and stored in base64 format.\n\n` +
                              `Click "PDF View" button above to see the actual PDF document.\n\n` +
                              `Base64 Encoded PDF Data (first 200 characters):\n` +
                              `${reportContent.split(',')[1]?.substring(0, 200) || 'No data'}...\n\n` +
                              `═══════════════════════════════════════════════════════\n\n` +
-                             `📝 FULL BASE64 CONTENT:\n\n` +
+                             `NOTE: FULL BASE64 CONTENT:\n\n` +
                              `${reportContent}`;
                            
                          } else if (reportContent.startsWith('data:')) {
@@ -1896,42 +1860,42 @@ Recommendation: Contact the clinic to re-upload this report.`;
                                try {
                                  const decoded = atob(content);
                                  return `DECODED REPORT CONTENT\n\n` +
-                                   `📄 File: ${report?.fileName || 'Unknown'}\n` +
-                                   `👤 Patient: ${report?.patientName || 'Unknown Patient'}\n` +
-                                   `🏥 Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
-                                   `📊 Content Type: ${contentType}\n` +
-                                   `📏 Size: ${decoded.length} characters\n\n` +
+                                   `FILE: File: ${report?.fileName || 'Unknown'}\n` +
+                                   ` Patient: ${report?.patientName || 'Unknown Patient'}\n` +
+                                   `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                                   `DATA: Content Type: ${contentType}\n` +
+                                   ` Size: ${decoded.length} characters\n\n` +
                                    `═══════════════════════════════════════════════════════\n\n` +
-                                   `📋 REPORT CONTENT:\n\n${decoded}`;
+                                   `INFO: REPORT CONTENT:\n\n${decoded}`;
                                } catch (decodeError) {
                                  console.warn('Failed to decode base64 content:', decodeError);
                                }
                              }
                              
                              return `ENCODED REPORT DATA\n\n` +
-                               `📄 File: ${report?.fileName || 'Unknown'}\n` +
-                               `👤 Patient: ${report?.patientName || 'Unknown Patient'}\n` +
-                               `🏥 Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
-                               `📊 Content Type: ${contentType}\n` +
-                               `📏 Encoded Size: ${content?.length || 0} characters\n\n` +
+                               `FILE: File: ${report?.fileName || 'Unknown'}\n` +
+                               ` Patient: ${report?.patientName || 'Unknown Patient'}\n` +
+                               `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                               `DATA: Content Type: ${contentType}\n` +
+                               ` Encoded Size: ${content?.length || 0} characters\n\n` +
                                `═══════════════════════════════════════════════════════\n\n` +
-                               `📋 BASE64 ENCODED CONTENT:\n\n${content?.substring(0, 2000) || 'No content'}${content?.length > 2000 ? '\n\n... (content truncated, scroll up to see full data)' : ''}`;
+                               `INFO: BASE64 ENCODED CONTENT:\n\n${content?.substring(0, 2000) || 'No content'}${content?.length > 2000 ? '\n\n... (content truncated, scroll up to see full data)' : ''}`;
                                
                            } catch (dataError) {
                              console.error('Error processing data content:', dataError);
                              return reportContent;
                            }
                          } else if (reportContent.startsWith('http')) {
-                           return `URL REFERENCE\n\n📄 File: ${report?.fileName || 'Unknown'}\n👤 Patient: ${report?.patientName || 'Unknown Patient'}\n🏥 Clinic: ${report?.clinicName || 'Unknown Clinic'}\n🔗 URL: ${reportContent}\n\n⚠️  NOTE: This report is stored as a URL reference.\nThe actual content may be hosted externally.`;
+                           return `URL REFERENCE\n\nFILE: File: ${report?.fileName || 'Unknown'}\n Patient: ${report?.patientName || 'Unknown Patient'}\nCLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n URL: ${reportContent}\n\nWARNING:  NOTE: This report is stored as a URL reference.\nThe actual content may be hosted externally.`;
                          } else {
                            // Plain text or other content
                            return `REPORT CONTENT\n\n` +
-                             `📄 File: ${report?.fileName || 'Unknown'}\n` +
-                             `👤 Patient: ${report?.patientName || 'Unknown Patient'}\n` +
-                             `🏥 Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
-                             `📅 Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n\n` +
+                             `FILE: File: ${report?.fileName || 'Unknown'}\n` +
+                             ` Patient: ${report?.patientName || 'Unknown Patient'}\n` +
+                             `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                             ` Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n\n` +
                              `═══════════════════════════════════════════════════════\n\n` +
-                             `📋 REPORT DATA:\n\n${reportContent}`;
+                             `INFO: REPORT DATA:\n\n${reportContent}`;
                          }
                        })()}
                        readOnly
@@ -1951,16 +1915,16 @@ Recommendation: Contact the clinic to re-upload this report.`;
                    
                    {!isFullView && (<div className="mt-2 flex items-center justify-between text-xs text-gray-500">
                      <div className="flex space-x-4">
-                       <span>📄 Type: {
+                       <span>FILE: Type: {
                          reportContent?.startsWith('data:application/pdf') ? 'PDF Document' :
                          reportContent?.startsWith('data:') ? 'Base64 Data' :
                          reportContent?.startsWith('http') ? 'URL Reference' :
                          'Text Content'
                        }</span>
-                       <span>🗂️ Storage: {report?.s3Key ? 'Cloud Storage' : 'Local'}</span>
+                       <span>️ Storage: {report?.s3Key ? 'Cloud Storage' : 'Local'}</span>
                      </div>
                      <div>
-                       <span>💡 Tip: {reportContent?.startsWith('data:application/pdf') ? 'Click "PDF View" to see the actual document' : 'Drag the bottom-right corner to resize'}</span>
+                       <span>IDEA: Tip: {reportContent?.startsWith('data:application/pdf') ? 'Click "PDF View" to see the actual document' : 'Drag the bottom-right corner to resize'}</span>
                      </div>
                    </div>)}
                  </div>
@@ -1983,28 +1947,28 @@ Recommendation: Contact the clinic to re-upload this report.`;
             <button
               onClick={() => {
                 try {
-                  console.log('🐛 DEBUG - Report Object:', report);
-                  console.log('🐛 DEBUG - Report Content:', reportContent);
+                  console.log(' DEBUG - Report Object:', report);
+                  console.log(' DEBUG - Report Content:', reportContent);
                   
                   try {
                     const reportsData = localStorage.getItem('reports');
                     const reports = reportsData ? JSON.parse(reportsData) : [];
-                    console.log('🐛 DEBUG - localStorage reports:', reports);
+                    console.log(' DEBUG - localStorage reports:', reports);
                   } catch (reportsError) {
-                    console.log('🐛 DEBUG - localStorage reports ERROR:', reportsError);
+                    console.log(' DEBUG - localStorage reports ERROR:', reportsError);
                   }
                   
                   try {
                     const s3Data = localStorage.getItem('s3MockFiles');
                     const s3Files = s3Data ? JSON.parse(s3Data) : [];
-                    console.log('🐛 DEBUG - localStorage s3MockFiles:', s3Files);
+                    console.log(' DEBUG - localStorage s3MockFiles:', s3Files);
                   } catch (s3Error) {
-                    console.log('🐛 DEBUG - localStorage s3MockFiles ERROR:', s3Error);
+                    console.log(' DEBUG - localStorage s3MockFiles ERROR:', s3Error);
                   }
                   
                   toast.success('Debug info logged to console (F12 → Console)');
                 } catch (error) {
-                  console.error('🐛 DEBUG - Error during debug:', error);
+                  console.error(' DEBUG - Error during debug:', error);
                   toast.error('Debug failed - check console for error details');
                 }
               }}

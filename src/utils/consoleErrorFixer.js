@@ -63,6 +63,6 @@ export const restoreConsole = () => {
 
 export default {
   init: () => {
-    console.log('🔧 Console error suppression enabled for development');
+    console.log('CONFIG: Console error suppression enabled for development');
   }
 };

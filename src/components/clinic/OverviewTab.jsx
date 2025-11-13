@@ -118,11 +118,11 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.name} className="bg-white rounded-lg border border-gray-200 p-6">
+            <div key={stat.name} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-gray-900/20 transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.name}</p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                     {stat.total ? `${stat.value}/${stat.total}` : stat.value}
                   </p>
                 </div>
@@ -132,9 +132,9 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
               </div>
               {stat.change && (
                 <div className="mt-4 flex items-center">
-                  <TrendingUp className="h-4 w-4 text-[#323956] mr-1" />
-                  <span className="text-sm font-medium text-[#323956]">{stat.change}</span>
-                  <span className="text-sm text-gray-500 ml-2">vs last month</span>
+                  <TrendingUp className="h-4 w-4 text-[#323956] dark:text-blue-400 mr-1" />
+                  <span className="text-sm font-medium text-[#323956] dark:text-blue-400">{stat.change}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">vs last month</span>
                 </div>
               )}
             </div>
@@ -144,24 +144,24 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Usage Overview */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Usage Overview</h3>
-          
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Usage Overview</h3>
+
           <div className="mb-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
               <span>Report Usage</span>
               <span>{clinic?.reportsUsed || 0} / {clinic?.reportsAllowed || 10}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div
                 className={`h-3 rounded-full transition-all duration-300 ${
-                  usagePercentage >= 90 ? 'bg-red-500' : 
-                  usagePercentage >= 70 ? 'bg-yellow-500' : 'bg-[#323956]'
+                  usagePercentage >= 90 ? 'bg-red-500' :
+                  usagePercentage >= 70 ? 'bg-yellow-500' : 'bg-[#323956] dark:bg-blue-500'
                 }`}
                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
               ></div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {usagePercentage >= 90 ? 'Critical: Approaching limit' :
                usagePercentage >= 70 ? 'Warning: Usage high' :
                'Good: Within normal range'}
@@ -169,23 +169,23 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-900">Remaining Reports</span>
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">Remaining Reports</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 {Math.max(0, (clinic?.reportsAllowed || 10) - (clinic?.reportsUsed || 0))}
               </span>
             </div>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-900">Subscription Status</span>
-              <span className="text-sm text-[#323956] font-medium">Active</span>
+
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">Subscription Status</span>
+              <span className="text-sm text-[#323956] dark:text-blue-400 font-medium">Active</span>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Link
               to="/clinic/subscription"
-              className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors text-center block"
+              className="w-full bg-primary-600 dark:bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 dark:hover:bg-blue-700 transition-colors text-center block"
             >
               Manage Subscription
             </Link>
@@ -193,12 +193,12 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
         </div>
 
         {/* Recent Activities */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
-            <button 
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
+            <button
               onClick={onRefresh}
-              className="text-sm text-primary-600 hover:text-primary-500 font-medium"
+              className="text-sm text-primary-600 dark:text-blue-400 hover:text-primary-500 dark:hover:text-blue-300 font-medium"
             >
               View All
             </button>
@@ -212,10 +212,10 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
                     <Icon className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{activity.message}</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
                     <div className="flex items-center mt-1">
-                      <Clock className="h-3 w-3 text-gray-400 mr-1" />
-                      <p className="text-xs text-gray-500">{activity.time}</p>
+                      <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500 mr-1" />
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
                     </div>
                   </div>
                 </div>
@@ -226,47 +226,47 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
-            to="/clinic?tab=patients"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            to="/clinic/patients"
+            className="flex flex-col items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <Plus className="h-8 w-8 text-[#323956] mb-2" />
-            <span className="text-sm font-medium text-gray-900">Add Patient</span>
+            <Plus className="h-8 w-8 text-[#323956] dark:text-blue-400 mb-2" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">Add Patient</span>
           </Link>
-          
+
           <Link
-            to="/clinic?tab=reports"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            to="/clinic/reports"
+            className="flex flex-col items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <FileText className="h-8 w-8 text-[#323956] mb-2" />
-            <span className="text-sm font-medium text-gray-900">View Reports</span>
+            <FileText className="h-8 w-8 text-[#323956] dark:text-blue-400 mb-2" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">View Reports</span>
           </Link>
-          
-          <button className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Download className="h-8 w-8 text-[#323956] mb-2" />
-            <span className="text-sm font-medium text-gray-900">Export Data</span>
+
+          <button className="flex flex-col items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <Download className="h-8 w-8 text-[#323956] dark:text-blue-400 mb-2" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">Export Data</span>
           </button>
 
           <Link
-            to="/clinic?tab=settings"
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            to="/clinic/usage"
+            className="flex flex-col items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            <Eye className="h-8 w-8 text-[#F5D05D] mb-2" />
-            <span className="text-sm font-medium text-gray-900">Settings</span>
+            <Eye className="h-8 w-8 text-[#F5D05D] dark:text-yellow-400 mb-2" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">Usage</span>
           </Link>
         </div>
       </div>
 
       {/* Recent Patients */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Patients</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Patients</h3>
           <Link
-            to="/clinic?tab=patients"
-            className="text-sm text-primary-600 hover:text-primary-500 font-medium"
+            to="/clinic/patients"
+            className="text-sm text-primary-600 dark:text-blue-400 hover:text-primary-500 dark:hover:text-blue-300 font-medium"
           >
             View All
           </Link>
@@ -275,22 +275,22 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
         {patients.length > 0 ? (
           <div className="overflow-hidden">
             <table className="min-w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Age</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Age</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Gender</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {patients.slice(0, 5).map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-900">{patient.name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{patient.age}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{patient.gender}</td>
+                  <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">{patient.name}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{patient.age}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{patient.gender}</td>
                     <td className="px-4 py-2">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                         Active
                       </span>
                     </td>
@@ -301,11 +301,11 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
           </div>
         ) : (
           <div className="text-center py-8">
-            <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-sm text-gray-500">No patients added yet</p>
+            <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">No patients added yet</p>
             <Link
-              to="/clinic?tab=patients"
-              className="mt-2 text-sm text-primary-600 hover:text-primary-500 font-medium"
+              to="/clinic/patients"
+              className="mt-2 text-sm text-primary-600 dark:text-blue-400 hover:text-primary-500 dark:hover:text-blue-300 font-medium"
             >
               Add your first patient
             </Link>

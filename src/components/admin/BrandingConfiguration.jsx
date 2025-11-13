@@ -127,7 +127,7 @@ const BrandingConfiguration = () => {
         setValue(`${logoType}Metadata`, uploadResult.data);
         toast.success(`${logoType === 'primaryLogo' ? 'Primary' : 'Secondary'} logo uploaded successfully`);
 
-        console.log(`✅ Logo uploaded:`, {
+        console.log(`SUCCESS: Logo uploaded:`, {
           type: logoType,
           size: uploadResult.data.size,
           filename: uploadResult.data.filename,

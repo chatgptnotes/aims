@@ -34,7 +34,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
   const [isLimitReached, setIsLimitReached] = useState(false);
 
   // Log props on mount
-  console.log('📋 ReportViewer mounted with:', {
+  console.log('INFO: ReportViewer mounted with:', {
     clinicId,
     patientsCount: patients?.length || 0,
     initialReportsCount: initialReports?.length || 0
@@ -42,7 +42,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
   // Error boundary-like error handling
   const handleError = (error, context) => {
-    console.error(`❌ ReportViewer Error in ${context}:`, error);
+    console.error(`ERROR: ReportViewer Error in ${context}:`, error);
     const errorMessage = error?.message || 'Unknown error occurred';
     setError(`Error in ${context}: ${errorMessage}`);
     toast.error(`Failed to ${context}. Please try again.`);
@@ -71,7 +71,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
   const loadReports = async () => {
     if (!clinicId) {
-      console.warn('⚠️ No clinicId provided to loadReports');
+      console.warn('WARNING: No clinicId provided to loadReports');
       return;
     }
 
@@ -79,18 +79,18 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       setLoading(true);
       setError(null); // Clear any previous errors
       console.log('========================================');
-      console.log('📋 LOADING REPORTS FOR CLINIC:', clinicId);
+      console.log('INFO: LOADING REPORTS FOR CLINIC:', clinicId);
       console.log('========================================');
 
       // Load reports from database (async to handle both database and localStorage)
       const reportsData = await DatabaseService.getReportsByClinic(clinicId);
-      console.log('📋 Reports loaded from database:', reportsData?.length || 0);
+      console.log('INFO: Reports loaded from database:', reportsData?.length || 0);
 
       if (reportsData && reportsData.length > 0) {
-        console.log('📋 ALL REPORTS DATA:', JSON.stringify(reportsData, null, 2));
-        console.log('📋 First report structure:', reportsData[0]);
+        console.log('INFO: ALL REPORTS DATA:', JSON.stringify(reportsData, null, 2));
+        console.log('INFO: First report structure:', reportsData[0]);
       } else {
-        console.log('❌ NO REPORTS RETURNED FROM DATABASE');
+        console.log('ERROR: NO REPORTS RETURNED FROM DATABASE');
       }
 
       // Load subscription data (async)
@@ -100,15 +100,15 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
       // Ensure reportsData is an array
       const validReports = Array.isArray(reportsData) ? reportsData : [];
-      console.log('📋 Setting reports state with', validReports.length, 'reports');
+      console.log('INFO: Setting reports state with', validReports.length, 'reports');
       setReports(validReports);
 
       if (validReports.length === 0) {
-        console.log('⚠️ No reports found for clinic:', clinicId);
+        console.log('WARNING: No reports found for clinic:', clinicId);
       }
     } catch (error) {
-      console.error('❌ Error loading reports:', error);
-      console.error('❌ Error stack:', error.stack);
+      console.error('ERROR: Error loading reports:', error);
+      console.error('ERROR: Error stack:', error.stack);
       handleError(error, 'load reports');
       setReports([]); // Set empty array on error
     } finally {
@@ -120,18 +120,18 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
     try {
       applyFilters();
     } catch (error) {
-      console.error('❌ Error in applyFilters:', error);
+      console.error('ERROR: Error in applyFilters:', error);
       setFilteredReports([]);
     }
   }, [reports, searchTerm, selectedPatient, dateFilter]);
 
   const applyFilters = () => {
-    console.log('🔍 Applying filters - Total reports:', reports.length);
-    console.log('🔍 Current filters:', { searchTerm, selectedPatient, dateFilter });
-    console.log('🔍 Patients available:', patients?.length || 0);
+    console.log('DEBUG: Applying filters - Total reports:', reports.length);
+    console.log('DEBUG: Current filters:', { searchTerm, selectedPatient, dateFilter });
+    console.log('DEBUG: Patients available:', patients?.length || 0);
 
     let filtered = [...reports];
-    console.log('🔍 Starting with reports:', filtered.length);
+    console.log('DEBUG: Starting with reports:', filtered.length);
 
     // Search filter
     if (searchTerm) {
@@ -143,19 +143,19 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
           patient?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       });
-      console.log('🔍 After search filter:', filtered.length);
+      console.log('DEBUG: After search filter:', filtered.length);
     }
 
     // Patient filter
     if (selectedPatient) {
-      console.log('🔍 Filtering by patient:', selectedPatient);
-      console.log('🔍 Reports before patient filter:', filtered.map(r => ({
+      console.log('DEBUG: Filtering by patient:', selectedPatient);
+      console.log('DEBUG: Reports before patient filter:', filtered.map(r => ({
         id: r.id,
         patientId: r.patientId,
         fileName: r.fileName
       })));
       filtered = filtered.filter(report => report.patientId === selectedPatient);
-      console.log('🔍 After patient filter:', filtered.length);
+      console.log('DEBUG: After patient filter:', filtered.length);
     }
 
     // Date filter
@@ -179,14 +179,14 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
       if (filterDate) {
         filtered = filtered.filter(report => new Date(report.createdAt) >= filterDate);
-        console.log('🔍 After date filter:', filtered.length);
+        console.log('DEBUG: After date filter:', filtered.length);
       }
     }
 
     // Sort by creation date (newest first)
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    console.log('🔍 Final filtered reports:', filtered.length);
+    console.log('DEBUG: Final filtered reports:', filtered.length);
     setFilteredReports(filtered);
   };
 
@@ -277,8 +277,8 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       const fileName = report.fileName || report.file_name || report.reportData?.file_name ||
                       report.report_data?.file_name || 'report.edf';
 
-      console.log('📥 Downloading report:', fileName);
-      console.log('📋 Report data:', {
+      console.log(' Downloading report:', fileName);
+      console.log('INFO: Report data:', {
         id: report.id,
         fileName,
         filePath: report.filePath || report.file_path,
@@ -293,7 +293,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
       if (filePath) {
         try {
-          console.log('📦 Attempting Supabase Storage download from:', filePath);
+          console.log(' Attempting Supabase Storage download from:', filePath);
 
           // Import StorageService dynamically
           const StorageService = (await import('../../services/storageService')).default;
@@ -315,12 +315,12 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
             // Clean up blob URL
             setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
 
-            toast.success(`📥 Downloaded ${fileName}`);
+            toast.success(` Downloaded ${fileName}`);
             downloadSuccess = true;
-            console.log('✅ Supabase Storage download successful');
+            console.log('SUCCESS: Supabase Storage download successful');
           }
         } catch (storageError) {
-          console.error('❌ Supabase Storage download failed:', storageError);
+          console.error('ERROR: Supabase Storage download failed:', storageError);
           toast.error(`Storage error: ${storageError.message}`);
         }
       }
@@ -329,7 +329,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       if (!downloadSuccess && (report.fileUrl || report.file_url)) {
         try {
           const fileUrl = report.fileUrl || report.file_url;
-          console.log('🔗 Attempting URL download from:', fileUrl);
+          console.log(' Attempting URL download from:', fileUrl);
 
           const link = document.createElement('a');
           link.href = fileUrl;
@@ -340,17 +340,17 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
           link.click();
           document.body.removeChild(link);
 
-          toast.success(`📥 Downloaded ${fileName}`);
+          toast.success(` Downloaded ${fileName}`);
           downloadSuccess = true;
-          console.log('✅ URL download successful');
+          console.log('SUCCESS: URL download successful');
         } catch (urlError) {
-          console.error('❌ URL download failed:', urlError);
+          console.error('ERROR: URL download failed:', urlError);
         }
       }
 
       // Final fallback
       if (!downloadSuccess) {
-        console.error('⚠️ No valid download method found for report:', {
+        console.error('WARNING: No valid download method found for report:', {
           id: report.id,
           filePath: report.filePath || report.file_path,
           fileUrl: report.fileUrl || report.file_url,
@@ -365,18 +365,18 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
             await DatabaseService.update('clinics', clinicId, {
               reportsUsed: (clinic.reportsUsed || 0) + 1
             });
-            console.log('✅ Incremented download counter for clinic:', clinicId);
+            console.log('SUCCESS: Incremented download counter for clinic:', clinicId);
 
             // Reload reports to update usage display
             await loadReports();
           }
         } catch (counterError) {
-          console.error('⚠️ Failed to increment download counter:', counterError);
+          console.error('WARNING: Failed to increment download counter:', counterError);
           // Don't show error to user - download was successful
         }
       }
     } catch (error) {
-      console.error('❌ Error downloading report:', error);
+      console.error('ERROR: Error downloading report:', error);
       toast.error(`Failed to download report: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -401,7 +401,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       if (onUpdate) onUpdate();
       toast.success('Reports refreshed successfully');
     } catch (error) {
-      console.error('❌ Error refreshing reports:', error);
+      console.error('ERROR: Error refreshing reports:', error);
       handleError(error, 'refresh reports');
     }
   };
@@ -425,7 +425,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       
       toast.success('Data repair and reload completed successfully');
     } catch (error) {
-      console.error('❌ Error during data repair:', error);
+      console.error('ERROR: Error during data repair:', error);
       handleError(error, 'repair data');
     } finally {
       setLoading(false);
@@ -457,15 +457,15 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
     const patient = patients.find(p => p.id === patientId);
     
     if (!patient) {
-      console.log(`⚠️ Patient lookup failed for ID: ${patientId}`);
-      console.log('🔍 Available patients:', patients.map(p => ({ id: p.id, name: p.name })));
+      console.log(`WARNING: Patient lookup failed for ID: ${patientId}`);
+      console.log('DEBUG: Available patients:', patients.map(p => ({ id: p.id, name: p.name })));
       
       // Try to find in localStorage as fallback
       const localStoragePatients = JSON.parse(localStorage.getItem('patients') || '[]');
       const fallbackPatient = localStoragePatients.find(p => p.id === patientId);
       
       if (fallbackPatient) {
-        console.log(`✅ Found patient in localStorage fallback: ${fallbackPatient.name}`);
+        console.log(`SUCCESS: Found patient in localStorage fallback: ${fallbackPatient.name}`);
         return fallbackPatient.name;
       }
       
@@ -483,7 +483,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
       p.id === selectedReport.reportData?.patientId
     );
 
-    console.log('📋 Report Details Modal - Patient lookup:', {
+    console.log('INFO: Report Details Modal - Patient lookup:', {
       reportPatientId: selectedReport.patientId,
       report_patient_id: selectedReport.patient_id,
       foundPatient: modalPatient ? {
@@ -680,7 +680,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
               // Log if patient not found
               if (!patient) {
-                console.warn('⚠️ Patient not found for report:', {
+                console.warn('WARNING: Patient not found for report:', {
                   reportId: report.id,
                   patientId: report.patientId,
                   patient_id: report.patient_id,

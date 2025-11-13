@@ -18,16 +18,16 @@ let supabase = null;
 
 if (hasValidSupabaseConfig) {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
-  console.log('✅ Supabase client initialized successfully');
+  console.log('SUCCESS: Supabase client initialized successfully');
 } else {
-  console.warn('⚠️ Supabase not configured in AuthContext. Environment variables missing.');
+  console.warn('WARNING: Supabase not configured in AuthContext. Environment variables missing.');
   console.log('Current environment variables:', {
     VITE_SUPABASE_URL: supabaseUrl,
     VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'Present' : 'Missing'
   });
 }
 
-// 🚀 DEVELOPMENT MODE: Bypass authentication
+// START: DEVELOPMENT MODE: Bypass authentication
 const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true' || false; // Set to false to enable authentication
 
 const AuthContext = createContext();
@@ -52,9 +52,9 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      // 🚀 DEVELOPMENT MODE: Auto-authenticate with default user
+      // START: DEVELOPMENT MODE: Auto-authenticate with default user
       if (BYPASS_AUTH) {
-        console.log('🚀 DEVELOPMENT MODE: Bypassing authentication');
+        console.log('START: DEVELOPMENT MODE: Bypassing authentication');
 
         // Check if user was previously set (from login)
         const storedUser = localStorage.getItem('user');
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
             setUser(parsedUser);
             setIsAuthenticated(true);
             setLoading(false);
-            console.log('✅ Development user authenticated from storage:', parsedUser.name, parsedUser.role);
+            console.log('SUCCESS: Development user authenticated from storage:', parsedUser.name, parsedUser.role);
             return;
           } catch (e) {
             console.warn('Failed to parse stored user, using default');
@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setLoading(false);
         localStorage.setItem('user', JSON.stringify(defaultUser));
-        console.log('✅ Development user authenticated:', defaultUser.name, defaultUser.role);
+        console.log('SUCCESS: Development user authenticated:', defaultUser.name, defaultUser.role);
         return;
       }
 
@@ -98,12 +98,12 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          console.log('🔍 Found stored auth token and user:', parsedUser.email, parsedUser.role);
+          console.log('DEBUG: Found stored auth token and user:', parsedUser.email, parsedUser.role);
 
           // Restore user from localStorage
           setUser(parsedUser);
           setIsAuthenticated(true);
-          console.log('✅ User authenticated from localStorage:', parsedUser.name, parsedUser.role);
+          console.log('SUCCESS: User authenticated from localStorage:', parsedUser.name, parsedUser.role);
 
           // Optionally verify token with backend or Supabase in background
           // but don't block the UI
@@ -138,14 +138,14 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
           setIsAuthenticated(true);
           localStorage.setItem('user', JSON.stringify(userData));
-          console.log('✅ User authenticated from Supabase session:', userData.name, userData.role);
+          console.log('SUCCESS: User authenticated from Supabase session:', userData.name, userData.role);
         } else {
-          console.log('❌ No active session found');
+          console.log('ERROR: No active session found');
           setUser(null);
           setIsAuthenticated(false);
         }
       } else {
-        console.log('❌ No stored auth and Supabase not available');
+        console.log('ERROR: No stored auth and Supabase not available');
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -159,11 +159,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials, method = 'email') => {
-    console.log('🚀 AuthContext: Starting login process');
+    console.log('START: AuthContext: Starting login process');
 
-    // 🚀 DEVELOPMENT MODE: Auto-succeed login
+    // START: DEVELOPMENT MODE: Auto-succeed login
     if (BYPASS_AUTH) {
-      console.log('🚀 DEVELOPMENT MODE: Bypassing login authentication');
+      console.log('START: DEVELOPMENT MODE: Bypassing login authentication');
       setLoading(true);
 
       // Simulate loading time
@@ -207,8 +207,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(defaultUser));
       localStorage.setItem('authToken', 'dev-bypass-token');
 
-      toast.success(`🚀 Development mode login as ${userRole}!`);
-      console.log('✅ Development login successful:', defaultUser.name, defaultUser.role);
+      toast.success(`START: Development mode login as ${userRole}!`);
+      console.log('SUCCESS: Development login successful:', defaultUser.name, defaultUser.role);
 
       return {
         success: true,
@@ -221,8 +221,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       let response;
       
-      console.log('📧 Login method:', method);
-      console.log('📝 Credentials:', { email: credentials.email, hasPassword: !!credentials.password });
+      console.log('EMAIL: Login method:', method);
+      console.log('NOTE: Credentials:', { email: credentials.email, hasPassword: !!credentials.password });
       
       switch (method) {
         case 'email':
@@ -241,7 +241,7 @@ export const AuthProvider = ({ children }) => {
           throw new Error('Invalid authentication method');
       }
 
-      console.log('📦 Auth response:', response);
+      console.log(' Auth response:', response);
 
       if (response && response.success && response.token) {
         // Store authentication data in multiple places for reliability
@@ -251,34 +251,34 @@ export const AuthProvider = ({ children }) => {
         // Fetch the latest user data from database to get updated profile picture
         let latestUserData = response.user;
         try {
-          console.log('🔄 Fetching latest user data from database...');
+          console.log('REFRESH: Fetching latest user data from database...');
           if (response.user.role === 'super_admin') {
             const superAdminData = await DatabaseService.findById('superAdmins', response.user.id);
             if (superAdminData) {
               latestUserData = { ...response.user, ...superAdminData };
-              console.log('✅ Super admin data fetched from database');
+              console.log('SUCCESS: Super admin data fetched from database');
             }
           } else if (response.user.role === 'clinic_admin') {
-            console.log('🔍 Attempting to fetch clinic data...');
-            console.log('🔍 User ID:', response.user.id);
-            console.log('🔍 User Email:', response.user.email);
+            console.log('DEBUG: Attempting to fetch clinic data...');
+            console.log('DEBUG: User ID:', response.user.id);
+            console.log('DEBUG: User Email:', response.user.email);
 
             // Try to find clinic by ID first
             let clinicData = await DatabaseService.findById('clinics', response.user.id);
 
             // If not found by ID, try by email
             if (!clinicData) {
-              console.log('⚠️ Clinic not found by ID, trying by email...');
+              console.log('WARNING: Clinic not found by ID, trying by email...');
               const clinicsByEmail = await DatabaseService.findBy('clinics', 'email', response.user.email);
               if (clinicsByEmail && clinicsByEmail.length > 0) {
                 clinicData = clinicsByEmail[0];
-                console.log('✅ Found clinic by email:', clinicData);
+                console.log('SUCCESS: Found clinic by email:', clinicData);
               }
             }
 
-            console.log('🏥 Fetched clinic data from database:', clinicData);
-            console.log('📞 Phone from database:', clinicData?.phone);
-            console.log('📍 Address from database:', clinicData?.address);
+            console.log('CLINIC: Fetched clinic data from database:', clinicData);
+            console.log(' Phone from database:', clinicData?.phone);
+            console.log(' Address from database:', clinicData?.address);
 
             if (clinicData) {
               // Map contact_person to name for the UI
@@ -287,31 +287,31 @@ export const AuthProvider = ({ children }) => {
                 ...clinicData,
                 name: clinicData.contact_person || clinicData.name || response.user.name
               };
-              console.log('✅ Clinic admin data fetched from database');
-              console.log('✅ Merged user data:', latestUserData);
-              console.log('✅ Name field set from contact_person:', latestUserData.name);
+              console.log('SUCCESS: Clinic admin data fetched from database');
+              console.log('SUCCESS: Merged user data:', latestUserData);
+              console.log('SUCCESS: Name field set from contact_person:', latestUserData.name);
             } else {
-              console.warn('⚠️ No clinic data found for this user!');
+              console.warn('WARNING: No clinic data found for this user!');
             }
           } else if (response.user.role === 'patient') {
-            console.log('🔍 Attempting to fetch patient data...');
-            console.log('🔍 User ID:', response.user.id);
-            console.log('🔍 User Email:', response.user.email);
+            console.log('DEBUG: Attempting to fetch patient data...');
+            console.log('DEBUG: User ID:', response.user.id);
+            console.log('DEBUG: User Email:', response.user.email);
 
             // Try to find patient by ID first
             let patientData = await DatabaseService.findById('patients', response.user.id);
 
             // If not found by ID, try by email
             if (!patientData) {
-              console.log('⚠️ Patient not found by ID, trying by email...');
+              console.log('WARNING: Patient not found by ID, trying by email...');
               const patientsByEmail = await DatabaseService.findBy('patients', 'email', response.user.email);
               if (patientsByEmail && patientsByEmail.length > 0) {
                 patientData = patientsByEmail[0];
-                console.log('✅ Found patient by email:', patientData);
+                console.log('SUCCESS: Found patient by email:', patientData);
               }
             }
 
-            console.log('👤 Fetched patient data from database:', patientData);
+            console.log(' Fetched patient data from database:', patientData);
 
             if (patientData) {
               latestUserData = {
@@ -319,15 +319,15 @@ export const AuthProvider = ({ children }) => {
                 ...patientData,
                 name: patientData.name || patientData.full_name || response.user.name
               };
-              console.log('✅ Patient data fetched from database');
-              console.log('✅ Merged user data:', latestUserData);
+              console.log('SUCCESS: Patient data fetched from database');
+              console.log('SUCCESS: Merged user data:', latestUserData);
             } else {
-              console.warn('⚠️ No patient data found for this user!');
-              console.log('ℹ️  This might be a new patient, using API response data');
+              console.warn('WARNING: No patient data found for this user!');
+              console.log('INFO:  This might be a new patient, using API response data');
             }
           }
         } catch (dbError) {
-          console.warn('⚠️ Failed to fetch latest user data from database, using API response:', dbError);
+          console.warn('WARNING: Failed to fetch latest user data from database, using API response:', dbError);
           // Continue with API response if database fetch fails
         }
         
@@ -338,7 +338,7 @@ export const AuthProvider = ({ children }) => {
         setUser(latestUserData);
         setIsAuthenticated(true);
         
-        console.log('✅ AuthContext: User data stored:', {
+        console.log('SUCCESS: AuthContext: User data stored:', {
           name: latestUserData.name,
           role: latestUserData.role,
           clinicId: latestUserData.clinicId,
@@ -346,14 +346,14 @@ export const AuthProvider = ({ children }) => {
         });
         
         toast.success('Logged in successfully');
-        console.log('✅ AuthContext: Login completed successfully');
+        console.log('SUCCESS: AuthContext: Login completed successfully');
         return { success: true, user: latestUserData };
       } else {
-        console.log('❌ AuthContext: Invalid response format:', response);
+        console.log('ERROR: AuthContext: Invalid response format:', response);
         throw new Error('Authentication failed');
       }
     } catch (error) {
-      console.error('🚨 AuthContext: Login failed:', error);
+      console.error('ALERT: AuthContext: Login failed:', error);
       toast.error(error.message || 'Login failed. Please try again.');
       return { success: false, error: error.message };
     } finally {
@@ -362,11 +362,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData, method = 'email') => {
-    console.log('🚀 AuthContext: Starting registration process');
+    console.log('START: AuthContext: Starting registration process');
 
-    // 🚀 DEVELOPMENT MODE: Auto-succeed registration
+    // START: DEVELOPMENT MODE: Auto-succeed registration
     if (BYPASS_AUTH) {
-      console.log('🚀 DEVELOPMENT MODE: Bypassing registration authentication');
+      console.log('START: DEVELOPMENT MODE: Bypassing registration authentication');
       setLoading(true);
 
       // Simulate loading time
@@ -389,8 +389,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(defaultUser));
       localStorage.setItem('authToken', 'dev-bypass-token');
 
-      toast.success('🚀 Development mode registration successful!');
-      console.log('✅ Development registration successful:', defaultUser.name, defaultUser.role);
+      toast.success('START: Development mode registration successful!');
+      console.log('SUCCESS: Development registration successful:', defaultUser.name, defaultUser.role);
 
       return {
         success: true,
@@ -403,8 +403,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       let response;
       
-      console.log('📧 Registration method:', method);
-      console.log('📝 User data:', { 
+      console.log('EMAIL: Registration method:', method);
+      console.log('NOTE: User data:', { 
         name: userData.name, 
         email: userData.email, 
         userType: userData.userType,
@@ -414,9 +414,9 @@ export const AuthProvider = ({ children }) => {
       
       switch (method) {
         case 'email':
-          console.log('🔄 Calling authService.registerWithEmail...');
+          console.log('REFRESH: Calling authService.registerWithEmail...');
           response = await authService.registerWithEmail(userData);
-          console.log('📦 AuthService response:', response);
+          console.log(' AuthService response:', response);
           break;
         case 'google':
           response = await authService.registerWithGoogle();
@@ -431,13 +431,13 @@ export const AuthProvider = ({ children }) => {
           throw new Error('Invalid registration method');
       }
 
-      console.log('✅ AuthContext: Registration response received', response);
+      console.log('SUCCESS: AuthContext: Registration response received', response);
 
       if (response && response.success) {
         if (response.needsActivation) {
           // Super admin needs activation - don't login automatically
           toast.success(response.message || 'Registration submitted for approval!');
-          console.log('✅ AuthContext: Registration completed - needs activation');
+          console.log('SUCCESS: AuthContext: Registration completed - needs activation');
           return { success: true, needsActivation: true };
         } else if (response.token) {
           // Normal registration with immediate login
@@ -447,34 +447,34 @@ export const AuthProvider = ({ children }) => {
           // Fetch the latest user data from database to get updated profile picture
           let latestUserData = response.user;
           try {
-            console.log('🔄 Fetching latest user data from database after registration...');
+            console.log('REFRESH: Fetching latest user data from database after registration...');
             if (response.user.role === 'super_admin') {
               const superAdminData = await DatabaseService.findById('superAdmins', response.user.id);
               if (superAdminData) {
                 latestUserData = { ...response.user, ...superAdminData };
-                console.log('✅ Super admin data fetched from database');
+                console.log('SUCCESS: Super admin data fetched from database');
               }
             } else if (response.user.role === 'clinic_admin') {
-              console.log('🔍 Registration: Attempting to fetch clinic data...');
-              console.log('🔍 Registration: User ID:', response.user.id);
-              console.log('🔍 Registration: User Email:', response.user.email);
+              console.log('DEBUG: Registration: Attempting to fetch clinic data...');
+              console.log('DEBUG: Registration: User ID:', response.user.id);
+              console.log('DEBUG: Registration: User Email:', response.user.email);
 
               // Try to find clinic by ID first
               let clinicData = await DatabaseService.findById('clinics', response.user.id);
 
               // If not found by ID, try by email
               if (!clinicData) {
-                console.log('⚠️ Registration: Clinic not found by ID, trying by email...');
+                console.log('WARNING: Registration: Clinic not found by ID, trying by email...');
                 const clinicsByEmail = await DatabaseService.findBy('clinics', 'email', response.user.email);
                 if (clinicsByEmail && clinicsByEmail.length > 0) {
                   clinicData = clinicsByEmail[0];
-                  console.log('✅ Registration: Found clinic by email:', clinicData);
+                  console.log('SUCCESS: Registration: Found clinic by email:', clinicData);
                 }
               }
 
-              console.log('🏥 Registration: Fetched clinic data from database:', clinicData);
-              console.log('📞 Registration: Phone from database:', clinicData?.phone);
-              console.log('📍 Registration: Address from database:', clinicData?.address);
+              console.log('CLINIC: Registration: Fetched clinic data from database:', clinicData);
+              console.log(' Registration: Phone from database:', clinicData?.phone);
+              console.log(' Registration: Address from database:', clinicData?.address);
 
               if (clinicData) {
                 // Map contact_person to name for the UI
@@ -483,15 +483,15 @@ export const AuthProvider = ({ children }) => {
                   ...clinicData,
                   name: clinicData.contact_person || clinicData.name || response.user.name
                 };
-                console.log('✅ Clinic admin data fetched from database');
-                console.log('✅ Registration: Merged user data:', latestUserData);
-                console.log('✅ Registration: Name field set from contact_person:', latestUserData.name);
+                console.log('SUCCESS: Clinic admin data fetched from database');
+                console.log('SUCCESS: Registration: Merged user data:', latestUserData);
+                console.log('SUCCESS: Registration: Name field set from contact_person:', latestUserData.name);
               } else {
-                console.warn('⚠️ Registration: No clinic data found for this user!');
+                console.warn('WARNING: Registration: No clinic data found for this user!');
               }
             }
           } catch (dbError) {
-            console.warn('⚠️ Failed to fetch latest user data from database, using API response:', dbError);
+            console.warn('WARNING: Failed to fetch latest user data from database, using API response:', dbError);
             // Continue with API response if database fetch fails
           }
           
@@ -501,22 +501,22 @@ export const AuthProvider = ({ children }) => {
           setUser(latestUserData);
           setIsAuthenticated(true);
           
-          console.log('✅ AuthContext: Registration user data stored:', {
+          console.log('SUCCESS: AuthContext: Registration user data stored:', {
             name: response.user.name,
             role: response.user.role,
             clinicId: response.user.clinicId
           });
           
           toast.success(response.message || 'Registration successful!');
-          console.log('✅ AuthContext: Registration completed successfully');
+          console.log('SUCCESS: AuthContext: Registration completed successfully');
           return { success: true };
         } else {
-          console.log('❌ AuthContext: Registration success but no token provided');
+          console.log('ERROR: AuthContext: Registration success but no token provided');
           return { success: false, error: 'Registration completed but login failed' };
         }
       } else {
         // Handle case where response doesn't have success field or is falsy
-        console.log('❌ AuthContext: Invalid registration response format:', response);
+        console.log('ERROR: AuthContext: Invalid registration response format:', response);
         const errorMessage = response?.error || response?.message || 'Registration failed with unknown error';
         return { success: false, error: errorMessage };
       }
@@ -531,7 +531,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      console.log('🚪 Logging out user...');
+      console.log(' Logging out user...');
 
       // For development mode, we don't need to call authService
       if (!BYPASS_AUTH) {
@@ -562,7 +562,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
 
       toast.success('Logged out successfully');
-      console.log('✅ Logout successful, redirecting to landing page');
+      console.log('SUCCESS: Logout successful, redirecting to landing page');
 
       // Redirect to landing page after logout
       window.location.href = '/';
@@ -628,7 +628,7 @@ export const AuthProvider = ({ children }) => {
   const updateUser = async (userData) => {
     try {
       setLoading(true);
-      console.log('🔄 Updating user profile:', userData);
+      console.log('REFRESH: Updating user profile:', userData);
 
       // Update local state immediately for better UX
       const updatedUser = { ...user, ...userData };
@@ -637,22 +637,22 @@ export const AuthProvider = ({ children }) => {
       // Update localStorage
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
-      // ✅ CRITICAL: Update Supabase Auth password FIRST if password is being changed
+      // SUCCESS: CRITICAL: Update Supabase Auth password FIRST if password is being changed
       if (userData.password && supabase) {
         try {
-          console.log('🔐 Updating Supabase Auth password...');
+          console.log('AUTH: Updating Supabase Auth password...');
           const { error: authError } = await supabase.auth.updateUser({
             password: userData.password
           });
 
           if (authError) {
-            console.warn('⚠️ Supabase Auth password update failed:', authError.message);
+            console.warn('WARNING: Supabase Auth password update failed:', authError.message);
             // Continue anyway to update local database
           } else {
-            console.log('✅ Supabase Auth password updated successfully');
+            console.log('SUCCESS: Supabase Auth password updated successfully');
           }
         } catch (authError) {
-          console.warn('⚠️ Failed to update Supabase Auth password:', authError);
+          console.warn('WARNING: Failed to update Supabase Auth password:', authError);
           // Continue anyway to update local database
         }
       }
@@ -662,7 +662,7 @@ export const AuthProvider = ({ children }) => {
         if (user?.role === 'super_admin') {
           // Update super admin in database
           await DatabaseService.update('superAdmins', user.id, userData);
-          console.log('✅ Super admin profile saved to database');
+          console.log('SUCCESS: Super admin profile saved to database');
         } else if (user?.role === 'clinic_admin') {
           // Map clinicName to name for database
           const clinicData = { ...userData };
@@ -679,27 +679,27 @@ export const AuthProvider = ({ children }) => {
             clinicData.logo_url = clinicData.avatar;
             delete clinicData.avatar;
           }
-          console.log('📝 Original userData received:', userData);
-          console.log('📝 Mapped clinic data for database:', clinicData);
-          console.log('📝 contact_person field:', clinicData.contact_person);
-          console.log('📝 User ID for update:', user.id);
+          console.log('NOTE: Original userData received:', userData);
+          console.log('NOTE: Mapped clinic data for database:', clinicData);
+          console.log('NOTE: contact_person field:', clinicData.contact_person);
+          console.log('NOTE: User ID for update:', user.id);
           // Update clinic admin in database
           const updateResult = await DatabaseService.update('clinics', user.id, clinicData);
-          console.log('✅ Clinic admin profile saved to database');
-          console.log('✅ Update result:', updateResult);
+          console.log('SUCCESS: Clinic admin profile saved to database');
+          console.log('SUCCESS: Update result:', updateResult);
         } else {
           // For regular users, update in appropriate table
           await DatabaseService.update('users', user.id, userData);
-          console.log('✅ User profile saved to database');
+          console.log('SUCCESS: User profile saved to database');
         }
       } catch (dbError) {
-        console.error('❌ Database update failed:', dbError);
-        console.warn('⚠️ Failed to save to database, but local update successful:', dbError);
+        console.error('ERROR: Database update failed:', dbError);
+        console.warn('WARNING: Failed to save to database, but local update successful:', dbError);
         // Don't fail the entire operation if database fails
       }
       
       toast.success('Profile updated successfully!');
-      console.log('✅ Profile updated successfully');
+      console.log('SUCCESS: Profile updated successfully');
       return { success: true };
     } catch (error) {
       console.error('Profile update failed:', error);

@@ -29,9 +29,9 @@ const LBWProgress = () => {
   };
 
   const milestones = [
-    { title: '7-Day Streak', desc: 'Completed daily check-ins for a week', achieved: true, icon: '🔥' },
-    { title: 'Focus Master', desc: 'Achieved 80+ focus score', achieved: true, icon: '🎯' },
-    { title: 'Memory Champion', desc: 'Complete 10 memory exercises', achieved: false, progress: 7, total: 10, icon: '🧠' },
+    { title: '7-Day Streak', desc: 'Completed daily check-ins for a week', achieved: true, icon: 'HOT:' },
+    { title: 'Focus Master', desc: 'Achieved 80+ focus score', achieved: true, icon: 'TARGET:' },
+    { title: 'Memory Champion', desc: 'Complete 10 memory exercises', achieved: false, progress: 7, total: 10, icon: '' },
     { title: 'Wellness Warrior', desc: 'Maintain 85+ mood score for 30 days', achieved: false, progress: 12, total: 30, icon: '⭐' }
   ];
 

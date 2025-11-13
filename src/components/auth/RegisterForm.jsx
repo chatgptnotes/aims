@@ -59,7 +59,7 @@ const RegisterForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      console.log('📝 Form submission started with data:', data);
+      console.log('NOTE: Form submission started with data:', data);
       
       // Include userType in registration data
       const registrationData = {
@@ -67,26 +67,26 @@ const RegisterForm = () => {
         userType: data.userType || userType
       };
       
-      console.log('📋 Registration data prepared:', registrationData);
+      console.log('INFO: Registration data prepared:', registrationData);
       
       const result = await registerUser(registrationData, 'email');
-      console.log('📨 Registration result:', result);
+      console.log(' Registration result:', result);
       
       if (result && result.success) {
         // Check if account needs activation
         if (result.needsActivation) {
-          console.log('✅ Registration successful - needs activation');
+          console.log('SUCCESS: Registration successful - needs activation');
           navigate('/activation-pending');
         } else {
-          console.log('✅ Registration successful - redirecting to dashboard');
+          console.log('SUCCESS: Registration successful - redirecting to dashboard');
           navigate('/dashboard');
         }
       } else {
-        console.log('❌ Registration failed:', result?.error);
+        console.log('ERROR: Registration failed:', result?.error);
         setError('root', { message: result?.error || 'Registration failed. Please try again.' });
       }
     } catch (error) {
-      console.error('🚨 Registration form error:', error);
+      console.error('ALERT: Registration form error:', error);
       setError('root', { message: 'An unexpected error occurred. Please try again.' });
     }
   };
@@ -135,9 +135,9 @@ const RegisterForm = () => {
                 })}
                 onChange={(e) => setUserType(e.target.value)}
               >
-                <option value="patient">❤️ Personal Patient</option>
-                <option value="clinic">🏥 Clinic Administrator</option>
-                <option value="super_admin">👑 Super Administrator</option>
+                <option value="patient">️ Personal Patient</option>
+                <option value="clinic">CLINIC: Clinic Administrator</option>
+                <option value="super_admin">SUPERADMIN: Super Administrator</option>
               </select>
             </div>
             {errors.userType && (

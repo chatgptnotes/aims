@@ -241,7 +241,7 @@ export default function AssessmentTaker({ assessment, onComplete, onCancel }: As
             <ul className="space-y-2">
               {results.recommendations.map((recommendation: string, index: number) => (
                 <li key={index} className="flex items-start space-x-2">
-                  <span className="text-wellness-500 mt-1">✓</span>
+                  <span className="text-wellness-500 mt-1"></span>
                   <span className="text-gray-700">{recommendation}</span>
                 </li>
               ))}

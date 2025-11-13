@@ -9,7 +9,7 @@ const SafeNavigationWrapper = ({ children }) => {
   }, [children]);
 
   const handleError = (error, errorInfo) => {
-    console.error('🚨 Navigation wrapper caught error:', error);
+    console.error('ALERT: Navigation wrapper caught error:', error);
     setHasError(true);
   };
 
@@ -18,7 +18,7 @@ const SafeNavigationWrapper = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
           <div className="text-red-500 mb-4">
-            ⚠️
+            WARNING:
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             Navigation Error

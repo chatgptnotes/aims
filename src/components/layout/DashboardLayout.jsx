@@ -9,10 +9,10 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   const { user } = useAuth();
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-slate-50 via-[#CAE0FF] to-indigo-100">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Responsive Sidebar */}
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
+      <Sidebar
+        collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
@@ -20,71 +20,60 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Healthcare-Themed Top Header */}
-        <header className="bg-gradient-to-r from-[#323956] via-[#2d3449] to-[#323956] border-b border-[#232D3C] shadow-xl px-4 lg:px-6">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-6">
-              {/* Mobile menu button - Hidden since it's now in Sidebar */}
+        {/* Clean Professional Header */}
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 lg:px-8 shadow-sm">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              {/* Mobile menu button spacing */}
               <div className="lg:hidden w-12"></div>
 
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#F5D05D] to-[#d9b84a] rounded-2xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-[#323956]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-white">{title}</h1>
-                  <p className="text-sm text-[#CAE0FF] font-medium">Welcome back, {user?.name || 'User'}</p>
-                </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Welcome back, {user?.name || 'User'}</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
               {/* Search Bar */}
               <div className="hidden md:flex relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-[#CAE0FF]" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search clinics, patients, reports..."
-                  className="block w-80 pl-12 pr-4 py-3 border-2 border-white/10 rounded-2xl leading-5 bg-white/10 backdrop-blur-sm placeholder-[#CAE0FF]/60 text-white focus:outline-none focus:placeholder-[#CAE0FF]/80 focus:ring-2 focus:ring-[#F5D05D] focus:border-[#F5D05D] sm:text-sm shadow-lg"
+                  className="block w-72 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-gray-50 dark:bg-gray-700"
                 />
               </div>
 
               {/* Notifications */}
-              <button className="relative p-3 text-[#CAE0FF] hover:bg-white/10 hover:text-white rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl">
-                <Bell className="h-6 w-6" />
-                <span className="absolute top-2 right-2 block h-3 w-3 bg-[#F5D05D] rounded-full ring-2 ring-[#323956] animate-pulse"></span>
+              <button className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 block h-2 w-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
               </button>
 
               {/* User Avatar */}
               <div className="relative">
-                <button className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#F5D05D] to-[#d9b84a] rounded-2xl flex items-center justify-center text-[#323956] text-sm font-bold overflow-hidden ring-2 ring-white/20">
+                <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                     {user?.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt="Profile" 
-                        className="w-10 h-10 object-cover"
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       (() => {
                         try {
-                          // For super admin with clinic name, show clinic name initial
                           if (user?.role === 'super_admin' && user?.clinicName) {
                             return user.clinicName.charAt(0).toUpperCase();
                           }
-                          // For clinic admin, show clinic name initial
                           if (user?.role === 'clinic_admin' && user?.clinicName) {
                             return user.clinicName.charAt(0).toUpperCase();
                           }
-                          // For super admin, show name initial (which might be clinic name)
                           if (user?.role === 'super_admin' && user?.name) {
                             return user.name.charAt(0).toUpperCase();
                           }
-                          // For regular users, show name initial
                           if (user?.name && typeof user.name === 'string' && user.name.length > 0) {
                             return user.name.charAt(0).toUpperCase();
                           }
@@ -97,8 +86,8 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
                     )}
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-bold text-white">{user?.name || 'User'}</p>
-                    <p className="text-xs text-[#CAE0FF] font-medium">{user?.email}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || 'User'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                   </div>
                 </button>
               </div>
@@ -107,8 +96,8 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6">
+        <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+          <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
             {children}
           </div>
         </main>

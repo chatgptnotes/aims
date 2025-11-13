@@ -2,8 +2,8 @@
 import { authService } from '../services/authService';
 
 export const debugSuperAdminRegistration = async (userData) => {
-  console.log('🐛 DEBUG: Super Admin Registration Started');
-  console.log('🔍 Input data:', {
+  console.log(' DEBUG: Super Admin Registration Started');
+  console.log('DEBUG: Input data:', {
     name: userData.name,
     email: userData.email,
     userType: userData.userType,
@@ -15,14 +15,14 @@ export const debugSuperAdminRegistration = async (userData) => {
     // Call the registration service
     const result = await authService.registerWithEmail(userData);
 
-    console.log('✅ DEBUG: Registration completed successfully');
-    console.log('📦 Result:', result);
+    console.log('SUCCESS: DEBUG: Registration completed successfully');
+    console.log(' Result:', result);
 
     return result;
 
   } catch (error) {
-    console.error('❌ DEBUG: Registration failed');
-    console.error('🚨 Error details:', {
+    console.error('ERROR: DEBUG: Registration failed');
+    console.error('ALERT: Error details:', {
       message: error.message,
       stack: error.stack,
       name: error.name
@@ -30,8 +30,8 @@ export const debugSuperAdminRegistration = async (userData) => {
 
     // Check if it's a Supabase-specific error
     if (error.message.includes('Supabase')) {
-      console.error('🔧 Supabase-related error detected');
-      console.error('💡 Check:');
+      console.error('CONFIG: Supabase-related error detected');
+      console.error('IDEA: Check:');
       console.error('   1. Are environment variables set correctly?');
       console.error('   2. Is the migration script run in Supabase?');
       console.error('   3. Do the tables exist?');
@@ -39,8 +39,8 @@ export const debugSuperAdminRegistration = async (userData) => {
 
     // Check if it's a database constraint error
     if (error.message.includes('constraint') || error.message.includes('foreign key')) {
-      console.error('🔧 Database constraint error detected');
-      console.error('💡 Check:');
+      console.error('CONFIG: Database constraint error detected');
+      console.error('IDEA: Check:');
       console.error('   1. Are the foreign key relationships correct?');
       console.error('   2. Does the profiles table exist?');
       console.error('   3. Does the super_admin_profiles table exist?');
@@ -52,7 +52,7 @@ export const debugSuperAdminRegistration = async (userData) => {
 
 // Test function to check database readiness
 export const testDatabaseReadiness = async () => {
-  console.log('🧪 Testing database readiness for super admin registration...');
+  console.log(' Testing database readiness for super admin registration...');
 
   try {
     // Import Supabase client
@@ -60,7 +60,7 @@ export const testDatabaseReadiness = async () => {
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('❌ Environment variables missing');
+      console.error('ERROR: Environment variables missing');
       return false;
     }
 
@@ -73,11 +73,11 @@ export const testDatabaseReadiness = async () => {
       .select('count', { count: 'exact', head: true });
 
     if (profilesError) {
-      console.error('❌ Profiles table not accessible:', profilesError.message);
+      console.error('ERROR: Profiles table not accessible:', profilesError.message);
       return false;
     }
 
-    console.log('✅ Profiles table accessible');
+    console.log('SUCCESS: Profiles table accessible');
 
     // Test 2: Check if super_admin_profiles table exists
     const { error: superAdminError } = await supabase
@@ -85,17 +85,17 @@ export const testDatabaseReadiness = async () => {
       .select('count', { count: 'exact', head: true });
 
     if (superAdminError) {
-      console.error('❌ Super admin profiles table not accessible:', superAdminError.message);
+      console.error('ERROR: Super admin profiles table not accessible:', superAdminError.message);
       return false;
     }
 
-    console.log('✅ Super admin profiles table accessible');
+    console.log('SUCCESS: Super admin profiles table accessible');
 
-    console.log('🎉 Database is ready for super admin registration!');
+    console.log('COMPLETE: Database is ready for super admin registration!');
     return true;
 
   } catch (error) {
-    console.error('❌ Database readiness test failed:', error.message);
+    console.error('ERROR: Database readiness test failed:', error.message);
     return false;
   }
 };

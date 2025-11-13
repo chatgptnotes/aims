@@ -20,30 +20,30 @@ export const PatientProvider = ({ children }) => {
   // Load patients for a specific clinic
   const loadPatientsForClinic = async (clinicId, forceReload = false) => {
     if (!clinicId) {
-      console.warn('⚠️ No clinicId provided to loadPatientsForClinic');
+      console.warn('WARNING: No clinicId provided to loadPatientsForClinic');
       setPatients([]);
       return;
     }
 
     // Only reload if this is a different clinic or forced reload
     if (clinicId === lastLoadedClinicId && !forceReload && patients.length > 0) {
-      console.log('✅ Patients already loaded for clinic:', clinicId, 'count:', patients.length);
+      console.log('SUCCESS: Patients already loaded for clinic:', clinicId, 'count:', patients.length);
       return patients;
     }
     
     // If we have no patients loaded, always reload regardless of cache
     if (patients.length === 0) {
-      console.log('⚠️ No patients in memory, forcing reload for clinic:', clinicId);
+      console.log('WARNING: No patients in memory, forcing reload for clinic:', clinicId);
       forceReload = true;
     }
 
-    console.log('👥 Loading patients for clinic:', clinicId, 'forceReload:', forceReload);
+    console.log(' Loading patients for clinic:', clinicId, 'forceReload:', forceReload);
     setLoading(true);
 
     try {
       // Load from database - Clear localStorage cache first to ensure fresh data
       if (forceReload) {
-        console.log('🗑️ Clearing localStorage cache for fresh data...');
+        console.log('DELETE: Clearing localStorage cache for fresh data...');
         // Clear all possible cache keys
         const cacheKeys = [
           'dbCache_patients', 'dbCache_reports', 'dbCache_clinics',
@@ -52,36 +52,36 @@ export const PatientProvider = ({ children }) => {
         cacheKeys.forEach(key => {
           if (localStorage.getItem(key)) {
             localStorage.removeItem(key);
-            console.log(`🗑️ Cleared cache key: ${key}`);
+            console.log(`DELETE: Cleared cache key: ${key}`);
           }
         });
       }
       
       const allPatients = await DatabaseService.get('patients');
-      console.log('📋 Total patients in database:', allPatients.length);
-      console.log('📋 All patients data:', allPatients.map(p => ({ id: p.id, name: p.name, clinicId: p.clinicId })));
+      console.log('INFO: Total patients in database:', allPatients.length);
+      console.log('INFO: All patients data:', allPatients.map(p => ({ id: p.id, name: p.name, clinicId: p.clinicId })));
       
       // Filter patients by clinic ID with multiple comparison methods
       let clinicPatients = allPatients.filter(patient => patient.clinicId === clinicId);
-      console.log('👥 Strict match patients:', clinicPatients.length);
+      console.log(' Strict match patients:', clinicPatients.length);
       
       if (clinicPatients.length === 0) {
-        console.log('⚠️ No strict matches, trying loose equality...');
+        console.log('WARNING: No strict matches, trying loose equality...');
         clinicPatients = allPatients.filter(patient => patient.clinicId == clinicId); // eslint-disable-line eqeqeq
-        console.log('👥 Loose match patients:', clinicPatients.length);
+        console.log(' Loose match patients:', clinicPatients.length);
       }
       
       if (clinicPatients.length === 0) {
-        console.log('⚠️ No loose matches, trying string conversion...');
+        console.log('WARNING: No loose matches, trying string conversion...');
         clinicPatients = allPatients.filter(patient => String(patient.clinicId) === String(clinicId));
-        console.log('👥 String match patients:', clinicPatients.length);
+        console.log(' String match patients:', clinicPatients.length);
       }
       
-      console.log('👥 Final filtered patients for clinic:', clinicPatients.length);
-      console.log('👥 Patient details:', clinicPatients.map(p => ({ id: p.id, name: p.name, clinicId: p.clinicId, clinicIdType: typeof p.clinicId })));
+      console.log(' Final filtered patients for clinic:', clinicPatients.length);
+      console.log(' Patient details:', clinicPatients.map(p => ({ id: p.id, name: p.name, clinicId: p.clinicId, clinicIdType: typeof p.clinicId })));
       
       // DEBUG: Check if any patients have different clinic ID format
-      console.log('🔍 DEBUG: Clinic ID comparison:', {
+      console.log('DEBUG: DEBUG: Clinic ID comparison:', {
         targetClinicId: clinicId,
         targetType: typeof clinicId,
         patientsWithMismatch: allPatients.filter(p => p.clinicId && p.clinicId !== clinicId).map(p => ({ 
@@ -109,10 +109,10 @@ export const PatientProvider = ({ children }) => {
       
       setPatientReports(reportsMap);
       
-      console.log('✅ Successfully loaded', clinicPatients.length, 'patients for clinic:', clinicId);
+      console.log('SUCCESS: Successfully loaded', clinicPatients.length, 'patients for clinic:', clinicId);
       return clinicPatients;
     } catch (error) {
-      console.error('❌ Error loading patients:', error);
+      console.error('ERROR: Error loading patients:', error);
       setPatients([]);
       return [];
     } finally {
@@ -123,16 +123,16 @@ export const PatientProvider = ({ children }) => {
   // Add a new patient
   const addPatient = async (clinicId, patientData) => {
     try {
-      console.log('➕ Adding new patient for clinic:', clinicId);
+      console.log(' Adding new patient for clinic:', clinicId);
       const newPatient = await DatabaseService.add('patients', patientData);
       
       // Force a complete reload to ensure data consistency
-      console.log('🔄 Forcing complete patient reload after add...');
+      console.log('REFRESH: Forcing complete patient reload after add...');
       await loadPatientsForClinic(clinicId, true);
       
       return newPatient;
     } catch (error) {
-      console.error('❌ Error adding patient:', error);
+      console.error('ERROR: Error adding patient:', error);
       throw error;
     }
   };
@@ -149,7 +149,7 @@ export const PatientProvider = ({ children }) => {
       
       return updatedPatient;
     } catch (error) {
-      console.error('❌ Error updating patient:', error);
+      console.error('ERROR: Error updating patient:', error);
       throw error;
     }
   };
@@ -164,7 +164,7 @@ export const PatientProvider = ({ children }) => {
         prevPatients.filter(p => p.id !== patientId)
       );
     } catch (error) {
-      console.error('❌ Error deleting patient:', error);
+      console.error('ERROR: Error deleting patient:', error);
       throw error;
     }
   };
@@ -172,11 +172,11 @@ export const PatientProvider = ({ children }) => {
   // Refresh patient reports after upload
   const refreshPatientReports = async (clinicId) => {
     if (!clinicId || patients.length === 0) {
-      console.warn('⚠️ Cannot refresh reports: no clinic ID or patients');
+      console.warn('WARNING: Cannot refresh reports: no clinic ID or patients');
       return;
     }
 
-    console.log('🔄 Refreshing patient reports for clinic:', clinicId);
+    console.log('REFRESH: Refreshing patient reports for clinic:', clinicId);
     
     try {
       // Clear reports cache to ensure fresh data
@@ -188,7 +188,7 @@ export const PatientProvider = ({ children }) => {
         try {
           const reports = await DatabaseService.getReportsByPatient(patient.id);
           reportsMap[patient.id] = reports || [];
-          console.log(`📄 Loaded ${reports?.length || 0} reports for patient ${patient.name}`);
+          console.log(`FILE: Loaded ${reports?.length || 0} reports for patient ${patient.name}`);
         } catch (error) {
           console.warn(`Failed to load reports for patient ${patient.id}:`, error);
           reportsMap[patient.id] = [];
@@ -196,15 +196,15 @@ export const PatientProvider = ({ children }) => {
       }
       
       setPatientReports(reportsMap);
-      console.log('✅ Successfully refreshed patient reports');
+      console.log('SUCCESS: Successfully refreshed patient reports');
     } catch (error) {
-      console.error('❌ Error refreshing patient reports:', error);
+      console.error('ERROR: Error refreshing patient reports:', error);
     }
   };
 
   // Force complete refresh - clears all cache and reloads
   const forceRefresh = async (clinicId) => {
-    console.log('🔄 FORCE REFRESH: Clearing all patient data and cache for clinic:', clinicId);
+    console.log('REFRESH: FORCE REFRESH: Clearing all patient data and cache for clinic:', clinicId);
     
     // Clear all state
     setPatients([]);
@@ -222,7 +222,7 @@ export const PatientProvider = ({ children }) => {
     
     cacheKeys.forEach(key => {
       localStorage.removeItem(key);
-      console.log(`🗑️ Force cleared: ${key}`);
+      console.log(`DELETE: Force cleared: ${key}`);
     });
     
     // Wait a moment for state to clear
@@ -230,7 +230,7 @@ export const PatientProvider = ({ children }) => {
     
     // Force fresh load
     if (clinicId) {
-      console.log('🔄 Starting fresh load after complete reset...');
+      console.log('REFRESH: Starting fresh load after complete reset...');
       await loadPatientsForClinic(clinicId, true);
     }
   };

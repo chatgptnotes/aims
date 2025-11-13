@@ -55,7 +55,7 @@ export default function AboutPage() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Global Presence</h2>
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">🌍</span>
+                    <span className="text-2xl"></span>
                     <div>
                       <div className="font-medium">Global Locations</div>
                       <div className="text-base text-gray-800 dark:text-gray-100 font-semibold">
@@ -64,7 +64,7 @@ export default function AboutPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">📅</span>
+                    <span className="text-2xl"></span>
                     <div>
                       <div className="font-medium">Founded</div>
                       <div className="text-base text-gray-800 dark:text-gray-100 font-semibold">{companyInfo.founded}</div>
@@ -197,7 +197,7 @@ export default function AboutPage() {
                         <div className="space-y-2">
                           {founder.achievements.slice(0, 5).map((achievement, i) => (
                             <div key={i} className="flex items-start space-x-2">
-                              <span className="text-wellness-600 mt-1">✓</span>
+                              <span className="text-wellness-600 mt-1"></span>
                               <span className="text-base text-gray-700 dark:text-gray-200 font-medium">{achievement}</span>
                             </div>
                           ))}
@@ -269,7 +269,7 @@ export default function AboutPage() {
               <Card className="p-6 h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <span className="text-2xl">🔬</span>
+                    <span className="text-2xl"></span>
                     <span>Our Services</span>
                   </CardTitle>
                 </CardHeader>
@@ -290,7 +290,7 @@ export default function AboutPage() {
               <Card className="p-6 h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <span className="text-2xl">🧠</span>
+                    <span className="text-2xl"></span>
                     <span>Our Methodology</span>
                   </CardTitle>
                 </CardHeader>
@@ -329,7 +329,7 @@ export default function AboutPage() {
               <motion.div key={index} variants={fadeInUp}>
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow duration-300">
                   <div className="w-16 h-16 bg-gradient-to-br from-brain-500 to-wellness-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white text-2xl">🤝</span>
+                    <span className="text-white text-2xl"></span>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">{collab.organization}</h3>
                   <p className="text-base text-brain-600 mb-2 font-medium">{collab.type}</p>

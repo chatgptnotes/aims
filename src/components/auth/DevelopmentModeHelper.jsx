@@ -135,7 +135,7 @@ const DevelopmentModeHelper = () => {
 
             <div className="mt-4 pt-3 border-t border-gray-700">
               <div className="text-xs text-gray-500">
-                💡 Login with different emails to test different roles
+                IDEA: Login with different emails to test different roles
               </div>
             </div>
           </div>

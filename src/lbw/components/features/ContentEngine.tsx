@@ -181,14 +181,14 @@ export default function ContentEngine({ user, onContentComplete, onContentStart 
 
   const getTypeIcon = (type: ContentItem['type']) => {
     switch (type) {
-      case 'article': return '📖'
-      case 'video': return '🎥'
-      case 'exercise': return '🏋️‍♀️'
-      case 'quote': return '💭'
-      case 'meditation': return '🧘‍♀️'
-      case 'nutrition': return '🥗'
-      case 'breathwork': return '🌬️'
-      default: return '📋'
+      case 'article': return ''
+      case 'video': return ''
+      case 'exercise': return '️‍️'
+      case 'quote': return ''
+      case 'meditation': return '‍️'
+      case 'nutrition': return ''
+      case 'breathwork': return '️'
+      default: return 'INFO:'
     }
   }
 
@@ -242,7 +242,7 @@ export default function ContentEngine({ user, onContentComplete, onContentStart 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-4 bg-white rounded-lg border border-brain-200">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-xl">💭</span>
+                <span className="text-xl"></span>
                 <span className="font-medium text-gray-900">Daily Quote</span>
               </div>
               <p className="text-gray-600 italic">"{dailyContent.quote.text}"</p>
@@ -251,7 +251,7 @@ export default function ContentEngine({ user, onContentComplete, onContentStart 
             
             <div className="p-4 bg-white rounded-lg border border-wellness-200">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-xl">🎯</span>
+                <span className="text-xl">TARGET:</span>
                 <span className="font-medium text-gray-900">Daily Task</span>
               </div>
               <p className="text-gray-600">{dailyContent.task.title}</p>
@@ -374,7 +374,7 @@ export default function ContentEngine({ user, onContentComplete, onContentStart 
               
               {item.completed && (
                 <div className="flex-1 text-center py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
-                  ✅ Completed
+                  SUCCESS: Completed
                 </div>
               )}
               

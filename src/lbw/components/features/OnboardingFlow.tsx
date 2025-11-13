@@ -206,28 +206,28 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         id: 'adhd' as ImprovementFocus, 
         title: 'Stay focused longer (ADHD)', 
         description: 'Attention, focus, and executive function support', 
-        icon: '🧠',
+        icon: '',
         pathway: 'ADHD Pathway'
       },
       { 
         id: 'memory' as ImprovementFocus, 
         title: 'Remember things better', 
         description: 'Memory enhancement and cognitive training', 
-        icon: '💭',
+        icon: '',
         pathway: 'Memory Pathway'
       },
       { 
         id: 'mood' as ImprovementFocus, 
         title: 'Improve mood regulation', 
         description: 'Emotional balance and mental well-being', 
-        icon: '😌',
+        icon: '',
         pathway: 'Mood Pathway'
       },
       { 
         id: 'stress' as ImprovementFocus, 
         title: 'Be in control of stress', 
         description: 'Stress management and emotional regulation', 
-        icon: '🧘‍♀️',
+        icon: '‍️',
         pathway: 'Stress & Emotional Regulation Pathway'
       },
       { 
@@ -265,7 +265,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <span className="text-base text-brain-600 font-semibold">{focus.pathway}</span>
                 </div>
                 {data.improvementFocus.includes(focus.id) && (
-                  <span className="text-brain-500 text-xl">✓</span>
+                  <span className="text-brain-500 text-xl"></span>
                 )}
               </div>
             </button>
@@ -306,7 +306,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
         <Card variant="gradient">
           <CardContent className="text-center">
-            <div className="text-4xl mb-4">🧠</div>
+            <div className="text-4xl mb-4"></div>
             <h3 className="font-semibold text-gray-900 mb-2">QEEG Brain Scan</h3>
             <p className="text-gray-600 mb-4">
               A QEEG (Quantitative Electroencephalogram) provides detailed insights into your brain's electrical activity, 
@@ -477,14 +477,14 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             id: 'brain',
             title: 'Brain Coach',
             description: 'Specialized in ADHD, cognitive enhancement, and brain optimization',
-            icon: '🧠',
+            icon: '',
             focus: 'ADHD & Cognitive Enhancement'
           },
           {
             id: 'nervous_system',
             title: 'Nervous System Coach',
             description: 'Focused on stress management, anxiety, and emotional regulation',
-            icon: '🧘‍♀️',
+            icon: '‍️',
             focus: 'Stress & Emotional Regulation'
           },
           {
@@ -498,7 +498,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             id: 'none',
             title: 'Self-guided for now',
             description: 'I prefer to start with self-guided content and assessments',
-            icon: '📚',
+            icon: '',
             focus: 'Independent Learning'
           }
         ].map((option) => (
@@ -519,7 +519,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <span className="text-base text-brain-600 font-semibold">{option.focus}</span>
               </div>
               {data.coachingPreference === option.id && (
-                <span className="text-brain-500 text-xl">✓</span>
+                <span className="text-brain-500 text-xl"></span>
               )}
             </div>
           </button>

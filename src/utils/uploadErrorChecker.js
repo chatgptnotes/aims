@@ -50,7 +50,7 @@ export const checkUploadRequirements = (clinicId, patient, user, file) => {
 };
 
 export const logUploadAttempt = (clinicId, patient, user, file) => {
-  console.group('🔍 Upload Requirements Check');
+  console.group('DEBUG: Upload Requirements Check');
   console.log('Clinic ID:', clinicId);
   console.log('Patient:', patient);
   console.log('User:', user);
@@ -71,9 +71,9 @@ export const logUploadAttempt = (clinicId, patient, user, file) => {
 
   const errors = checkUploadRequirements(clinicId, patient, user, file);
   if (errors.length > 0) {
-    console.error('❌ Upload Errors Found:', errors);
+    console.error('ERROR: Upload Errors Found:', errors);
   } else {
-    console.log('✅ All requirements met - proceeding with upload');
+    console.log('SUCCESS: All requirements met - proceeding with upload');
   }
 
   console.groupEnd();
@@ -82,7 +82,7 @@ export const logUploadAttempt = (clinicId, patient, user, file) => {
 };
 
 export const logUploadError = (error, context = {}) => {
-  console.group('🚨 Upload Error Details');
+  console.group('ALERT: Upload Error Details');
   console.error('Error:', error);
   console.log('Error message:', error.message);
   console.log('Error stack:', error.stack);

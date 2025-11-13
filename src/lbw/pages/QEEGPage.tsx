@@ -44,7 +44,7 @@ export default function QEEGPage() {
                 </ul>
               </div>
               <div className="bg-gradient-to-br from-brain-100 to-wellness-100 rounded-lg p-6 text-center">
-                <div className="text-6xl mb-4">🧠</div>
+                <div className="text-6xl mb-4"></div>
                 <h3 className="font-semibold text-gray-900 mb-2">Your Brain Map</h3>
                 <p className="text-sm text-gray-600">
                   Get a detailed analysis of your brain's unique patterns and receive 
@@ -63,7 +63,7 @@ export default function QEEGPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-brain-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-brain-600 text-2xl">🎯</span>
+                  <span className="text-brain-600 text-2xl">TARGET:</span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Precision Targeting</h3>
                 <p className="text-gray-600 text-sm">
@@ -74,7 +74,7 @@ export default function QEEGPage() {
               
               <div className="text-center">
                 <div className="w-16 h-16 bg-wellness-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-wellness-600 text-2xl">📈</span>
+                  <span className="text-wellness-600 text-2xl">GROWTH:</span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Track Progress</h3>
                 <p className="text-gray-600 text-sm">
@@ -85,7 +85,7 @@ export default function QEEGPage() {
               
               <div className="text-center">
                 <div className="w-16 h-16 bg-calm-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-calm-600 text-2xl">⚡</span>
+                  <span className="text-calm-600 text-2xl"></span>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Personalized Protocols</h3>
                 <p className="text-gray-600 text-sm">

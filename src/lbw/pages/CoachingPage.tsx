@@ -29,11 +29,11 @@ export default function CoachingPage() {
 
   const getSpecialtyIcon = (specialty: ImprovementFocus) => {
     switch (specialty) {
-      case 'adhd': return '🧠'
-      case 'memory': return '💭'
-      case 'stress': return '🌿'
-      case 'wellness': return '⚡'
-      default: return '🎯'
+      case 'adhd': return ''
+      case 'memory': return ''
+      case 'stress': return ''
+      case 'wellness': return ''
+      default: return 'TARGET:'
     }
   }
 
@@ -87,7 +87,7 @@ export default function CoachingPage() {
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card className="p-6 text-center">
               <div className="w-16 h-16 bg-brain-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-brain-600 text-2xl">🧠</span>
+                <span className="text-brain-600 text-2xl"></span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Brain Coaching</h3>
               <p className="text-gray-700 dark:text-gray-200 text-base mb-4 font-medium leading-6">
@@ -105,7 +105,7 @@ export default function CoachingPage() {
 
             <Card className="p-6 text-center">
               <div className="w-16 h-16 bg-calm-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-calm-600 text-2xl">🌿</span>
+                <span className="text-calm-600 text-2xl"></span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Nervous System Coaching</h3>
               <p className="text-gray-700 dark:text-gray-200 text-base mb-4 font-medium leading-6">
@@ -123,7 +123,7 @@ export default function CoachingPage() {
 
             <Card className="p-6 text-center">
               <div className="w-16 h-16 bg-wellness-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-wellness-600 text-2xl">⚡</span>
+                <span className="text-wellness-600 text-2xl"></span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">qEEG Consultation</h3>
               <p className="text-gray-700 dark:text-gray-200 text-base mb-4 font-medium leading-6">
@@ -150,7 +150,7 @@ export default function CoachingPage() {
                 <Card key={coach.id} className="p-6">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-2xl">
-                      👩‍⚕️
+                      ‍️
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{coach.name}</h3>
