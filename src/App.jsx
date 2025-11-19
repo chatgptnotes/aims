@@ -7,6 +7,9 @@ import { testSupabaseConnection } from './utils/supabaseTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/Landing.jsx';
 import AboutUs from './pages/AboutUs.jsx';
+import FAQ from './pages/FAQ.jsx';
+import Science from './pages/Science.jsx';
+import Technicians from './pages/Technicians.jsx';
 import LBWProjectUpdates from './pages/LBWProjectUpdates.jsx';
 import LBWAssessments from './pages/LBWAssessments.jsx';
 import LBWCoaching from './pages/LBWCoaching.jsx';
@@ -100,6 +103,9 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/science" element={<Science />} />
+            <Route path="/technicians" element={<Technicians />} />
             <Route path="/lbw" element={<LBWMainLanding />} />
             <Route path="/lbw-updates" element={<LBWProjectUpdates />} />
             <Route path="/assessments" element={<LBWAssessments />} />

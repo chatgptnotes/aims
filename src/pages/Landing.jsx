@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Brain, ShieldCheck, Users, Truck, ArrowDown, Menu, X, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin } from 'lucide-react';
 
 const Landing = () => {
@@ -931,43 +931,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Why is NeuroSense better for you Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16 animate-fade-in-up relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-12">
-              Why is NeuroSense better for you
-            </h2>
-
-            <div className="relative">
-              <div className="bg-gray-50 rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200 relative z-20">
-                <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
-                  Evidence Based Research
-                </h3>
-
-                <div className="text-base sm:text-lg text-gray-700 leading-relaxed space-y-4 text-left">
-                  <p>
-                    Quantitative EEG (qEEG) has emerged as a scientifically validated tool in brain wellness and care, enabling the visualization and measurement of electrical activity patterns that reflect cognitive performance, emotional regulation, and mental resilience. Unlike conventional EEG, qEEG maps the brain's functional networks using advanced analytics and normative databases, allowing clinicians to identify dysregulated circuits linked to stress, focus, sleep, and mood.
-                  </p>
-
-                  <p>
-                    At NeuroSense, we have harnessed this evidence backed technology to create an integrative, clinical grade brain assessment system that translates complex neurodata into clear, actionable insights for personalized brain optimization. By combining qEEG findings with lifestyle, nutrition, and neuro modulation strategies, NeuroSense bridges the gap between medical neuroscience and everyday brain care.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => navigate('/about-us')}
-                  className="mt-8 bg-[#00897B] hover:bg-[#00796B] text-white px-8 py-3 rounded-full text-base font-medium transition-all inline-flex items-center gap-2"
-                >
-                  Learn about the science and research behind neurofeedback
-                  <span>→</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-black text-white py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1047,7 +1010,7 @@ const Landing = () => {
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FAQs</a></li>
+                <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
               </ul>
             </div>
@@ -1056,12 +1019,12 @@ const Landing = () => {
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
               <ul className="space-y-3">
-                <li><a href="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</a></li>
+                <li><Link to="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Guide to Brainwaves</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Science</a></li>
+                <li><Link to="/science" className="text-base hover:text-[#00897B] transition-colors">Science</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Reviews</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Blog</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FAQs</a></li>
+                <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FSA/HSA Eligible</a></li>
               </ul>
             </div>
@@ -1081,10 +1044,10 @@ const Landing = () => {
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Company</h3>
               <ul className="space-y-3">
-                <li><a href="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</a></li>
+                <li><Link to="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Careers →</a></li>
-                <li><a href="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</a></li>
+                <li><Link to="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</Link></li>
                 <li><a href="tel:+18553217800" className="text-base hover:text-[#00897B] transition-colors">+1 (855) 321-7800</a></li>
               </ul>
             </div>

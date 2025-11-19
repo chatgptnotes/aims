@@ -106,6 +106,41 @@ const LBWProjectUpdates = () => {
           ))}
         </div>
 
+        {/* Why is NeuroSense better for you Section */}
+        <div className="mt-20 mb-16">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-12">
+              Why is NeuroSense better for you
+            </h2>
+
+            <div className="relative">
+              <div className="bg-gray-50 rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200">
+                <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
+                  Evidence Based Research
+                </h3>
+
+                <div className="text-base sm:text-lg text-gray-700 leading-relaxed space-y-4 text-left">
+                  <p>
+                    Quantitative EEG (qEEG) has emerged as a scientifically validated tool in brain wellness and care, enabling the visualization and measurement of electrical activity patterns that reflect cognitive performance, emotional regulation, and mental resilience. Unlike conventional EEG, qEEG maps the brain's functional networks using advanced analytics and normative databases, allowing clinicians to identify dysregulated circuits linked to stress, focus, sleep, and mood.
+                  </p>
+
+                  <p>
+                    At NeuroSense, we have harnessed this evidence backed technology to create an integrative, clinical grade brain assessment system that translates complex neurodata into clear, actionable insights for personalized brain optimization. By combining qEEG findings with lifestyle, nutrition, and neuro modulation strategies, NeuroSense bridges the gap between medical neuroscience and everyday brain care.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => navigate('/about-us')}
+                  className="mt-8 bg-[#00897B] hover:bg-[#00796B] text-white px-8 py-3 rounded-full text-base font-medium transition-all inline-flex items-center gap-2"
+                >
+                  Learn about the science and research behind neurofeedback
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* For Clinics and Individuals Section */}
         <div className="mt-20 mb-16">
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">

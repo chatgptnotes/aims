@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Brain, Menu, X } from 'lucide-react';
 
 const NavBar = () => {
@@ -27,10 +27,10 @@ const NavBar = () => {
   return (
     <>
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 py-3 px-4 sm:px-6 bg-white/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-center">
+      <nav className="fixed top-0 left-0 right-0 z-50 py-5 px-4 sm:px-6">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-center">
           {/* Center Navigation Pill with Logo, Links and Buttons ALL INSIDE */}
-          <div className="hidden lg:flex items-center bg-white backdrop-blur-md rounded-full shadow-md px-5 py-3 gap-5">
+          <div className="hidden lg:flex items-center bg-white backdrop-blur-md rounded-full shadow-md px-8 py-4 gap-6">
             {/* Logo INSIDE Pill */}
             <div className="flex items-center pr-3 border-r border-gray-200 cursor-pointer" onClick={() => navigate('/')}>
               <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
@@ -40,15 +40,15 @@ const NavBar = () => {
             </div>
 
             {/* Navigation Links */}
-            <a href="/lbw" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            <Link to="/lbw" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               For clinicians
-            </a>
-            <a href="/technicians" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            </Link>
+            <Link to="/technicians" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               For technicians
-            </a>
-            <a href="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            </Link>
+            <Link to="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               How it works
-            </a>
+            </Link>
 
             {/* Action Buttons Inside Same Pill */}
             <button
@@ -105,15 +105,15 @@ const NavBar = () => {
 
               {/* Navigation Links */}
               <div className="flex flex-col space-y-6 mb-12">
-                <a href="/lbw" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                <Link to="/lbw" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   For clinicians
-                </a>
-                <a href="/technicians" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                </Link>
+                <Link to="/technicians" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   For technicians
-                </a>
-                <a href="/lbw-updates" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                </Link>
+                <Link to="/lbw-updates" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   How it works
-                </a>
+                </Link>
               </div>
 
               {/* Action Buttons */}

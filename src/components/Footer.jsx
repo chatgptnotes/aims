@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Brain, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin } from 'lucide-react';
 
 const Footer = () => {
@@ -9,12 +10,12 @@ const Footer = () => {
           {/* Left Column - Brand & Newsletter */}
           <div className="lg:col-span-1 space-y-6">
             {/* Logo */}
-            <div className="flex items-center">
+            <Link to="/" className="flex items-center">
               <Brain className="h-6 w-6 text-white bg-white p-1 rounded" />
               <span className="ml-2 text-lg font-normal">
                 NeuroSense<sup className="text-[10px]">®</sup>
               </span>
-            </div>
+            </Link>
 
             {/* Tagline */}
             <p className="text-base">
@@ -60,7 +61,7 @@ const Footer = () => {
             {/* Find a Clinic CTA */}
             <div className="p-4 bg-[#00897B]/20 rounded-lg border border-[#00897B]/30">
               <p className="text-sm font-medium mb-1">Ready to start?</p>
-              <a href="/register" className="text-sm text-[#00897B] hover:underline">Find a clinic near you →</a>
+              <Link to="/register" className="text-sm text-[#00897B] hover:underline">Find a clinic near you →</Link>
             </div>
 
             {/* Address */}
@@ -81,7 +82,7 @@ const Footer = () => {
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FAQs</a></li>
+              <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
             </ul>
           </div>
@@ -90,12 +91,12 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
             <ul className="space-y-3">
-              <li><a href="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</a></li>
+              <li><Link to="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Guide to Brainwaves</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Science</a></li>
+              <li><Link to="/science" className="text-base hover:text-[#00897B] transition-colors">Science</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Reviews</a></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Blog</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FAQs</a></li>
+              <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FSA/HSA Eligible</a></li>
             </ul>
           </div>
@@ -115,10 +116,10 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Company</h3>
             <ul className="space-y-3">
-              <li><a href="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</a></li>
+              <li><Link to="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Careers →</a></li>
-              <li><a href="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</a></li>
-              <li><a href="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</a></li>
+              <li><Link to="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</Link></li>
               <li><a href="tel:+18553217800" className="text-base hover:text-[#00897B] transition-colors">+1 (855) 321-7800</a></li>
             </ul>
           </div>
