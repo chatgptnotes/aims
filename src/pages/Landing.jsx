@@ -71,7 +71,7 @@ const Landing = () => {
             <div className="flex items-center pr-3 border-r border-gray-200">
               <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
               <span className="ml-1.5 text-base font-normal text-gray-900">
-                Neuro360<sup className="text-[10px]">®</sup>
+                NeuroSense<sup className="text-[10px]">®</sup>
               </span>
             </div>
 
@@ -79,14 +79,11 @@ const Landing = () => {
             <a href="/lbw" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               For clinicians
             </a>
+            <a href="/technicians" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+              For technicians
+            </a>
             <a href="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               How it works
-            </a>
-            <a href="/assessments" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
-              Reviews
-            </a>
-            <a href="/coaching" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
-              Blog
             </a>
 
             {/* Action Buttons Inside Same Pill */}
@@ -109,7 +106,7 @@ const Landing = () => {
             <div className="flex items-center">
               <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
               <span className="ml-1.5 text-base font-normal text-gray-900">
-                Neuro360<sup className="text-[10px]">®</sup>
+                NeuroSense<sup className="text-[10px]">®</sup>
               </span>
             </div>
             <button
@@ -138,23 +135,20 @@ const Landing = () => {
               <div className="flex items-center mb-12 mt-2">
                 <Brain className="h-6 w-6 text-white bg-gray-900 p-1 rounded" />
                 <span className="ml-2 text-lg font-normal text-gray-900">
-                  Neuro360<sup className="text-[10px]">®</sup>
+                  NeuroSense<sup className="text-[10px]">®</sup>
                 </span>
               </div>
 
               {/* Navigation Links */}
               <div className="flex flex-col space-y-6 mb-12">
                 <a href="/lbw" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  LBW Portal
+                  For clinicians
+                </a>
+                <a href="/technicians" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  For technicians
                 </a>
                 <a href="/lbw-updates" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  Updates
-                </a>
-                <a href="/assessments" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  Assessments
-                </a>
-                <a href="/coaching" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  Coaching
+                  How it works
                 </a>
               </div>
 
@@ -193,10 +187,9 @@ const Landing = () => {
           {/* Video Background */}
           <div className="absolute inset-0">
             <video
-              src="https://framerusercontent.com/assets/vsU2sB9A4gvWxvvxcLHdwVAPxCs.mp4"
+              src="/hero_section.mp4"
               loop
               preload="auto"
-              poster="https://framerusercontent.com/images/j36jPOU7NY9Xe7boYQkJ2zndvw.jpg"
               muted
               playsInline
               autoPlay
@@ -277,7 +270,7 @@ const Landing = () => {
                       textShadow: '0 2px 4px rgba(0,0,0,0.5)'
                     }}
                   >
-                    Restore clarity, calm, and focus. Build customized daily habits. Individualized breathing(pranayama), meditation, music, exercise and mantra/affirmations for your brain.
+                    Restore clarity, calm, and focus. Build customized daily habits. Individualized breathing(pranayama), meditation, music, exercise and mantra affirmations for your brain.
                   </p>
                 </div>
               </div>
@@ -574,15 +567,15 @@ const Landing = () => {
 
             <div className="space-y-6">
               <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-                For the very first time — a clinical-grade EEG combined with proprietary and globally validated brain assessment parameters to measure your true brain performance, trusted all over the world.
+                For the very first time, a clinical grade EEG combined with proprietary and globally validated brain assessment parameters to measure your true brain performance, trusted all over the world.
               </p>
 
               <p className="text-lg sm:text-xl md:text-2xl text-gray-900 leading-relaxed font-semibold animate-brainwave">
-                Don't just track your bank balance—track your brain's balance.
+                Don't just track your bank balance, track your brain's balance.
               </p>
 
               <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-                Track memory, focus, mood, stress, and sleep with the <span className="font-bold text-[#00897B]">NeuroSense BMW Report(Brain & Mental Wellness)</span> —actionable insights to guide your next steps.
+                Track memory, focus, mood, stress, and sleep with the <span className="font-bold text-[#00897B]">NeuroSense BMW Report(Brain & Mental Wellness)</span> actionable insights to guide your next steps.
               </p>
             </div>
           </div>
@@ -636,7 +629,7 @@ const Landing = () => {
             {/* Connecting dot at top */}
             <div className="absolute -top-8 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
             <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-              We blend ancient truths with modern scientific proofs to create a personalized <span className="font-bold text-[#00897B]">MOVERS protocol</span> — integrating <span className="font-semibold text-[#00897B]">M</span>editation, <span className="font-semibold text-[#00897B]">O</span>xygenation (breathwork), <span className="font-semibold text-[#00897B]">V</span>isualization or Theta techniques, <span className="font-semibold text-[#00897B]">E</span>xercises, Affirmations, targeted <span className="font-semibold text-[#00897B]">R</span>elaxation and Nutrition, and <span className="font-semibold text-[#00897B]">S</span>leep or Stress-Relief through HRV(Heart rate variability) — for complete brain care.
+              We blend ancient truths with modern scientific proofs to create a personalized <span className="font-bold text-[#00897B]">MOVERS protocol</span> integrating <span className="font-semibold text-[#00897B]">M</span>editation, <span className="font-semibold text-[#00897B]">O</span>xygenation (breathwork), <span className="font-semibold text-[#00897B]">V</span>isualization or Theta techniques, <span className="font-semibold text-[#00897B]">E</span>xercises, Affirmations, targeted <span className="font-semibold text-[#00897B]">R</span>elaxation and Nutrition, and <span className="font-semibold text-[#00897B]">S</span>leep or Stress Relief through HRV(Heart rate variability) for complete brain care.
             </p>
           </div>
 
@@ -824,7 +817,7 @@ const Landing = () => {
               {/* Content Box */}
               <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20">
                 <p className="text-base sm:text-lg text-gray-900 leading-relaxed">
-                  <span className="font-bold">Build a personalized brain optimization plan tailored to your needs.</span> Leverage our lab-tested brainwave frequencies, special sounds and music (mantras), ANS (Autonomic Nervous System) reset protocols, guided meditations, and targeted light and sound therapies. Track your progress, refine your plan, and sustain your gains with ongoing expert support. Available for both <span className="font-semibold text-[#00897B]">home and clinic-based care</span>, depending on your requirements.
+                  <span className="font-bold">Build a personalized brain optimization plan tailored to your needs.</span> Leverage our lab tested brainwave frequencies, special sounds and music (mantras), ANS (Autonomic Nervous System) reset protocols, guided meditations, and targeted light and sound therapies. Track your progress, refine your plan, and sustain your gains with ongoing expert support. Available for both <span className="font-semibold text-[#00897B]">home and clinic based care</span>, depending on your requirements.
                 </p>
               </div>
             </div>
@@ -854,11 +847,11 @@ const Landing = () => {
               {/* Content Box */}
               <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20">
                 <p className="text-base sm:text-lg text-gray-900 leading-relaxed mb-6">
-                  Ask AI-trained about your condition and how Neuro360 can help, in any language.
+                  Ask AI trained about your condition and how NeuroSense can help, in any language.
                 </p>
 
                 <p className="text-sm text-gray-600 leading-relaxed mb-8">
-                  This would be reworded for dr sweta the Ai, "AI-generated content may contain errors or inaccuracies, and is not a substitute for professional advice, treatment or therapy. Please check with your Doctor or Therapist before following any advice given. By using this Ai, you agree to the terms and conditions on the website, are over 18, and agree that you are solely responsible. All conversations are anonymous and never shared."
+                  This would be reworded for dr sweta the Ai, "AI generated content may contain errors or inaccuracies, and is not a substitute for professional advice, treatment or therapy. Please check with your Doctor or Therapist before following any advice given. By using this Ai, you agree to the terms and conditions on the website, are over 18, and agree that you are solely responsible. All conversations are anonymous and never shared."
                 </p>
 
                 {/* AI Avatar and Name */}
@@ -876,8 +869,8 @@ const Landing = () => {
                     <button className="bg-[#1DA1F2] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#1a8cd8] transition-colors">
                       Tweet
                     </button>
-                    <button className="bg-[#0077B5] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#006399] transition-colors">
-                      Share
+                    <button className="bg-[#25D366] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#20BA5A] transition-colors">
+                      Call
                     </button>
                     <button className="bg-[#0866FF] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#0658e3] transition-colors">
                       Share
@@ -908,12 +901,15 @@ const Landing = () => {
               {/* Content Box with Brain Image and Text */}
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200 relative z-20">
                 <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                  {/* Brain Image */}
+                  {/* Frequency Modulation Video */}
                   <div className="flex-shrink-0">
                     <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
-                      <img
-                        src="/brain.png"
-                        alt="Brain illustration"
+                      <video
+                        src="/frequency_modulation_work.mp4"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
                         className="w-full h-full object-contain drop-shadow-lg"
                       />
                     </div>
@@ -925,7 +921,7 @@ const Landing = () => {
                       How does Neurosense's Frequency Modulation Work?
                     </h2>
                     <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
-                      NeuroSense uses frequency-modulated audio—subtle rhythms and tones your brain naturally syncs to—to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
+                      NeuroSense uses frequency modulated audio, subtle rhythms and tones your brain naturally syncs to, to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
                     </p>
                   </div>
                 </div>
@@ -935,122 +931,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Step-by-Step Guide Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Title */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900">
-              A <span className="font-normal">Step-By-Step</span> Guide to Doing
-            </h2>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900">
-              Neurofeedback With <span className="text-[#00897B] font-normal">NeuroSense</span>
-            </h2>
-          </div>
-
-          {/* Step 1: Measure your brain activity */}
-          <div className="mb-20 group cursor-pointer">
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 shadow-lg border border-gray-200 transition-all duration-500 ease-out group-hover:shadow-2xl group-hover:scale-[1.02]">
-              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                {/* Text Content */}
-                <div className="flex-1 text-left space-y-4">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-normal text-gray-900 leading-tight">
-                    <span className="font-semibold">1. Measure</span> your brain activity
-                  </h3>
-                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
-                    Electrical signals generated in the brain reflect your current mental state. Neurosense uses proprietary technology to study and measure your brain activity
-                  </p>
-                  <div className="pt-2">
-                    <button className="bg-[#00897B] hover:bg-[#00796B] text-white px-6 py-3 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg">
-                      Find a clinic near you
-                    </button>
-                  </div>
-                </div>
-
-                {/* Brain Image */}
-                <div className="flex-shrink-0">
-                  <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transform transition-transform duration-700 ease-out group-hover:scale-125 group-hover:rotate-6">
-                    <img
-                      src="/brain.png"
-                      alt="Brain illustration"
-                      className="w-full h-full object-contain drop-shadow-lg transition-all duration-700 group-hover:drop-shadow-2xl"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 2: Understand your brain */}
-          <div className="mb-20 group cursor-pointer">
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 shadow-lg border border-gray-200 transition-all duration-500 ease-out group-hover:shadow-2xl group-hover:scale-[1.02]">
-              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                {/* Graphic Image */}
-                <div className="flex-shrink-0">
-                  <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transform transition-transform duration-700 ease-out group-hover:scale-125 group-hover:-rotate-6">
-                    <img
-                      src="/11.png"
-                      alt="Understand your brain"
-                      className="w-full h-full object-contain transition-all duration-700 group-hover:drop-shadow-2xl"
-                    />
-                  </div>
-                </div>
-
-                {/* Text Content */}
-                <div className="flex-1 text-left space-y-4">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-normal text-gray-900 leading-tight">
-                    <span className="font-semibold">2. Understand</span> your brain
-                  </h3>
-                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
-                    NeuroSense scans, decodes, and provides you with in-depth insights into your brain. Your Brain Map, explained.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3: Get a personalized brain training plan */}
-          <div className="mb-20 group cursor-pointer">
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 shadow-lg border border-gray-200 transition-all duration-500 ease-out group-hover:shadow-2xl group-hover:scale-[1.02]">
-              <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                {/* Text Content */}
-                <div className="flex-1 text-left space-y-4">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-normal text-gray-900 leading-tight">
-                    <span className="font-semibold">3. Get a personalized</span> brain training plan
-                  </h3>
-                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
-                    We create a personalized, holistic frequency modulation plan based on your brain activity, brain type, and goals, helping your brain reach its ultimate capacity.
-                  </p>
-                </div>
-
-                {/* Brain Image */}
-                <div className="flex-shrink-0">
-                  <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transform transition-transform duration-700 ease-out group-hover:scale-125 group-hover:rotate-6">
-                    <img
-                      src="/brain.png"
-                      alt="Brain illustration"
-                      className="w-full h-full object-contain drop-shadow-lg transition-all duration-700 group-hover:drop-shadow-2xl"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-black text-white py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
             {/* Left Column - Brand & Newsletter */}
             <div className="lg:col-span-1 space-y-6">
               {/* Logo */}
               <div className="flex items-center">
                 <Brain className="h-6 w-6 text-white bg-white p-1 rounded" />
                 <span className="ml-2 text-lg font-normal">
-                  Neuro360<sup className="text-[10px]">®</sup>
+                  NeuroSense<sup className="text-[10px]">®</sup>
                 </span>
               </div>
 
@@ -1062,15 +953,15 @@ const Landing = () => {
               {/* Newsletter */}
               <div className="space-y-3">
                 <p className="text-sm text-gray-400">
-                  Develop a healthier brain with our science-backed tips straight to your inbox.
+                  Develop a healthier brain with our science backed tips straight to your inbox.
                 </p>
-                <div className="flex gap-2">
+                <div className="space-y-2">
                   <input
                     type="email"
                     placeholder="Your email address"
-                    className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00897B]"
+                    className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00897B]"
                   />
-                  <button className="px-6 py-2 bg-[#00897B] hover:bg-[#00796B] text-white rounded-lg text-sm font-medium transition-colors">
+                  <button className="w-full px-6 py-2.5 bg-[#00897B] hover:bg-[#00796B] text-white rounded-lg text-sm font-medium transition-colors">
                     Subscribe
                   </button>
                 </div>
@@ -1095,17 +986,17 @@ const Landing = () => {
                 </a>
               </div>
 
-              {/* Headband Link */}
+              {/* Find a Clinic CTA */}
               <div className="p-4 bg-[#00897B]/20 rounded-lg border border-[#00897B]/30">
-                <p className="text-sm font-medium mb-1">Have a headband?</p>
-                <a href="#" className="text-sm text-[#00897B] hover:underline">Try Neuro360 for free →</a>
+                <p className="text-sm font-medium mb-1">Ready to start?</p>
+                <a href="/register" className="text-sm text-[#00897B] hover:underline">Find a clinic near you →</a>
               </div>
 
               {/* Address */}
               <div className="flex items-start gap-2 text-xs text-gray-400">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">Neuro360 Inc.</p>
+                  <p className="font-medium text-white">NeuroSense Inc.</p>
                   <p>175 Varick Street</p>
                   <p>New York, NY 10014, US</p>
                 </div>
@@ -1117,15 +1008,18 @@ const Landing = () => {
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For clinics</h3>
               <ul className="space-y-3">
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Neuro360 Clinical Product</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FAQs</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Neuro360 Dashboard →</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
               </ul>
+            </div>
 
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider pt-4">Resources</h3>
+            {/* Resources Column */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">How It Works</a></li>
+                <li><a href="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Guide to Brainwaves</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Science</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Reviews</a></li>
@@ -1141,8 +1035,8 @@ const Landing = () => {
               <ul className="space-y-3">
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Start now</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Peak Performance</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Neuro360 vs. Others</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Neuro360 Providers Library</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense vs. Others</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Providers Library</a></li>
               </ul>
             </div>
 
@@ -1150,17 +1044,20 @@ const Landing = () => {
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Company</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">About Us</a></li>
+                <li><a href="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Careers →</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Legal</a></li>
+                <li><a href="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</a></li>
                 <li><a href="tel:+18553217800" className="text-base hover:text-[#00897B] transition-colors">+1 (855) 321-7800</a></li>
               </ul>
             </div>
           </div>
 
           {/* Bottom Copyright */}
-          <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-            <p className="text-sm text-gray-400">&copy; 2024 Neuro360 Inc. All rights reserved.</p>
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <div className="text-center">
+              <p className="text-sm text-gray-400">&copy; 2024 NeuroSense Inc. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </footer>

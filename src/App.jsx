@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { testSupabaseConnection } from './utils/supabaseTest';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/Landing.jsx';
+import AboutUs from './pages/AboutUs.jsx';
 import LBWProjectUpdates from './pages/LBWProjectUpdates.jsx';
 import LBWAssessments from './pages/LBWAssessments.jsx';
 import LBWCoaching from './pages/LBWCoaching.jsx';
@@ -98,6 +99,7 @@ function App() {
             <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/about-us" element={<AboutUs />} />
             <Route path="/lbw" element={<LBWMainLanding />} />
             <Route path="/lbw-updates" element={<LBWProjectUpdates />} />
             <Route path="/assessments" element={<LBWAssessments />} />
