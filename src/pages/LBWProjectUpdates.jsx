@@ -106,18 +106,39 @@ const LBWProjectUpdates = () => {
           ))}
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-16 text-center bg-gradient-to-r from-[#00897B] to-[#00796B] rounded-2xl p-12 text-white">
-          <h2 className="text-3xl font-normal mb-4">Ready to Start Your Journey?</h2>
-          <p className="text-lg mb-8 opacity-90">
-            Join thousands of people who have improved their mental wellness with NeuroSense
-          </p>
-          <button
-            onClick={() => navigate('/register')}
-            className="bg-white text-[#00897B] hover:bg-gray-100 px-8 py-3 rounded-full text-base font-medium transition-all"
-          >
-            Get Started Today
-          </button>
+        {/* For Clinics and Individuals Section */}
+        <div className="mt-20 mb-16">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* For Clinics Card */}
+            <div className="bg-gray-50 rounded-3xl p-10 text-center hover:shadow-xl transition-all duration-300">
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">For clinics</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Explore NeuroSense's remote care capabilities and how to get started.
+              </p>
+              <button
+                onClick={() => navigate('/lbw')}
+                className="bg-[#00897B] hover:bg-[#00796B] text-white px-6 py-3 rounded-full text-base font-medium transition-all inline-flex items-center gap-2"
+              >
+                Learn more about NeuroSense Clinical
+                <span>→</span>
+              </button>
+            </div>
+
+            {/* For Individuals Card */}
+            <div className="bg-[#C8E6E1] rounded-3xl p-10 text-center hover:shadow-xl transition-all duration-300">
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">For individuals</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Enroll in our at home neurofeedback program or find a nearby NeuroSense provider.
+              </p>
+              <button
+                onClick={() => navigate('/register')}
+                className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-full text-base font-medium transition-all inline-flex items-center gap-2"
+              >
+                Get started
+                <span>→</span>
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>
