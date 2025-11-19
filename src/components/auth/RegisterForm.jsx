@@ -137,7 +137,6 @@ const RegisterForm = () => {
               >
                 <option value="patient">️ Personal Patient</option>
                 <option value="clinic">CLINIC: Clinic Administrator</option>
-                <option value="super_admin">SUPERADMIN: Super Administrator</option>
               </select>
             </div>
             {errors.userType && (
