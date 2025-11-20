@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 class StorageService {
   constructor() {
     this.reportsBucket = 'patient-reports';
-    this.avatarsBucket = 'avatars';
+    this.avatarsBucket = 'profile_image'; // Changed to match your Supabase bucket name
     this.initialized = false;
     this.checkBucketAvailability();
   }
@@ -389,14 +389,14 @@ class StorageService {
         throw new Error(`Image size must be less than 5MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
       }
 
-      // Create unique file path: avatars/{userRole}/{userId}/avatar.{ext}
+      // Create unique file path: profile_image/{userRole}/{userId}/avatar.{ext}
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const filePath = `${userRole}/${userId}/avatar_${timestamp}.${fileExt}`;
 
       console.log('STORAGE: Upload path:', filePath);
 
-      // Upload to Supabase Storage (avatars bucket)
+      // Upload to Supabase Storage (profile_image bucket)
       const { data, error } = await supabase.storage
         .from(this.avatarsBucket)
         .upload(filePath, file, {
@@ -433,7 +433,7 @@ class StorageService {
   }
 
   /**
-   * Delete avatar from Supabase Storage
+   * Delete avatar from Supabase Storage (profile_image bucket)
    * @param {string} path - File path in storage
    * @returns {Promise<Object>} - Deletion result
    */
@@ -447,7 +447,7 @@ class StorageService {
         throw new Error(`Failed to delete avatar: ${error.message}`);
       }
 
-      console.log('STORAGE: Avatar deleted successfully:', path);
+      console.log('STORAGE: Avatar deleted successfully from profile_image bucket:', path);
       return { success: true, message: 'Avatar deleted successfully' };
     } catch (error) {
       console.error('STORAGE: Error deleting avatar:', error);
