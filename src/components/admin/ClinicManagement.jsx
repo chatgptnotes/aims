@@ -528,13 +528,35 @@ const ClinicManagement = ({ onUpdate }) => {
       const action = newStatus ? 'activate' : 'deactivate';
 
       if (window.confirm(`Are you sure you want to ${action} "${clinic.name}"?\n\n${newStatus ? 'Clinic will be able to login and use the system.' : 'Clinic will be unable to login or access the system.'}`)) {
-        await DatabaseService.update('clinics', clinicId, {
+
+        // Prepare update data
+        const updateData = {
           isActive: newStatus,
           is_active: newStatus, // Also update snake_case field for consistency
           updated_at: new Date().toISOString()
-        });
-        toast.success(`Clinic "${clinic.name}" ${newStatus ? 'activated' : 'deactivated'} successfully`, {
-          duration: 3000
+        };
+
+        // If activating the clinic, also update subscription status if it's pending_approval
+        if (newStatus && (clinic.subscription_status === 'pending_approval' || clinic.subscriptionStatus === 'pending_approval')) {
+          updateData.subscription_status = 'trial'; // Change from pending_approval to trial
+          updateData.subscriptionStatus = 'trial'; // Legacy field
+          updateData.reports_allowed = 10; // Give trial credits
+          updateData.reportsAllowed = 10; // Legacy field
+          updateData.reports_used = 0; // Reset usage
+          updateData.reportsUsed = 0; // Legacy field
+          updateData.trial_start_date = new Date().toISOString();
+          updateData.trial_end_date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days trial
+          updateData.activatedAt = new Date().toISOString();
+        }
+
+        await DatabaseService.update('clinics', clinicId, updateData);
+
+        const successMessage = newStatus
+          ? `Clinic "${clinic.name}" activated successfully! They can now login with their credentials.`
+          : `Clinic "${clinic.name}" deactivated successfully.`;
+
+        toast.success(successMessage, {
+          duration: 4000
         });
         loadClinics();
         onUpdate?.();
