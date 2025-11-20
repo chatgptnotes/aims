@@ -162,11 +162,39 @@ const RegisterForm = () => {
             </div>
           </div>
 
-          {/* Name Field */}
+          {/* Clinic Name Field - Only for clinic registration */}
+          {watchUserType === 'clinic' && (
+            <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <label htmlFor="clinicName" className="field-label">
+                Clinic Name
+              </label>
+              <div className="relative">
+                <Building2 className={`input-icon ${errors.clinicName ? 'text-red-400' : ''}`} />
+                <input
+                  id="clinicName"
+                  type="text"
+                  className={`auth-input pl-11 ${errors.clinicName ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
+                  placeholder="Enter clinic name"
+                  {...register('clinicName', {
+                    required: watchUserType === 'clinic' ? 'Clinic name is required' : false,
+                    minLength: {
+                      value: 2,
+                      message: 'Clinic name must be at least 2 characters',
+                    },
+                  })}
+                />
+              </div>
+              {errors.clinicName && (
+                <p className="error-message">{errors.clinicName.message}</p>
+              )}
+            </div>
+          )}
+
+          {/* Name Field - Contact Person for clinic, Full Name for others */}
           <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <label htmlFor="name" className="field-label">
               {watchUserType === 'super_admin' ? 'Administrator Name' :
-               watchUserType === 'clinic' ? 'Clinic Name / Contact Person' :
+               watchUserType === 'clinic' ? 'Contact Person Name' :
                'Full Name'}
             </label>
             <div className="relative">
@@ -176,7 +204,7 @@ const RegisterForm = () => {
                 type="text"
                 className={`auth-input pl-11 ${errors.name ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                 placeholder={watchUserType === 'super_admin' ? 'Enter administrator name' :
-                            watchUserType === 'clinic' ? 'Enter clinic name or contact person' :
+                            watchUserType === 'clinic' ? 'Enter contact person name' :
                             'Enter your full name'}
                 {...register('name', {
                   required: 'Name is required',
@@ -358,20 +386,20 @@ const RegisterForm = () => {
 
               {/* Registered Clinic Name */}
               <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.5s' }}>
-                <label htmlFor="clinicName" className="field-label">
+                <label htmlFor="registeredClinicName" className="field-label">
                   Registered Clinic Name
                 </label>
                 <div className="relative">
-                  <Building2 className={`input-icon ${errors.clinicName ? 'text-red-400' : ''}`} />
+                  <Building2 className={`input-icon ${errors.registeredClinicName ? 'text-red-400' : ''}`} />
                   <input
-                    id="clinicName"
+                    id="registeredClinicName"
                     type="text"
-                    className={`auth-input pl-11 ${errors.clinicName ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
+                    className={`auth-input pl-11 ${errors.registeredClinicName ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                     placeholder="Enter your registered clinic name"
                     data-lpignore="true"
                     data-form-type="other"
                     autoComplete="off"
-                    {...register('clinicName', {
+                    {...register('registeredClinicName', {
                       required: 'Clinic name is required for patients',
                       minLength: {
                         value: 2,
@@ -380,8 +408,8 @@ const RegisterForm = () => {
                     })}
                   />
                 </div>
-                {errors.clinicName && (
-                  <p className="error-message">{errors.clinicName.message}</p>
+                {errors.registeredClinicName && (
+                  <p className="error-message">{errors.registeredClinicName.message}</p>
                 )}
                 <p className="mt-2 text-xs text-gray-500">
                   Enter the exact name of the clinic where you are registered
