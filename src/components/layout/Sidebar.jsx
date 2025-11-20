@@ -33,11 +33,13 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from './ThemeToggle';
 
 const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const handleLogout = async () => {
     await logout();
@@ -206,13 +208,25 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
           {/* Brand Logo */}
           <div className="flex items-center justify-center">
             {!collapsed && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
+              <div className="flex items-center justify-center w-full">
+                <img
+                  src={isDarkMode ? "/assets/branding/dark background.png" : "/assets/branding/white background.png"}
+                  alt="NeuroSense360 Logo"
+                  className="h-10 w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to text if image fails to load
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden items-center space-x-2">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <span className="text-white font-bold text-base">NeuroSense360</span>
                 </div>
-                <span className="text-white font-bold text-base">NeuroSense360</span>
               </div>
             )}
             {collapsed && (
