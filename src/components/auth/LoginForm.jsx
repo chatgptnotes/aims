@@ -28,7 +28,10 @@ const LoginForm = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  // Get user type from navigation state (from landing page)
+  const userTypeFromState = location.state?.userType;
+
   const {
     register,
     handleSubmit,
@@ -96,7 +99,11 @@ const LoginForm = () => {
       <div className="auth-card animate-fade-in-up floating-elements relative z-10">
         <div className="text-center mb-6 sm:mb-8 animate-slide-up">
           <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2 sm:mb-3">Welcome Back</h2>
-          <p className="text-gray-600 font-medium text-sm sm:text-base">Sign in to your account</p>
+          <p className="text-gray-600 font-medium text-sm sm:text-base">
+            {userTypeFromState === 'patient' ? 'Patient Login' :
+             userTypeFromState === 'clinic' ? 'Clinic Login' :
+             'Sign in to your account'}
+          </p>
         </div>
 
         {/* Login Form */}

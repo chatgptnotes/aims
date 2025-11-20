@@ -37,13 +37,23 @@ const Landing = () => {
   }, []);
 
   const handlePersonalSignup = () => {
-    setSelectedType('personal');
-    setShowOptions(true);
+    // Navigate directly to login page with patient user type
+    navigate('/login', {
+      state: {
+        userType: 'patient',
+        fromLanding: true
+      }
+    });
   };
 
   const handleClinicSignup = () => {
-    setSelectedType('clinic');
-    setShowOptions(true);
+    // Navigate directly to login page with clinic user type
+    navigate('/login', {
+      state: {
+        userType: 'clinic',
+        fromLanding: true
+      }
+    });
   };
 
   const handleLogin = () => {
