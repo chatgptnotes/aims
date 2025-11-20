@@ -281,15 +281,17 @@ export const AuthProvider = ({ children }) => {
             console.log(' Address from database:', clinicData?.address);
 
             if (clinicData) {
-              // Map contact_person to name for the UI
+              // Map contact_person to name and logo_url to avatar for the UI
               latestUserData = {
                 ...response.user,
                 ...clinicData,
-                name: clinicData.contact_person || clinicData.name || response.user.name
+                name: clinicData.contact_person || clinicData.name || response.user.name,
+                avatar: clinicData.logo_url || clinicData.avatar || response.user.avatar
               };
               console.log('SUCCESS: Clinic admin data fetched from database');
               console.log('SUCCESS: Merged user data:', latestUserData);
               console.log('SUCCESS: Name field set from contact_person:', latestUserData.name);
+              console.log('SUCCESS: Avatar field set from logo_url:', latestUserData.avatar ? 'Yes' : 'No');
             } else {
               console.warn('WARNING: No clinic data found for this user!');
             }
@@ -477,15 +479,17 @@ export const AuthProvider = ({ children }) => {
               console.log(' Registration: Address from database:', clinicData?.address);
 
               if (clinicData) {
-                // Map contact_person to name for the UI
+                // Map contact_person to name and logo_url to avatar for the UI
                 latestUserData = {
                   ...response.user,
                   ...clinicData,
-                  name: clinicData.contact_person || clinicData.name || response.user.name
+                  name: clinicData.contact_person || clinicData.name || response.user.name,
+                  avatar: clinicData.logo_url || clinicData.avatar || response.user.avatar
                 };
                 console.log('SUCCESS: Clinic admin data fetched from database');
                 console.log('SUCCESS: Registration: Merged user data:', latestUserData);
                 console.log('SUCCESS: Registration: Name field set from contact_person:', latestUserData.name);
+                console.log('SUCCESS: Registration: Avatar field set from logo_url:', latestUserData.avatar ? 'Yes' : 'No');
               } else {
                 console.warn('WARNING: Registration: No clinic data found for this user!');
               }
@@ -677,11 +681,14 @@ export const AuthProvider = ({ children }) => {
           // Map avatar to logo_url (clinics table doesn't have avatar field)
           if (clinicData.avatar) {
             clinicData.logo_url = clinicData.avatar;
+            console.log('STORAGE: Avatar mapped to logo_url for clinics table');
+            console.log('STORAGE: Avatar size:', clinicData.avatar?.length || 0, 'characters');
             delete clinicData.avatar;
           }
           console.log('NOTE: Original userData received:', userData);
           console.log('NOTE: Mapped clinic data for database:', clinicData);
           console.log('NOTE: contact_person field:', clinicData.contact_person);
+          console.log('NOTE: logo_url field present:', !!clinicData.logo_url);
           console.log('NOTE: User ID for update:', user.id);
           // Update clinic admin in database
           const updateResult = await DatabaseService.update('clinics', user.id, clinicData);
