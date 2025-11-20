@@ -455,9 +455,9 @@ export const authService = {
     }
   },
 
-  async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone }) {
+  async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone, clinicName }) {
     try {
-      console.log('AUTH: Attempting registration with:', { name, email, userType });
+      console.log('AUTH: Attempting registration with:', { name, email, userType, clinicName });
 
       // Input validation
       if (!name || name.trim().length < 2) {
@@ -474,6 +474,21 @@ export const authService = {
       }
       if (!['patient', 'clinic', 'super_admin'].includes(userType)) {
         throw new Error('Invalid user type selected');
+      }
+
+      // For patients, validate clinic exists if clinic name is provided
+      let registeredClinic = null;
+      if (userType === 'patient' && clinicName && clinicName.trim()) {
+        console.log('AUTH: Validating clinic name:', clinicName);
+        const clinics = await DatabaseService.findBy('clinics', 'name', clinicName.trim());
+
+        if (!clinics || clinics.length === 0) {
+          throw new Error('This clinic is not available in NeuroSense. Please check the clinic name or contact support.');
+        }
+
+        // Store clinic reference for later use
+        registeredClinic = clinics[0];
+        console.log('SUCCESS: Clinic found:', registeredClinic.name);
       }
 
       const normalizedEmail = email.trim().toLowerCase();
@@ -555,34 +570,84 @@ export const authService = {
 
       // Handle user type specific data creation
       if (userType === 'patient') {
-        // For individual patients, create a personal organization and patient record
+        // For patients registered with a clinic, link to clinic's organization
+        // For individual patients, create a personal organization
         try {
           console.log(' Creating patient organization and patient record...');
 
-          // Create personal organization for the patient
-          const personalOrgData = {
-            name: `${name.trim()} - Personal Account`,
-            type: 'personal',
-            subscription_tier: 'free',
-            credits_remaining: 5, // Personal trial credits
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
+          let targetOrgId = null;
+          let targetOrgResult = null;
 
-          const { data: personalOrgResult } = await supabase.from('organizations').insert(personalOrgData).select().single();
+          if (registeredClinic) {
+            // Patient is registering with a clinic - find or create clinic's organization
+            console.log('AUTH: Linking patient to clinic:', registeredClinic.name);
 
-          if (personalOrgResult) {
+            // First, try to find the clinic's organization
+            const { data: clinicOrgs } = await supabase
+              .from('organizations')
+              .select('*')
+              .eq('type', 'clinic')
+              .ilike('name', registeredClinic.name)
+              .limit(1);
+
+            if (clinicOrgs && clinicOrgs.length > 0) {
+              targetOrgResult = clinicOrgs[0];
+              targetOrgId = targetOrgResult.id;
+              console.log('SUCCESS: Found existing clinic organization:', targetOrgResult.name);
+            } else {
+              // Create organization for the clinic if it doesn't exist
+              const clinicOrgData = {
+                name: registeredClinic.name,
+                type: 'clinic',
+                subscription_tier: registeredClinic.subscription_tier || 'free',
+                credits_remaining: registeredClinic.reports_allowed || 10,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+
+              const { data: newClinicOrg } = await supabase.from('organizations').insert(clinicOrgData).select().single();
+              targetOrgResult = newClinicOrg;
+              targetOrgId = newClinicOrg.id;
+              console.log('SUCCESS: Created clinic organization:', newClinicOrg.name);
+            }
+
+            // Create organization membership for the patient (as member, not owner)
+            await supabase.from('org_memberships').insert({
+              org_id: targetOrgId,
+              user_id: data.user.id,
+              role: 'member',
+              created_at: new Date().toISOString()
+            });
+            console.log('SUCCESS: Patient added to clinic organization');
+
+          } else {
+            // Individual patient - create personal organization
+            const personalOrgData = {
+              name: `${name.trim()} - Personal Account`,
+              type: 'personal',
+              subscription_tier: 'free',
+              credits_remaining: 5, // Personal trial credits
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+
+            const { data: personalOrgResult } = await supabase.from('organizations').insert(personalOrgData).select().single();
+            targetOrgResult = personalOrgResult;
+            targetOrgId = personalOrgResult.id;
+
             // Create organization membership for the patient
             await supabase.from('org_memberships').insert({
-              org_id: personalOrgResult.id,
+              org_id: targetOrgId,
               user_id: data.user.id,
               role: 'owner',
               created_at: new Date().toISOString()
             });
+          }
 
+          if (targetOrgId) {
             // Create patient record in patients table
             const patientData = {
-              org_id: personalOrgResult.id,
+              org_id: targetOrgId,
               owner_user: data.user.id,
               external_id: `PAT_${Date.now()}`, // Generate unique external ID
               full_name: name.trim(),
@@ -594,12 +659,18 @@ export const authService = {
               medical_history: null,
               improvement_focus: ['cognitive_enhancement'], // Default focus
               brain_fitness_score: null,
+              clinic_id: registeredClinic ? registeredClinic.id : null, // Store clinic reference
+              clinic_name: registeredClinic ? registeredClinic.name : null, // Store clinic name for easy filtering
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
 
             await supabase.from('patients').insert(patientData);
-            console.log('SUCCESS: Patient record created in patients table');
+            console.log('SUCCESS: Patient record created in patients table', {
+              orgId: targetOrgId,
+              clinicId: registeredClinic?.id,
+              clinicName: registeredClinic?.name
+            });
           }
         } catch (patientError) {
           console.warn('WARNING: Failed to create patient record:', patientError);

@@ -352,6 +352,38 @@ const RegisterForm = () => {
                 )}
               </div>
 
+              {/* Registered Clinic Name */}
+              <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                <label htmlFor="clinicName" className="field-label">
+                  Registered Clinic Name
+                </label>
+                <div className="relative">
+                  <Building2 className={`input-icon ${errors.clinicName ? 'text-red-400' : ''}`} />
+                  <input
+                    id="clinicName"
+                    type="text"
+                    className={`auth-input pl-11 ${errors.clinicName ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
+                    placeholder="Enter your registered clinic name"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    autoComplete="off"
+                    {...register('clinicName', {
+                      required: 'Clinic name is required for patients',
+                      minLength: {
+                        value: 2,
+                        message: 'Clinic name must be at least 2 characters',
+                      },
+                    })}
+                  />
+                </div>
+                {errors.clinicName && (
+                  <p className="error-message">{errors.clinicName.message}</p>
+                )}
+                <p className="mt-2 text-xs text-gray-500">
+                  Enter the exact name of the clinic where you are registered
+                </p>
+              </div>
+
               {/* Phone Number */}
               <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.5s' }}>
                 <label htmlFor="phone" className="field-label">
