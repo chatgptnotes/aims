@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
+import {
   LayoutDashboard,
   Users,
   FileText,
@@ -33,13 +33,11 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import ProfileModal from './ProfileModal';
 import ThemeToggle from './ThemeToggle';
 
 const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -226,68 +224,6 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
             )}
           </div>
 
-          {/* User Info (Simplified) */}
-          {!collapsed && user && (
-            <button
-              onClick={() => {
-                try {
-                  setIsProfileModalOpen(true);
-                } catch (error) {
-                  console.error('Error handling profile click:', error);
-                }
-              }}
-              className="mt-4 p-3 bg-[#1a2332] hover:bg-[#2a3442] rounded-lg transition-colors cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    getProfileInitial()
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-white truncate">
-                    {getDisplayName()}
-                  </p>
-                  <span className="text-xs text-gray-400">
-                    {getRoleLabel()}
-                  </span>
-                </div>
-              </div>
-            </button>
-          )}
-
-          {/* Collapsed User Avatar */}
-          {collapsed && user && (
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={() => {
-                  try {
-                    setIsProfileModalOpen(true);
-                  } catch (error) {
-                    console.error('Error handling profile click:', error);
-                  }
-                }}
-                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity"
-                title={`${getDisplayName()} - ${getRoleLabel()}`}
-              >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  getProfileInitial()
-                )}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Navigation */}
@@ -353,14 +289,8 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
           )}
         </div>
       </div>
+    </>
+  );
+};
 
-       {/* Profile Modal */}
-       <ProfileModal 
-         isOpen={isProfileModalOpen} 
-         onClose={() => setIsProfileModalOpen(false)} 
-       />
-     </>
-   );
- };
- 
- export default Sidebar;
+export default Sidebar;

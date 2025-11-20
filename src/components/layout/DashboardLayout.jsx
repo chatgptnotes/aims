@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Bell, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from './Sidebar';
+import ProfileModal from './ProfileModal';
 
 const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const { user } = useAuth();
 
   return (
@@ -52,9 +54,12 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
                 <span className="absolute top-1 right-1 block h-2 w-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800"></span>
               </button>
 
-              {/* User Avatar */}
+              {/* User Profile Button */}
               <div className="relative">
-                <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <button
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                     {user?.avatar ? (
                       <img
@@ -102,6 +107,12 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
           </div>
         </main>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 };
