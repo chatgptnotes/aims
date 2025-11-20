@@ -17,6 +17,8 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
+import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 
 const LBWMainLanding = () => {
   const navigate = useNavigate();
@@ -102,8 +104,10 @@ const LBWMainLanding = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E4EFFF] via-white to-purple-50">
+      <NavBar />
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-20">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
         <div className="container mx-auto px-4 py-20 relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -293,19 +297,7 @@ const LBWMainLanding = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <div className="flex justify-center items-center gap-2 mb-4">
-              <Brain className="w-8 h-8 text-blue-400" />
-              <span className="text-2xl font-bold">Limitless Brain Wellness</span>
-            </div>
-            <p className="text-gray-400 mb-4">By Dr. Sweta Adatia</p>
-            <p className="text-gray-500">© 2024 Limitless Brain Lab. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
