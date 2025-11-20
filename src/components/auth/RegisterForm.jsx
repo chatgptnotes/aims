@@ -165,7 +165,9 @@ const RegisterForm = () => {
           {/* Name Field */}
           <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <label htmlFor="name" className="field-label">
-              {watchUserType === 'super_admin' ? 'Administrator Name' : 'Clinic Name / Contact Person'}
+              {watchUserType === 'super_admin' ? 'Administrator Name' :
+               watchUserType === 'clinic' ? 'Clinic Name / Contact Person' :
+               'Full Name'}
             </label>
             <div className="relative">
               <User className={`input-icon ${errors.name ? 'text-red-400' : ''}`} />
@@ -173,7 +175,9 @@ const RegisterForm = () => {
                 id="name"
                 type="text"
                 className={`auth-input pl-11 ${errors.name ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
-                placeholder={watchUserType === 'super_admin' ? 'Enter administrator name' : 'Enter clinic name or your name'}
+                placeholder={watchUserType === 'super_admin' ? 'Enter administrator name' :
+                            watchUserType === 'clinic' ? 'Enter clinic name or contact person' :
+                            'Enter your full name'}
                 {...register('name', {
                   required: 'Name is required',
                   minLength: {
