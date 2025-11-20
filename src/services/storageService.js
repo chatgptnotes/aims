@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 class StorageService {
   constructor() {
     this.reportsBucket = 'patient-reports';
+    this.avatarsBucket = 'avatars';
     this.initialized = false;
     this.checkBucketAvailability();
   }
@@ -359,6 +360,98 @@ class StorageService {
     } catch (error) {
       console.error('Error copying file:', error);
       throw new Error(`Failed to copy file: ${error.message}`);
+    }
+  }
+
+  /**
+   * Upload profile avatar to Supabase Storage
+   * @param {File} file - Image file to upload
+   * @param {string} userId - User ID for organizing files
+   * @param {string} userRole - User role (super_admin, clinic_admin, etc.)
+   * @returns {Promise<Object>} - Upload result with public URL
+   */
+  async uploadAvatar(file, userId, userRole = 'user') {
+    try {
+      console.log('STORAGE: Uploading avatar to Supabase Storage:', { userId, userRole, fileName: file.name });
+
+      if (!file) {
+        throw new Error('No file provided');
+      }
+
+      // Validate file is an image
+      if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image');
+      }
+
+      // Check file size (max 5MB for avatars)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        throw new Error(`Image size must be less than 5MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      }
+
+      // Create unique file path: avatars/{userRole}/{userId}/avatar.{ext}
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const filePath = `${userRole}/${userId}/avatar_${timestamp}.${fileExt}`;
+
+      console.log('STORAGE: Upload path:', filePath);
+
+      // Upload to Supabase Storage (avatars bucket)
+      const { data, error } = await supabase.storage
+        .from(this.avatarsBucket)
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true, // Replace existing avatar
+          cacheControl: '3600' // Cache for 1 hour
+        });
+
+      if (error) {
+        console.error('STORAGE: Upload error:', error);
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      console.log('STORAGE: File uploaded successfully:', data.path);
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from(this.avatarsBucket)
+        .getPublicUrl(data.path);
+
+      console.log('STORAGE: Public URL generated:', urlData.publicUrl);
+
+      return {
+        success: true,
+        path: data.path,
+        url: urlData.publicUrl,
+        bucket: this.avatarsBucket,
+        uploadedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('STORAGE: Error uploading avatar:', error);
+      throw new Error(`Failed to upload avatar: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete avatar from Supabase Storage
+   * @param {string} path - File path in storage
+   * @returns {Promise<Object>} - Deletion result
+   */
+  async deleteAvatar(path) {
+    try {
+      const { error } = await supabase.storage
+        .from(this.avatarsBucket)
+        .remove([path]);
+
+      if (error) {
+        throw new Error(`Failed to delete avatar: ${error.message}`);
+      }
+
+      console.log('STORAGE: Avatar deleted successfully:', path);
+      return { success: true, message: 'Avatar deleted successfully' };
+    } catch (error) {
+      console.error('STORAGE: Error deleting avatar:', error);
+      throw new Error(`Failed to delete avatar: ${error.message}`);
     }
   }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, User, Mail, Building, Shield, Save, Upload, CheckCircle, Phone, MapPin, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import StorageService from '../../services/storageService';
 
 const ProfileModal = ({ isOpen, onClose }) => {
   const { user, updateUser } = useAuth();
@@ -18,6 +19,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   // Update form data when user changes or modal opens
@@ -45,17 +48,33 @@ const ProfileModal = ({ isOpen, onClose }) => {
     }));
   };
 
-  const handleAvatarUpload = (e) => {
+  const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormData(prev => ({
-          ...prev,
-          avatar: e.target.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        setUploadingAvatar(true);
+        console.log('AVATAR: Starting upload to Supabase Storage...', file.name);
+
+        // Store file for later upload on save
+        setSelectedFile(file);
+
+        // Show preview immediately using FileReader
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setFormData(prev => ({
+            ...prev,
+            avatar: e.target.result // Temporary preview (base64)
+          }));
+        };
+        reader.readAsDataURL(file);
+
+        console.log('AVATAR: File selected and preview loaded');
+      } catch (error) {
+        console.error('AVATAR: Error selecting file:', error);
+        alert('Error selecting image: ' + error.message);
+      } finally {
+        setUploadingAvatar(false);
+      }
     }
   };
 
@@ -63,6 +82,31 @@ const ProfileModal = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true);
       console.log('STORAGE: Saving profile data to database:', formData);
+
+      // Upload avatar to Supabase Storage if a new file was selected
+      let avatarUrl = formData.avatar;
+      if (selectedFile) {
+        try {
+          console.log('AVATAR: Uploading new avatar to Supabase Storage...');
+          const uploadResult = await StorageService.uploadAvatar(
+            selectedFile,
+            user.id,
+            user.role
+          );
+
+          if (uploadResult.success) {
+            avatarUrl = uploadResult.url;
+            console.log('AVATAR: Upload successful! URL:', avatarUrl);
+          } else {
+            throw new Error('Avatar upload failed');
+          }
+        } catch (uploadError) {
+          console.error('AVATAR: Upload error:', uploadError);
+          alert('Failed to upload avatar: ' + uploadError.message);
+          setIsLoading(false);
+          return;
+        }
+      }
 
       // Validate password change only if user wants to change password (all three fields filled)
       if (formData.currentPassword && formData.password && formData.confirmPassword) {
@@ -98,7 +142,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       }
 
       // Prepare data to send
-      const dataToSave = { ...formData };
+      const dataToSave = { ...formData, avatar: avatarUrl };
 
       // Remove password fields if not changing password
       if (!formData.password) {
@@ -118,6 +162,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
       if (result.success) {
         console.log('SUCCESS: Profile saved successfully to database');
         setShowSuccess(true);
+        setSelectedFile(null); // Clear selected file after successful save
         setTimeout(() => {
           setIsEditing(false);
           setShowSuccess(false);
@@ -207,9 +252,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
               {isEditing && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-2 -right-2 p-2 bg-[#323956] dark:bg-blue-600 text-white rounded-full shadow-lg hover:bg-[#323956] dark:hover:bg-blue-700 transition-colors"
+                  disabled={uploadingAvatar}
+                  className="absolute -bottom-2 -right-2 p-2 bg-[#323956] dark:bg-blue-600 text-white rounded-full shadow-lg hover:bg-[#323956] dark:hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
-                  <Camera className="h-4 w-4" />
+                  {uploadingAvatar ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </button>
               )}
             </div>
