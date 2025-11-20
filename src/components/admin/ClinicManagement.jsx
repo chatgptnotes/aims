@@ -20,7 +20,9 @@ import {
   CreditCard,
   UserPlus,
   Shield,
-  Settings
+  Settings,
+  Power,
+  PowerOff
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -520,19 +522,26 @@ const ClinicManagement = ({ onUpdate }) => {
   };
 
   const handleDeactivateClinic = async (clinicId) => {
-    if (window.confirm('Are you sure you want to change the status of this clinic?')) {
-      try {
-        const clinic = await DatabaseService.findById('clinics', clinicId);
-        await DatabaseService.update('clinics', clinicId, { 
-          isActive: !clinic.isActive 
+    try {
+      const clinic = await DatabaseService.findById('clinics', clinicId);
+      const newStatus = !clinic.isActive;
+      const action = newStatus ? 'activate' : 'deactivate';
+
+      if (window.confirm(`Are you sure you want to ${action} "${clinic.name}"?\n\n${newStatus ? 'Clinic will be able to login and use the system.' : 'Clinic will be unable to login or access the system.'}`)) {
+        await DatabaseService.update('clinics', clinicId, {
+          isActive: newStatus,
+          is_active: newStatus, // Also update snake_case field for consistency
+          updated_at: new Date().toISOString()
         });
-        toast.success(`Clinic ${clinic.isActive ? 'deactivated' : 'activated'} successfully`);
+        toast.success(`Clinic "${clinic.name}" ${newStatus ? 'activated' : 'deactivated'} successfully`, {
+          duration: 3000
+        });
         loadClinics();
         onUpdate?.();
-      } catch (error) {
-        toast.error('Error updating clinic status');
-        console.error(error);
       }
+    } catch (error) {
+      toast.error('Error updating clinic status');
+      console.error('Error in handleDeactivateClinic:', error);
     }
   };
 
@@ -1306,6 +1315,18 @@ Please manually share these credentials with the clinic.`;
                             title="Edit"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDeactivateClinic(clinic.id)}
+                            className={`p-1.5 rounded-md transition-colors ${
+                              clinic.isActive
+                                ? 'bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 text-orange-600 dark:text-orange-400'
+                                : 'bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400'
+                            }`}
+                            title={clinic.isActive ? 'Deactivate Clinic' : 'Activate Clinic'}
+                          >
+                            {clinic.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                           </button>
 
                           <button
