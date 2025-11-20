@@ -455,9 +455,9 @@ export const authService = {
     }
   },
 
-  async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone, clinicName, registeredClinicName }) {
+  async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone, clinicName }) {
     try {
-      console.log('AUTH: Attempting registration with:', { name, email, userType, clinicName, registeredClinicName });
+      console.log('AUTH: Attempting registration with:', { name, email, userType, clinicName });
 
       // Input validation
       if (!name || name.trim().length < 2) {
@@ -476,16 +476,11 @@ export const authService = {
         throw new Error('Invalid user type selected');
       }
 
-      // For clinics, validate clinic name is provided
-      if (userType === 'clinic' && (!clinicName || !clinicName.trim())) {
-        throw new Error('Clinic name is required for clinic registration');
-      }
-
       // For patients, validate clinic exists if clinic name is provided
       let registeredClinic = null;
-      if (userType === 'patient' && registeredClinicName && registeredClinicName.trim()) {
-        console.log('AUTH: Validating clinic name:', registeredClinicName);
-        const clinics = await DatabaseService.findBy('clinics', 'name', registeredClinicName.trim());
+      if (userType === 'patient' && clinicName && clinicName.trim()) {
+        console.log('AUTH: Validating clinic name:', clinicName);
+        const clinics = await DatabaseService.findBy('clinics', 'name', clinicName.trim());
 
         if (!clinics || clinics.length === 0) {
           throw new Error('This clinic is not available in NeuroSense. Please check the clinic name or contact support.');
@@ -685,11 +680,8 @@ export const authService = {
 
       // If clinic registration, create organization AND local clinic entry
       if (userType === 'clinic') {
-        const actualClinicName = clinicName && clinicName.trim() ? clinicName.trim() : name.trim();
-        const contactPerson = name.trim();
-
         const orgData = {
-          name: actualClinicName,
+          name: name.trim(),
           type: 'clinic',
           subscription_tier: 'free',
           credits_remaining: 10, // Trial credits
@@ -713,9 +705,9 @@ export const authService = {
         try {
           const clinicRequestData = {
             id: data.user.id, // Use Supabase user ID as clinic ID
-            name: actualClinicName, // Use clinic name from clinicName field
+            name: name.trim(),
             email: normalizedEmail,
-            contact_person: contactPerson, // Use contact person from name field
+            contact_person: name.trim(),
             phone: phone || '',
             address: '',
             password: password, // Store password for clinic login
