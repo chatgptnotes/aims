@@ -417,3 +417,44 @@ img[loading="lazy"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Force hide LastPass, 1Password, and other password manager icons */
+input[data-lpignore="true"] ~ div[data-lastpass-icon-root],
+input[data-lpignore="true"] + div[data-lastpass-icon-root],
+div[data-lastpass-icon-root],
+div[data-lastpass-overlay],
+div[id^="__lpform_"],
+div[style*="2147483647"],
+[data-lastpass-root],
+[id^="lp-pom-root"],
+#lp-pom-root,
+._lpElement,
+[data-form-type="other"] ~ div[data-lastpass-icon-root],
+[data-form-type="other"] + div[data-lastpass-icon-root] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide 1Password icons */
+[data-form-type="other"] ~ div[data-extension="1password"],
+com-1password-button {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Prevent any extension from adding icons to our forms */
+input[data-lpignore="true"],
+input[data-form-type="other"] {
+  background-image: none !important;
+}
+
+/* Additional LastPass hiding - by background color */
+div[style*="background: rgb(230, 0, 23)"],
+div[style*="background: rgb(204, 0, 0)"],
+div[style*="background-color: rgb(230, 0, 23)"] {
+  display: none !important;
+}
