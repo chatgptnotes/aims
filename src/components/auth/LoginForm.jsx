@@ -217,6 +217,10 @@ const LoginForm = () => {
             Don't have an account?{' '}
             <Link
               to="/register"
+              state={{
+                userType: userTypeFromState || 'patient',
+                fromLogin: true
+              }}
               className="font-semibold text-[#323956] hover:text-[#232D3C] transition-all duration-200 hover:underline hover:underline-offset-4"
             >
               Sign up here
