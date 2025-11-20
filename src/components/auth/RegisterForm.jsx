@@ -200,6 +200,9 @@ const RegisterForm = () => {
                 type="email"
                 className={`auth-input pl-11 ${errors.email ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                 placeholder="Enter your email"
+                data-lpignore="true"
+                data-form-type="other"
+                autoComplete="off"
                 {...register('email', {
                   required: 'Email is required',
                   pattern: {
@@ -226,6 +229,9 @@ const RegisterForm = () => {
                 type={showPassword ? 'text' : 'password'}
                 className={`auth-input pl-11 pr-11 ${errors.password ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                 placeholder="Create a password"
+                data-lpignore="true"
+                data-form-type="other"
+                autoComplete="new-password"
                 {...register('password', {
                   required: 'Password is required',
                   minLength: {
@@ -263,6 +269,9 @@ const RegisterForm = () => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 className={`auth-input pl-11 pr-11 ${errors.confirmPassword ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                 placeholder="Confirm your password"
+                data-lpignore="true"
+                data-form-type="other"
+                autoComplete="new-password"
                 {...register('confirmPassword', {
                   required: 'Please confirm your password',
                   validate: (value) =>
@@ -294,7 +303,12 @@ const RegisterForm = () => {
                   <input
                     id="dateOfBirth"
                     type="date"
+                    max={new Date().toISOString().split('T')[0]}
+                    min={new Date(new Date().setFullYear(new Date().getFullYear() - 120)).toISOString().split('T')[0]}
                     className={`auth-input ${errors.dateOfBirth ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
+                    data-lpignore="true"
+                    data-form-type="other"
+                    autoComplete="bday"
                     {...register('dateOfBirth', {
                       required: 'Date of birth is required for patients',
                       validate: (value) => {
