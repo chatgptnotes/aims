@@ -1,6 +1,86 @@
-# Add Missing Columns to Clinics Table
+# Neuro360 Migration Instructions
 
-## Option 1: Using Supabase Dashboard (Recommended)
+---
+
+## 🆕 LATEST: Patient UID Migration (CLINICCODE-YYYYMM-XXXX)
+
+### ✅ Implementation Complete!
+
+Patient UID format `CLINICCODE-YYYYMM-XXXX` is now implemented in your codebase.
+
+**Example:** `HOPE-202502-0012`
+- **HOPE** = Clinic code
+- **202502** = Year (2025) + Month (02 = February)
+- **0012** = Sequential patient number
+
+### 🚀 Apply Patient UID Migration
+
+#### Step 1: Add clinic_code Column to Organizations Table
+
+1. Go to your Supabase project dashboard: https://supabase.com/dashboard/project/omyltmcesgbhnqmhrrvq
+2. Navigate to **SQL Editor** in the left sidebar
+3. Click **New Query**
+4. Paste and run this SQL:
+
+```sql
+-- Add clinic_code column to organizations table
+ALTER TABLE organizations
+ADD COLUMN IF NOT EXISTS clinic_code VARCHAR(50);
+
+-- Add unique constraint to clinic_code
+ALTER TABLE organizations
+ADD CONSTRAINT organizations_clinic_code_key UNIQUE (clinic_code);
+
+-- Create index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_organizations_clinic_code ON organizations(clinic_code);
+```
+
+5. Click **Run** to execute
+
+#### Step 2: Generate Clinic Codes (Use HTML Tool)
+
+1. Open `test-patient-uid.html` in your browser
+2. Click **"1. Check Database"** to verify column was added
+3. Click **"3. Generate Clinic Codes"** to auto-generate codes for all organizations
+4. Click **"4. Test UID Generation"** to verify
+
+**Or use browser console:**
+
+```javascript
+async function updateClinicCodes() {
+  const { data: orgs } = await supabase.from('organizations').select('id, name, clinic_code');
+  for (const org of orgs) {
+    if (!org.clinic_code) {
+      const code = org.name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8) || 'CLINIC';
+      await supabase.from('organizations').update({ clinic_code: code }).eq('id', org.id);
+      console.log(`✅ ${org.name} → ${code}`);
+    }
+  }
+  console.log('✅ All clinic codes generated!');
+}
+updateClinicCodes();
+```
+
+### 📋 Files Modified
+- ✅ `src/utils/patientUidGenerator.js` - UID generation logic
+- ✅ `src/services/authService.js:650` - Patient registration
+- ✅ `src/components/clinic/PatientManagement.jsx:217` - Clinic admin patient creation
+- ✅ `supabase/migrations/018_add_clinic_code_to_organizations.sql` - Database migration
+
+### 🧪 Test Patient UID
+After migration, create a test patient and verify the UID format in `patients` table:
+```sql
+SELECT external_id, full_name FROM patients ORDER BY created_at DESC LIMIT 5;
+```
+Expected: `HOPE-202502-0001`, `HOPE-202502-0002`, etc.
+
+---
+
+## Previous Migrations
+
+### Add Missing Columns to Clinics Table
+
+#### Option 1: Using Supabase Dashboard (Recommended)
 
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor** in the left sidebar

@@ -50,40 +50,83 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'patient',
-      message: 'New patient John Doe registered',
-      time: '2 hours ago',
-      icon: Users,
-      color: 'blue'
-    },
-    {
-      id: 2,
-      type: 'report',
-      message: 'EEG report generated for Sarah Smith',
-      time: '4 hours ago',
-      icon: FileText,
-      color: 'green'
-    },
-    {
-      id: 3,
-      type: 'upload',
-      message: 'EDF file uploaded for patient Mike Johnson',
-      time: '6 hours ago',
-      icon: Activity,
-      color: 'purple'
-    },
-    {
-      id: 4,
-      type: 'alert',
-      message: 'Approaching report usage limit',
-      time: '1 day ago',
-      icon: AlertTriangle,
-      color: 'yellow'
+  // Helper function to format time ago
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return 'Recently';
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInMs = now - past;
+    const diffInMins = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMs / 3600000);
+    const diffInDays = Math.floor(diffInMs / 86400000);
+
+    if (diffInMins < 1) return 'Just now';
+    if (diffInMins < 60) return `${diffInMins} minute${diffInMins > 1 ? 's' : ''} ago`;
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    if (diffInDays < 30) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    return new Date(timestamp).toLocaleDateString();
+  };
+
+  // Generate dynamic recent activities from real data
+  const recentActivities = React.useMemo(() => {
+    const activities = [];
+
+    // Add recent patients (last 5)
+    const recentPatients = [...patients]
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
+      .slice(0, 5);
+
+    recentPatients.forEach(patient => {
+      activities.push({
+        id: `patient-${patient.id}`,
+        type: 'patient',
+        message: `New patient ${patient.full_name || patient.fullName || patient.name || 'Unknown'} registered`,
+        time: getTimeAgo(patient.created_at || patient.createdAt),
+        timestamp: new Date(patient.created_at || patient.createdAt),
+        icon: Users,
+        color: 'blue'
+      });
+    });
+
+    // Add recent reports (last 5)
+    const recentReports = [...reports]
+      .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
+      .slice(0, 5);
+
+    recentReports.forEach(report => {
+      const patientName = report.patient_name || report.patientName || 'Unknown Patient';
+      activities.push({
+        id: `report-${report.id}`,
+        type: 'report',
+        message: `Report generated for ${patientName}`,
+        time: getTimeAgo(report.created_at || report.createdAt),
+        timestamp: new Date(report.created_at || report.createdAt),
+        icon: FileText,
+        color: 'green'
+      });
+    });
+
+    // Add usage warning if approaching limit
+    if (clinic?.reportsUsed && clinic?.reportsAllowed) {
+      const usagePercent = (clinic.reportsUsed / clinic.reportsAllowed) * 100;
+      if (usagePercent >= 80) {
+        activities.push({
+          id: 'usage-warning',
+          type: 'alert',
+          message: 'Approaching report usage limit',
+          time: 'Active',
+          timestamp: new Date(),
+          icon: AlertTriangle,
+          color: 'yellow'
+        });
+      }
     }
-  ];
+
+    // Sort by timestamp (most recent first) and return top 10
+    return activities
+      .sort((a, b) => (b.timestamp || new Date()) - (a.timestamp || new Date()))
+      .slice(0, 10);
+  }, [patients, reports, clinic]);
 
   const getIconColor = (color) => {
     const colors = {
@@ -204,23 +247,31 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
             </button>
           </div>
           <div className="space-y-4">
-            {recentActivities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <div key={activity.id} className="flex items-start space-x-3">
-                  <div className={`p-2 rounded-full ${getIconColor(activity.color)}`}>
-                    <Icon className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500 mr-1" />
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={activity.id} className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-full ${getIconColor(activity.color)}`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
+                      <div className="flex items-center mt-1">
+                        <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500 mr-1" />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No recent activities</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Activities will appear here as you add patients and generate reports</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -258,59 +309,6 @@ const OverviewTab = ({ clinic, patients = [], reports = [], usage = {}, onRefres
             <span className="text-sm font-medium text-gray-900 dark:text-white">Usage</span>
           </Link>
         </div>
-      </div>
-
-      {/* Recent Patients */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Patients</h3>
-          <Link
-            to="/clinic/patients"
-            className="text-sm text-primary-600 dark:text-blue-400 hover:text-primary-500 dark:hover:text-blue-300 font-medium"
-          >
-            View All
-          </Link>
-        </div>
-        
-        {patients.length > 0 ? (
-          <div className="overflow-hidden">
-            <table className="min-w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Age</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Gender</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {patients.slice(0, 5).map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">{patient.name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{patient.age}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{patient.gender}</td>
-                    <td className="px-4 py-2">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
-                        Active
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">No patients added yet</p>
-            <Link
-              to="/clinic/patients"
-              className="mt-2 text-sm text-primary-600 dark:text-blue-400 hover:text-primary-500 dark:hover:text-blue-300 font-medium"
-            >
-              Add your first patient
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -30,6 +30,8 @@ import {
   Building2,
   Sparkles
 } from 'lucide-react';
+import ClinicLocator from './ClinicLocator';
+import EnquiryForm from './EnquiryForm';
 
 // Animated Counter Component
 const AnimatedCounter = ({ end, duration = 2000, suffix = '' }) => {
@@ -88,9 +90,16 @@ const LandingPage = () => {
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [showCookieBanner, setShowCookieBanner] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
+  const [enquiryLocation, setEnquiryLocation] = useState('');
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
   const toggleFaq = (index) => setOpenFaq(openFaq === index ? null : index);
+
+  const handleNoClinicFound = (location) => {
+    setEnquiryLocation(location);
+    setShowEnquiryForm(true);
+  };
 
   // Show random notification
   useEffect(() => {
@@ -219,7 +228,7 @@ const LandingPage = () => {
                   Start
                 </Link>
                 <Link
-                  to="/register"
+                  to="/login"
                   className="px-5 py-2 bg-gray-900 text-white font-medium text-sm rounded-full hover:bg-gray-800 transition-all duration-300"
                 >
                   For clinics
@@ -249,7 +258,7 @@ const LandingPage = () => {
                 <Link to="/login" className="block text-center px-5 py-2.5 bg-[#00897B] text-white font-medium rounded-full hover:bg-[#00796B] transition-colors">
                   Start
                 </Link>
-                <Link to="/register" className="block text-center px-5 py-2.5 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors">
+                <Link to="/login" className="block text-center px-5 py-2.5 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors">
                   For clinics
                 </Link>
               </div>
@@ -301,13 +310,13 @@ const LandingPage = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <Link
-                to="/register"
+                to="/login"
                 className="group inline-flex items-center justify-center px-8 py-3.5 bg-[#00897B] text-white font-semibold text-base rounded-full hover:bg-[#00796B] transition-all duration-300 transform hover:scale-105"
               >
                 I want it for myself
               </Link>
               <Link
-                to="/register"
+                to="/login"
                 className="inline-flex items-center justify-center px-8 py-3.5 bg-[#2D3748] text-white font-semibold text-base rounded-full hover:bg-[#1A202C] transition-all duration-300 transform hover:scale-105"
               >
                 I want it for my clinic
@@ -819,7 +828,7 @@ const LandingPage = () => {
 
               <div className="mt-8">
                 <Link
-                  to="/register"
+                  to="/login"
                   className="inline-flex items-center px-8 py-4 bg-[#0066CC] text-white font-semibold rounded-full hover:bg-[#004A99] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
                 >
                   Start Your Journey
@@ -957,7 +966,7 @@ const LandingPage = () => {
               Neurofeedback complements traditional approaches and can be used alongside therapy or as you transition off medication (with doctor approval)
             </p>
             <Link
-              to="/register"
+              to="/login"
               className="inline-flex items-center px-8 py-4 bg-[#0066CC] text-white font-semibold rounded-full hover:bg-[#004A99] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
             >
               Start Your Journey Today
@@ -1043,7 +1052,7 @@ const LandingPage = () => {
               Join our network of <span className="font-bold text-[#0066CC]">100+ certified experts</span> worldwide
             </p>
             <Link
-              to="/register"
+              to="/login"
               className="inline-flex items-center text-[#0066CC] font-semibold hover:gap-2 transition-all"
             >
               View All Experts
@@ -1156,7 +1165,7 @@ const LandingPage = () => {
               Ready to start your transformation journey?
             </p>
             <Link
-              to="/register"
+              to="/login"
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#0066CC] to-[#00BFA5] text-white font-semibold rounded-full hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
             >
               Begin Your Journey Today
@@ -1206,7 +1215,7 @@ const LandingPage = () => {
               </ul>
 
               <Link
-                to="/register"
+                to="/login"
                 className="block w-full text-center px-6 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-800 transition-colors"
               >
                 Get Started
@@ -1246,7 +1255,7 @@ const LandingPage = () => {
               </ul>
 
               <Link
-                to="/register"
+                to="/login"
                 className="block w-full text-center px-6 py-3 bg-white text-[#0066CC] font-semibold rounded-full hover:bg-gray-50 transition-colors shadow-lg"
               >
                 Start Free Trial
@@ -1281,7 +1290,7 @@ const LandingPage = () => {
               </ul>
 
               <Link
-                to="/register"
+                to="/login"
                 className="block w-full text-center px-6 py-3 bg-gray-900 text-white font-semibold rounded-full hover:bg-gray-800 transition-colors"
               >
                 Contact Sales
@@ -1391,6 +1400,11 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Clinic Locator Section */}
+      <section id="clinic-locator">
+        <ClinicLocator onNoClinicFound={handleNoClinicFound} />
+      </section>
+
       {/* Final CTA Section */}
       <section className="py-20 lg:py-28 bg-gradient-to-br from-[#0066CC] to-[#00BFA5] text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -1403,7 +1417,7 @@ const LandingPage = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Link
-              to="/register"
+              to="/login"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#0066CC] font-semibold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
             >
               Get Started Today
@@ -1462,8 +1476,8 @@ const LandingPage = () => {
               <ul className="space-y-3">
                 <li><Link to="/" className="hover:text-[#00BFA5] transition-colors">Home</Link></li>
                 <li><a href="#how-it-works" className="hover:text-[#00BFA5] transition-colors">How It Works</a></li>
-                <li><Link to="/register" className="hover:text-[#00BFA5] transition-colors">For Individuals</Link></li>
-                <li><Link to="/register" className="hover:text-[#00BFA5] transition-colors">For Clinics</Link></li>
+                <li><Link to="/login" className="hover:text-[#00BFA5] transition-colors">For Individuals</Link></li>
+                <li><Link to="/login" className="hover:text-[#00BFA5] transition-colors">For Clinics</Link></li>
                 <li><a href="#testimonials" className="hover:text-[#00BFA5] transition-colors">Testimonials</a></li>
               </ul>
             </div>
@@ -1541,7 +1555,7 @@ const LandingPage = () => {
       {showStickyCTA && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
           <Link
-            to="/register"
+            to="/login"
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#0066CC] to-[#00BFA5] text-white font-bold rounded-full shadow-2xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
           >
             <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
@@ -1615,6 +1629,13 @@ const LandingPage = () => {
           </div>
         </div>
       )}
+
+      {/* Enquiry Form Modal */}
+      <EnquiryForm
+        isOpen={showEnquiryForm}
+        onClose={() => setShowEnquiryForm(false)}
+        initialLocation={enquiryLocation}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import DatabaseService from './databaseService';
+import { generatePatientUID } from '../utils/patientUidGenerator';
 
 // Import shared Supabase service to avoid multiple client instances
 import SupabaseService from './supabaseService';
@@ -480,7 +481,14 @@ export const authService = {
       let registeredClinic = null;
       if (userType === 'patient' && clinicName && clinicName.trim()) {
         console.log('AUTH: Validating clinic name:', clinicName);
-        const clinics = await DatabaseService.findBy('clinics', 'name', clinicName.trim());
+
+        // Search in organizations table (primary) and fallback to clinics table (legacy)
+        let clinics = await DatabaseService.findBy('organizations', 'name', clinicName.trim());
+
+        // Fallback: try legacy clinics table if not found in organizations
+        if (!clinics || clinics.length === 0) {
+          clinics = await DatabaseService.findBy('clinics', 'name', clinicName.trim());
+        }
 
         if (!clinics || clinics.length === 0) {
           throw new Error('This clinic is not available in NeuroSense. Please check the clinic name or contact support.');
@@ -645,11 +653,14 @@ export const authService = {
           }
 
           if (targetOrgId) {
+            // Generate patient UID in format CLINICCODE-YYYYMM-XXXX
+            const patientUID = await generatePatientUID(targetOrgId);
+
             // Create patient record in patients table
             const patientData = {
               org_id: targetOrgId,
               owner_user: data.user.id,
-              external_id: `PAT_${Date.now()}`, // Generate unique external ID
+              external_id: patientUID, // Use new UID format: CLINICCODE-YYYYMM-XXXX
               full_name: name.trim(),
               date_of_birth: dateOfBirth || '1990-01-01', // Use form data or default
               gender: gender || 'other', // Use form data or default

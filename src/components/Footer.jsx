@@ -61,7 +61,21 @@ const Footer = () => {
             {/* Find a Clinic CTA */}
             <div className="p-4 bg-[#00897B]/20 rounded-lg border border-[#00897B]/30">
               <p className="text-sm font-medium mb-1">Ready to start?</p>
-              <Link to="/register" className="text-sm text-[#00897B] hover:underline">Find a clinic near you →</Link>
+              <a
+                href="/#clinic-locator"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.getElementById('clinic-locator');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    window.location.href = '/#clinic-locator';
+                  }
+                }}
+                className="text-sm text-[#00897B] hover:underline cursor-pointer"
+              >
+                Find a clinic near you →
+              </a>
             </div>
 
             {/* Address */}
@@ -82,7 +96,6 @@ const Footer = () => {
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-              <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
               <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
             </ul>
           </div>

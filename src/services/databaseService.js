@@ -324,6 +324,18 @@ class DatabaseService {
     }
   }
 
+  // Case-insensitive search by field
+  async findByNameIgnoreCase(table, name) {
+    try {
+      const actualTable = this.mapTableName(table);
+      const results = await this.supabaseService.findByNameIgnoreCase(actualTable, name);
+      return results.map(item => this.convertToCamelCase(item));
+    } catch (error) {
+      console.error(`ERROR: Failed to find by name (case-insensitive) in ${table}:`, error);
+      throw error;
+    }
+  }
+
   // Convert between camelCase and snake_case
   toSnakeCase(str) {
     return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);

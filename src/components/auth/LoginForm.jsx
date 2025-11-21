@@ -211,22 +211,24 @@ const LoginForm = () => {
           </button>
         </form>
 
-        {/* Sign Up Link */}
-        <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              state={{
-                userType: userTypeFromState || 'patient',
-                fromLogin: true
-              }}
-              className="font-semibold text-[#323956] hover:text-[#232D3C] transition-all duration-200 hover:underline hover:underline-offset-4"
-            >
-              Sign up here
-            </Link>
-          </p>
-        </div>
+        {/* Sign Up Link - Only show for clinic users */}
+        {userTypeFromState === 'clinic' && (
+          <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                state={{
+                  userType: 'clinic',
+                  fromLogin: true
+                }}
+                className="font-semibold text-[#323956] hover:text-[#232D3C] transition-all duration-200 hover:underline hover:underline-offset-4"
+              >
+                Sign up here
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

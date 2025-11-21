@@ -13,14 +13,18 @@ import {
   Phone,
   Mail,
   MapPin,
-  Upload
+  Upload,
+  Info
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import DatabaseService from '../../services/databaseService';
 import StorageService from '../../services/storageService';
 import UploadReportModal from './UploadReportModal';
+import ClinicalReportForm from './ClinicalReportForm';
+import ClinicalReportView from './ClinicalReportView';
 import { useAuth } from '../../contexts/AuthContext';
+import { generatePatientUID } from '../../utils/patientUidGenerator';
 
 const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
   const { user } = useAuth();
@@ -35,6 +39,10 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
   const [patientForUpload, setPatientForUpload] = useState(null);
   const [patientReports, setPatientReports] = useState({});
   const [showPatientListModal, setShowPatientListModal] = useState(false);
+  const [showPatientInfoModal, setShowPatientInfoModal] = useState(false);
+  const [patientForInfo, setPatientForInfo] = useState(null);
+  const [showPatientViewModal, setShowPatientViewModal] = useState(false);
+  const [patientForView, setPatientForView] = useState(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -212,9 +220,13 @@ const PatientManagement = ({ clinicId: propClinicId, onUpdate }) => {
         }
       }
 
+      // Generate patient UID in format CLINICCODE-YYYYMM-XXXX
+      const patientUID = await generatePatientUID(clinicId);
+
       // Map fields to match database schema (without owner_user - it doesn't exist)
       const patientData = {
         org_id: clinicId, // Database uses org_id instead of clinicId
+        external_id: patientUID, // Use new UID format: CLINICCODE-YYYYMM-XXXX
         full_name: data.name, // Database uses full_name instead of name
         gender: data.gender?.toLowerCase(), // Convert to lowercase for database enum
         email: data.email,
@@ -398,6 +410,26 @@ Share these credentials with the patient so they can login to view their reports
     setShowPatientListModal(false);
   };
 
+  const openPatientInfoModal = (patient) => {
+    setPatientForInfo(patient);
+    setShowPatientInfoModal(true);
+  };
+
+  const closePatientInfoModal = () => {
+    setPatientForInfo(null);
+    setShowPatientInfoModal(false);
+  };
+
+  const openPatientViewModal = (patient) => {
+    setPatientForView(patient);
+    setShowPatientViewModal(true);
+  };
+
+  const closePatientViewModal = () => {
+    setPatientForView(null);
+    setShowPatientViewModal(false);
+  };
+
   const handleBulkAddPatients = async (patientList) => {
     try {
       if (!clinicId) {
@@ -570,7 +602,7 @@ Share these credentials with the patient so they can login to view their reports
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">{getPatientName(patient)}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.id?.slice(0, 8) || 'N/A'}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.external_id || patient.externalId || patient.id?.slice(0, 8) || 'N/A'}</div>
                         </div>
                       </div>
                     </td>
@@ -609,6 +641,13 @@ Share these credentials with the patient so they can login to view their reports
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
+                          onClick={() => openPatientInfoModal(patient)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors"
+                          title="Clinical Report Form"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => openUploadModal(patient)}
                           className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                           title="Upload Report"
@@ -616,9 +655,9 @@ Share these credentials with the patient so they can login to view their reports
                           <Upload className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => viewPatientDetails(patient)}
-                          className="text-primary-600 dark:text-blue-400 hover:text-primary-900 dark:hover:text-blue-300"
-                          title="View Details"
+                          onClick={() => openPatientViewModal(patient)}
+                          className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 transition-colors"
+                          title="View Clinical Report"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -695,6 +734,28 @@ Share these credentials with the patient so they can login to view their reports
         <PatientListModal
           onAddPatients={handleBulkAddPatients}
           onClose={closePatientListModal}
+        />
+      )}
+
+      {/* Patient Information Modal - Clinical Report Form */}
+      {showPatientInfoModal && patientForInfo && (
+        <ClinicalReportForm
+          patient={patientForInfo}
+          onClose={closePatientInfoModal}
+          onSave={async (formData, files) => {
+            // Save clinical report data
+            console.log('Saving clinical report:', formData, files);
+            await loadPatients();
+            onUpdate?.();
+          }}
+        />
+      )}
+
+      {/* Patient Clinical Report View Modal */}
+      {showPatientViewModal && patientForView && (
+        <ClinicalReportView
+          patient={patientForView}
+          onClose={closePatientViewModal}
         />
       )}
     </div>
