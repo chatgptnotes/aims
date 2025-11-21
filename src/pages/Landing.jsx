@@ -10,6 +10,8 @@ const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sectionsVisible, setSectionsVisible] = useState({});
   const sectionRefs = useRef({});
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -34,6 +36,20 @@ const Landing = () => {
     });
 
     return () => observer.disconnect();
+  }, []);
+
+  // 3D circular carousel rotation for Measure section
+  useEffect(() => {
+    let rotation = 0;
+    const rotationInterval = setInterval(() => {
+      rotation += 120; // Rotate 120 degrees (360/3 cards)
+      if (carouselRef.current) {
+        carouselRef.current.style.transform = `rotateY(${rotation}deg)`;
+      }
+      setCurrentCardIndex((prev) => (prev + 1) % 3);
+    }, 3500); // Rotate every 3.5 seconds
+
+    return () => clearInterval(rotationInterval);
   }, []);
 
   const handlePersonalSignup = () => {
@@ -73,39 +89,40 @@ const Landing = () => {
   return (
     <div className="w-full min-h-screen bg-white m-0 p-0">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 py-3 px-4 sm:px-6">
+      <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-center">
           {/* Center Navigation Pill with Logo, Links and Buttons ALL INSIDE */}
-          <div className="hidden lg:flex items-center bg-white backdrop-blur-md rounded-full shadow-md px-5 py-3 gap-5">
+          <div className="hidden lg:flex items-center bg-white/95 backdrop-blur-lg rounded-full shadow-lg px-6 py-2.5 gap-6 border border-gray-100">
             {/* Logo INSIDE Pill */}
-            <div className="flex items-center pr-3 border-r border-gray-200">
-              <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
-              <span className="ml-1.5 text-base font-normal text-gray-900">
-                NeuroSense<sup className="text-[10px]">®</sup>
-              </span>
+            <div className="flex items-center pr-4 border-r border-gray-200">
+              <img
+                src="/header logo.png"
+                alt="NeuroSense Logo"
+                className="h-10 w-auto object-contain"
+              />
             </div>
 
             {/* Navigation Links */}
-            <a href="/lbw" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            <a href="/lbw" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
               For clinicians
             </a>
-            <a href="/technicians" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            <a href="/technicians" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
               For technicians
             </a>
-            <a href="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            <a href="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
               How it works
             </a>
 
             {/* Action Buttons Inside Same Pill */}
             <button
               onClick={handlePersonalSignup}
-              className="bg-[#00897B] hover:bg-[#00796B] text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
+              className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
             >
               Start
             </button>
             <button
               onClick={handleClinicSignup}
-              className="bg-gray-900 hover:bg-black text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
+              className="bg-gray-900 hover:bg-black text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
             >
               For clinics
             </button>
@@ -114,10 +131,11 @@ const Landing = () => {
           {/* Mobile - Logo and Menu Button */}
           <div className="lg:hidden flex items-center justify-between w-full">
             <div className="flex items-center">
-              <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
-              <span className="ml-1.5 text-base font-normal text-gray-900">
-                NeuroSense<sup className="text-[10px]">®</sup>
-              </span>
+              <img
+                src="/header logo.png"
+                alt="NeuroSense Logo"
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -143,10 +161,11 @@ const Landing = () => {
             <div className="p-6">
               {/* Logo */}
               <div className="flex items-center mb-12 mt-2">
-                <Brain className="h-6 w-6 text-white bg-gray-900 p-1 rounded" />
-                <span className="ml-2 text-lg font-normal text-gray-900">
-                  NeuroSense<sup className="text-[10px]">®</sup>
-                </span>
+                <img
+                  src="/header logo.png"
+                  alt="NeuroSense Logo"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
 
               {/* Navigation Links */}
@@ -294,7 +313,7 @@ const Landing = () => {
                 >
                   <div style={{ transform: 'none' }}>
                     <p
-                      className="framer-text bg-[#00897B] hover:bg-[#00796B] text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      className="framer-text bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
                       style={{
                         textAlign: 'left',
                         color: 'rgb(255, 255, 255)'
@@ -537,18 +556,6 @@ const Landing = () => {
             opacity: 1;
           }
         }
-
-        .animate-dash-flow {
-          animation: dashFlow 2s linear infinite;
-        }
-
-        .animate-dot-pulse {
-          animation: dotPulse 2s ease-in-out infinite;
-        }
-
-        .animate-line-grow {
-          animation: lineGrow 1s ease-out forwards;
-        }
       `}</style>
 
       {/* NeuroSense Information & Philosophy Section */}
@@ -559,22 +566,9 @@ const Landing = () => {
           sectionsVisible.neurosenseInfo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        {/* Connecting Thread Line */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-20 bg-gradient-to-b from-transparent via-[#00897B] to-transparent opacity-30 animate-dash-flow animate-line-grow z-0"
-             style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
-        </div>
-
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Introduction Text Box */}
           <div className="bg-gray-50 rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-100 relative z-10">
-            {/* Connecting dot at top */}
-            <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
-
             <div className="space-y-6">
               <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
                 For the very first time, a clinical grade EEG combined with proprietary and globally validated brain assessment parameters to measure your true brain performance, trusted all over the world.
@@ -590,21 +584,8 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Connecting Line between boxes */}
-          <div className="flex justify-center mb-12 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '60px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
           {/* Our Core Philosophy Box */}
           <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-300 relative z-10">
-            {/* Connecting dot at top */}
-            <div className="absolute -top-8 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
 
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 mb-6">
@@ -623,63 +604,70 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Connecting Line between boxes */}
-          <div className="flex justify-center mb-12 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '60px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
           {/* MOVERS Protocol Box */}
           <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-500 relative z-10">
-            {/* Connecting dot at top */}
-            <div className="absolute -top-8 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
             <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
               We blend ancient truths with modern scientific proofs to create a personalized <span className="font-bold text-[#00897B]">MOVERS protocol</span> integrating <span className="font-semibold text-[#00897B]">M</span>editation, <span className="font-semibold text-[#00897B]">O</span>xygenation (breathwork), <span className="font-semibold text-[#00897B]">V</span>isualization or Theta techniques, <span className="font-semibold text-[#00897B]">E</span>xercises, Affirmations, targeted <span className="font-semibold text-[#00897B]">R</span>elaxation and Nutrition, and <span className="font-semibold text-[#00897B]">S</span>leep or Stress Relief through HRV(Heart rate variability) for complete brain care.
             </p>
           </div>
 
-          {/* Connecting Line to CTAs */}
-          <div className="flex justify-center mb-12 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '60px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
-          {/* 3 CTAs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
-            <div className="bg-gradient-to-br from-[#00897B] to-[#00796B] rounded-2xl p-6 sm:p-8 text-white text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer animate-fade-in-up delay-300 animate-glow">
-              <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neuropsychiatry</h3>
-              <p className="text-sm sm:text-base opacity-90">Comprehensive mental health assessment</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 text-white text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer animate-fade-in-up delay-400 hover:animate-pulse-card">
-              <h3 className="text-xl sm:text-2xl font-semibold mb-3">Executive Cognitive Check</h3>
-              <p className="text-sm sm:text-base opacity-90">Evaluate cognitive performance</p>
+          {/* 3 CTAs with 3D Animation */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4" style={{ perspective: '1500px' }}>
+            {/* Card 1: Neuropsychiatry */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/60 to-[#00796B]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-[#00897B] to-[#00796B] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.6)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neuropsychiatry</h3>
+                  <p className="text-sm sm:text-base opacity-90">Comprehensive mental health assessment</p>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#323956] to-[#2a3048] rounded-2xl p-6 sm:p-8 text-white text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer animate-fade-in-up delay-500 hover:animate-pulse-card">
-              <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neurodivergence</h3>
-              <p className="text-sm sm:text-base opacity-90">Specialized neurodivergent support</p>
+            {/* Card 2: Executive Cognitive Check */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/60 to-gray-800/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite 0.5s',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Executive Cognitive Check</h3>
+                  <p className="text-sm sm:text-base opacity-90">Evaluate cognitive performance</p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Connecting Line to Connect Section */}
-          <div className="flex justify-center my-16 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
+            {/* Card 3: Neurodivergence */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#323956]/60 to-[#2a3048]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-[#323956] to-[#2a3048] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(50,57,86,0.6)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite 1s',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neurodivergence</h3>
+                  <p className="text-sm sm:text-base opacity-90">Specialized neurodivergent support</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -692,13 +680,23 @@ const Landing = () => {
               Find us at a clinic near you to start your journey with neurosense. Or if you don't find, book a discovery call.
             </p>
 
-            {/* Video Call Mockup */}
-            <div className="flex justify-center">
-              <div className="relative w-80 sm:w-96">
+            {/* Video Call Mockup with 3D Animation */}
+            <div className="flex justify-center" style={{ perspective: '1200px' }}>
+              <div className="relative w-80 sm:w-96 group" style={{ transformStyle: 'preserve-3d' }}>
+                {/* Glow Effect Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/40 to-[#00796B]/40 rounded-[2.5rem] blur-3xl group-hover:blur-[60px] opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-50px)' }}></div>
+
                 {/* Screen Content with White Border */}
-                <div className="bg-white rounded-[2.5rem] overflow-hidden relative aspect-[9/16] shadow-2xl p-3">
+                <div className="bg-white rounded-[2.5rem] overflow-hidden relative aspect-[9/16] shadow-2xl p-3 transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,137,123,0.5)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite',
+                       transform: 'translateZ(30px)'
+                     }}>
                   {/* Inner Screen with Image */}
-                  <div className="bg-black rounded-[2rem] overflow-hidden relative h-full">
+                  <div className="bg-black rounded-[2rem] overflow-hidden relative h-full transition-transform duration-700 group-hover:scale-105"
+                       style={{ transform: 'translateZ(20px)' }}>
                     {/* Video Call Background - Using Actual Image */}
                     <div className="absolute inset-0">
                       <img
@@ -709,36 +707,20 @@ const Landing = () => {
                     </div>
 
                     {/* Clinic near you Button */}
-                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-8/12">
-                      <button className="w-full bg-[#00897B] hover:bg-[#00796B] text-white px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-105">
+                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-8/12" style={{ transform: 'translate(-50%, 0) translateZ(30px)' }}>
+                      <button className="w-full bg-[#00897B] hover:bg-[#00796B] text-white px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl">
                         Clinic near you
                       </button>
                     </div>
                   </div>
                 </div>
-
-                {/* Connecting dot at top */}
-                <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse"></div>
               </div>
-            </div>
-          </div>
-
-          {/* Connecting Line to Measure Section */}
-          <div className="flex justify-center my-16 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
             </div>
           </div>
 
           {/* Measure Section */}
           <div className="text-center mb-16 animate-fade-in-up relative z-10">
             <div className="relative">
-              {/* Connecting dot at top */}
-              <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg z-10 animate-dot-pulse"></div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900 mb-4 bg-white relative z-20">
                 Measure
@@ -747,48 +729,107 @@ const Landing = () => {
                 Receive your detailed neurofeedback brain scan. This will help in customizing your experience.
               </p>
 
-              {/* Devices and Person Image Mockup */}
-              <div className="bg-gray-50 rounded-3xl p-8 sm:p-12 mb-8 mx-auto max-w-4xl">
-                <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-                  {/* Sustained Focus Image */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src="/sustainedfocus.png"
-                      alt="Sustained focus"
-                      className="w-32 h-32 object-contain"
-                    />
-                  </div>
-
-                  {/* Phone with Circular Progress */}
-                  <div className="flex-shrink-0">
-                    <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-[2.5rem] p-3 shadow-2xl border-4 border-gray-300">
-                      <div className="bg-white rounded-[2rem] overflow-hidden w-40 h-56 flex flex-col items-center justify-center">
-                        {/* Circular Progress */}
-                        <div className="relative w-24 h-24 mb-4">
-                          <svg className="transform -rotate-90 w-24 h-24">
-                            <circle cx="48" cy="48" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
-                            <circle cx="48" cy="48" r="40" stroke="#00897B" strokeWidth="8" fill="none"
-                                    strokeDasharray="251.2" strokeDashoffset="175.84" strokeLinecap="round" />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-2xl font-bold text-gray-900">30%</span>
-                          </div>
+              {/* Devices and Person Image Mockup - 3D CIRCULAR CAROUSEL */}
+              <div className="relative w-full mx-auto mb-16 py-8 h-[350px] flex items-center justify-center" style={{ perspective: '1200px' }}>
+                <div
+                  ref={carouselRef}
+                  className="relative"
+                  style={{
+                    width: '250px',
+                    height: '250px',
+                    transformStyle: 'preserve-3d',
+                    transition: 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'rotateY(0deg)'
+                  }}
+                >
+                  {/* Sustained Focus Image - 3D CARD 1 (0 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(0deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/30 to-[#00796B]/30 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-2xl" style={{ transform: 'translateZ(30px)' }}>
+                          <img
+                            src="/sustainedfocus.png"
+                            alt="Sustained focus"
+                            className="w-24 h-24 object-contain relative z-10 drop-shadow-2xl"
+                            style={{ transform: 'translateZ(20px)' }}
+                          />
                         </div>
-                        <button className="bg-[#00897B] text-white px-6 py-2 rounded-full text-sm font-semibold uppercase">
-                          JOIN
-                        </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Person with EEG Headband */}
-                  <div className="flex-shrink-0">
-                    <div className="w-40 h-48 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl overflow-hidden border-2 border-[#00897B]/30">
-                      <img
-                        src="/eeg scan.png"
-                        alt="EEG Scan"
-                        className="w-full h-full object-cover"
-                      />
+                  {/* Phone with Circular Progress - 3D CARD 2 (120 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(120deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite 0.5s',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-[#00897B]/40 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-[1.5rem] p-2 shadow-2xl border-2 border-gray-300 relative z-10 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.5)] transition-all"
+                             style={{ transform: 'translateZ(40px)' }}>
+                          <div className="bg-white rounded-[1.2rem] overflow-hidden w-28 h-40 flex flex-col items-center justify-center">
+                            {/* Circular Progress with animation */}
+                            <div className="relative w-16 h-16 mb-2">
+                              <svg className="transform -rotate-90 w-16 h-16">
+                                <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="5" fill="none" />
+                                <circle cx="32" cy="32" r="28" stroke="#00897B" strokeWidth="5" fill="none"
+                                        strokeDasharray="176" strokeDashoffset="123" strokeLinecap="round"
+                                        className="transition-all duration-1000 group-hover:stroke-dashoffset-105" />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-xl font-bold text-gray-900 transition-all group-hover:scale-125 group-hover:text-[#00897B]">30%</span>
+                              </div>
+                            </div>
+                            <button className="bg-[#00897B] text-white px-4 py-1.5 rounded-full text-xs font-semibold uppercase hover:bg-[#00796B] hover:scale-110 transition-all duration-300 hover:shadow-xl"
+                                    style={{ transform: 'translateZ(10px)' }}>
+                              JOIN
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Person with EEG Headband - 3D CARD 3 (240 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(240deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite 1s',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/40 to-[#00796B]/40 rounded-2xl blur-xl group-hover:blur-2xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="w-32 h-40 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-2xl overflow-hidden border-2 border-[#00897B]/30 relative z-10 group-hover:border-[#00897B]/60 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.5)] transition-all"
+                             style={{ transform: 'translateZ(25px)' }}>
+                          <img
+                            src="/eeg scan.png"
+                            alt="EEG Scan"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -803,59 +844,53 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Connecting Line to Care Section */}
-          <div className="flex justify-center my-16 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
           {/* Care Section */}
-          <div className="text-center mb-16 animate-fade-in-up relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
             <div className="relative">
-              {/* Connecting dot at top */}
-              <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-white relative z-20">
                 Care
               </h2>
 
-              {/* Content Box */}
-              <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20">
-                <p className="text-base sm:text-lg text-gray-900 leading-relaxed">
-                  <span className="font-bold">Build a personalized brain optimization plan tailored to your needs.</span> Leverage our lab tested brainwave frequencies, special sounds and music (mantras), ANS (Autonomic Nervous System) reset protocols, guided meditations, and targeted light and sound therapies. Track your progress, refine your plan, and sustain your gains with ongoing expert support. Available for both <span className="font-semibold text-[#00897B]">home and clinic based care</span>, depending on your requirements.
-                </p>
+              {/* Content Box with 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite',
+                         transform: 'translateZ(20px)'
+                       }}>
+                    <p className="text-base sm:text-lg text-gray-900 leading-relaxed">
+                      <span className="font-bold">Build a personalized brain optimization plan tailored to your needs.</span> Leverage our lab tested brainwave frequencies, special sounds and music (mantras), ANS (Autonomic Nervous System) reset protocols, guided meditations, and targeted light and sound therapies. Track your progress, refine your plan, and sustain your gains with ongoing expert support. Available for both <span className="font-semibold text-[#00897B]">home and clinic based care</span>, depending on your requirements.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Connecting Line to Ask Dr Sweta Section */}
-          <div className="flex justify-center my-16 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
           {/* Ask Ashok Interactive (AI) Section */}
-          <div className="text-center mb-16 animate-fade-in-up relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
             <div className="relative">
-              {/* Connecting dot at top */}
-              <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#00897B] mb-4 bg-white relative z-20">
                 Ask Dr Sweta Interactive (AI)
               </h2>
 
-              {/* Content Box */}
-              <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20">
+              {/* Content Box with 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite 0.5s',
+                         transform: 'translateZ(20px)'
+                       }}>
                 <p className="text-base sm:text-lg text-gray-900 leading-relaxed mb-6">
                   Ask AI trained about your condition and how NeuroSense can help, in any language.
                 </p>
@@ -887,43 +922,42 @@ const Landing = () => {
                     </button>
                   </div>
                 </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Connecting Line to How Does Neurofeedback Work Section */}
-          <div className="flex justify-center my-16 relative z-0">
-            <div className="animate-dash-flow animate-line-grow" style={{
-               backgroundImage: 'repeating-linear-gradient(0deg, #00897B, #00897B 10px, transparent 10px, transparent 20px)',
-               width: '3px',
-               height: '80px',
-               backgroundSize: '100% 40px'
-             }}>
-            </div>
-          </div>
-
           {/* How Does NeuroSense's Frequency Modulation Work Section */}
-          <div className="text-center mb-16 animate-fade-in-up relative z-10">
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
             <div className="relative">
-              {/* Connecting dot at top */}
-              <div className="absolute -top-12 left-1/2 w-4 h-4 bg-[#00897B] rounded-full border-4 border-white shadow-lg animate-dot-pulse z-0"></div>
 
-              {/* Content Box with Brain Image and Text */}
-              <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200 relative z-20">
-                <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                  {/* Frequency Modulation Video */}
-                  <div className="flex-shrink-0">
-                    <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
-                      <video
-                        src="/frequency_modulation_work.mp4"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-contain drop-shadow-lg"
-                      />
-                    </div>
-                  </div>
+              {/* Content Box with Brain Image and Text - 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite 1s',
+                         transform: 'translateZ(20px)'
+                       }}>
+                    <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                      {/* Frequency Modulation Video */}
+                      <div className="flex-shrink-0 group/video" style={{ transformStyle: 'preserve-3d' }}>
+                        <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transition-transform duration-700"
+                             style={{ transform: 'translateZ(30px)' }}>
+                          <video
+                            src="/frequency_modulation_work.mp4"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-contain drop-shadow-lg transition-transform duration-700 group-hover/video:scale-110"
+                          />
+                        </div>
+                      </div>
 
                   {/* Text Content */}
                   <div className="flex-1 text-left space-y-4">
@@ -933,6 +967,8 @@ const Landing = () => {
                     <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
                       NeuroSense uses frequency modulated audio, subtle rhythms and tones your brain naturally syncs to, to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
                     </p>
+                  </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -949,10 +985,11 @@ const Landing = () => {
             <div className="lg:col-span-1 space-y-6">
               {/* Logo */}
               <div className="flex items-center">
-                <Brain className="h-6 w-6 text-white bg-white p-1 rounded" />
-                <span className="ml-2 text-lg font-normal">
-                  NeuroSense<sup className="text-[10px]">®</sup>
-                </span>
+                <img
+                  src="/footer logo.png"
+                  alt="NeuroSense Logo"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
 
               {/* Tagline */}
@@ -1020,7 +1057,6 @@ const Landing = () => {
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-                <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
               </ul>
             </div>
