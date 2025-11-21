@@ -994,7 +994,7 @@ const Landing = () => {
 
               {/* Tagline */}
               <p className="text-base">
-                Neurotherapy for a <span className="text-[#00897B]">better brain.</span>
+                Brain fitness score - <span className="text-[#00897B]">try it now buy it now</span>
               </p>
 
               {/* Newsletter */}
