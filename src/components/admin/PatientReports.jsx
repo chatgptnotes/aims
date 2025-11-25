@@ -182,14 +182,23 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       // Validate and fix report data
       const validatedReports = validateReportData(reportsWithFixedNames);
       
-      // Enhance reports with clinic and patient names
+      // Enhance reports with clinic and patient names, and extract file paths
       const enhancedReports = validatedReports.map(report => {
         const clinic = clinicsData.find(c => c.id === report.clinicId);
-        
+
+        // Extract file path and metadata from reportData if they exist
+        const reportData = report.reportData || report.report_data || {};
+
         return {
           ...report,
           clinicName: clinic?.name || 'Unknown Clinic',
-          patientName: report.patientName || 'Unknown Patient'
+          patientName: report.patientName || 'Unknown Patient',
+          // Ensure file path fields are available at top level for easy access
+          storagePath: report.storagePath || report.filePath || report.file_path || reportData.storagePath || reportData.filePath,
+          s3Key: report.s3Key || reportData.s3Key,
+          fileUrl: report.fileUrl || reportData.fileUrl,
+          storedInCloud: report.storedInCloud || reportData.storedInCloud || false,
+          title: report.title || reportData.title || report.fileName
         };
       }).sort((a, b) => new Date(b.uploadedAt || b.createdAt || 0) - new Date(a.uploadedAt || a.createdAt || 0));
       
@@ -611,15 +620,9 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
   };
 
   const handleDownloadReport = async (report) => {
-    // Super Admin should use View instead of Download
-    if (user?.role === 'super_admin') {
-      handleViewReport(report);
-      return;
-    }
-
     try {
-      // For regular users, check if clinic has reached report limit
-      if (checkReportLimit(report.clinicId)) {
+      // For regular users (not super_admin), check if clinic has reached report limit
+      if (user?.role !== 'super_admin' && checkReportLimit(report.clinicId)) {
         setShowSubscriptionPopup(true);
         toast.error('Report limit reached. Please upgrade your plan to continue downloading reports.');
         return;
@@ -628,18 +631,58 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
       let downloadUrl = null;
       let fileName = report.fileName || 'report.pdf';
 
+      console.log('INFO: Downloading report:', {
+        fileName,
+        reportId: report.id,
+        s3Key: report.s3Key,
+        storagePath: report.storagePath,
+        filePath: report.filePath || report.file_path,
+        fileUrl: report.fileUrl,
+        storedInCloud: report.storedInCloud,
+        reportData: report.reportData
+      });
+
+      // Extract file path from multiple possible locations
+      const possiblePaths = [
+        report.storagePath,
+        report.s3Key,
+        report.filePath,
+        report.file_path,
+        report.reportData?.s3Key,
+        report.reportData?.storagePath,
+        report.reportData?.filePath
+      ].filter(Boolean);
+
+      console.log('DEBUG: Possible file paths:', possiblePaths);
+
       // Try multiple download methods
-      if (report.s3Key && report.storedInCloud) {
+      let lastError = null;
+
+      // Method 1: Try each possible path with Supabase Storage
+      for (const path of possiblePaths) {
         try {
-          downloadUrl = await StorageService.getSignedUrl(report.storagePath || report.s3Key, 300); // 5 minutes
-        } catch (s3Error) {
-          // S3 failed, try fallback methods
+          console.log('DEBUG: Trying path:', path);
+          downloadUrl = await StorageService.getSignedUrl(path, 300); // 5 minutes
+          if (downloadUrl) {
+            console.log('SUCCESS: Got signed URL from Supabase Storage using path:', path);
+            break;
+          }
+        } catch (pathError) {
+          console.warn('WARNING: Failed to get signed URL for path:', path, pathError.message);
+          lastError = pathError;
         }
       }
 
-      // Fallback to direct file URL if available
+      // Method 2: Fallback to direct file URL if available
       if (!downloadUrl && report.fileUrl) {
         downloadUrl = report.fileUrl;
+        console.log('INFO: Using direct file URL');
+      }
+
+      // Method 3: Check if file URL is in reportData
+      if (!downloadUrl && report.reportData?.fileUrl) {
+        downloadUrl = report.reportData.fileUrl;
+        console.log('INFO: Using file URL from reportData');
       }
 
       // Download file if URL is available
@@ -650,21 +693,25 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
         link.download = fileName;
         link.target = '_blank';
         link.style.display = 'none';
-        
+
         // Add to DOM, click, and remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up blob URL if created
         if (downloadUrl.startsWith('blob:')) {
           setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
         }
-        
-        toast.success(` Downloading ${fileName}`);
+
+        toast.success(`Downloading ${fileName}`);
+        console.log('SUCCESS: Download initiated for:', fileName);
       } else {
         // No download method available
-        toast.error(`Cannot download ${fileName}. File not found in S3 or local storage.`);
+        console.error('ERROR: No download URL available. Tried paths:', possiblePaths);
+        console.error('ERROR: Last error:', lastError?.message);
+        console.error('ERROR: Full report object:', report);
+        toast.error(`Cannot download ${fileName}. File not found in storage.`);
       }
     } catch (error) {
       console.error('ERROR: Error downloading report:', error);
@@ -672,13 +719,44 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
     }
   };
 
+  // Filter reports to EXCLUDE response reports (they will be shown in separate section)
   const filteredReports = (reports || []).filter(report => {
+    // EXCLUDE response reports from main list
+    const isResponseReport = report.reportData?.isResponseReport ||
+                             report.report_data?.isResponseReport ||
+                             report.reportData?.report_type === 'Response Report' ||
+                             report.fileName?.startsWith('response_');
+
+    if (isResponseReport) {
+      return false; // Don't show response reports in main list
+    }
+
     const matchesSearch = (report?.patientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (report?.clinicName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (report?.fileName || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClinic = !selectedClinic || report?.clinicId === selectedClinic;
     const matchesPatient = !selectedPatient || report?.patientId === selectedPatient;
-    
+
+    return matchesSearch && matchesClinic && matchesPatient;
+  });
+
+  // Get ONLY response reports for separate display
+  const responseReports = (reports || []).filter(report => {
+    const isResponseReport = report.reportData?.isResponseReport ||
+                             report.report_data?.isResponseReport ||
+                             report.reportData?.report_type === 'Response Report' ||
+                             report.fileName?.startsWith('response_');
+
+    if (!isResponseReport) {
+      return false;
+    }
+
+    const matchesSearch = (report?.patientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report?.clinicName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report?.fileName || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesClinic = !selectedClinic || report?.clinicId === selectedClinic;
+    const matchesPatient = !selectedPatient || report?.patientId === selectedPatient;
+
     return matchesSearch && matchesClinic && matchesPatient;
   });
 
@@ -964,13 +1042,22 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
                         <Upload className="h-4 w-4" />
                       </button>
                       {user?.role === 'super_admin' ? (
-                        <button
-                          onClick={() => handleViewReport(report)}
-                          className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                          title="View Report Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleViewReport(report)}
+                            className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                            title="View Report Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadReport(report)}
+                            className="text-primary-600 dark:text-blue-400 hover:text-primary-900 dark:hover:text-blue-300"
+                            title="Download Report"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </>
                       ) : (
                         checkReportLimit(report.clinicId) ? (
                           <button
@@ -1078,6 +1165,121 @@ const PatientReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic }) 
             setSelectedReportForView(null);
           }}
         />
+      )}
+
+      {/* Response Reports Section - Separate from regular reports */}
+      {responseReports.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
+            <h3 className="text-lg font-medium text-green-900 dark:text-green-100">
+              Response Reports Sent to Clinics & Patients ({responseReports.length})
+            </h3>
+            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              These response reports have been sent to clinics and are visible to patients
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Response Report
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Patient
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Clinic
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    File Info
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Uploaded
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {responseReports.map((report) => (
+                  <tr key={report.id} className="hover:bg-green-50 dark:hover:bg-green-900/10">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{report.fileName}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{report.title || 'Response Report'}</div>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 mt-1">
+                            Response Report
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">{report.patientName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">{report.clinicName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white flex items-center">
+                        {report.fileType || 'PDF'}
+                        {report.storedInCloud && (
+                          <Cloud className="h-4 w-4 ml-2 text-[#323956] dark:text-blue-400" title="Stored in Cloud Storage" />
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{report.fileSize || 'N/A'}</div>
+                      {report.s3Key && (
+                        <div className="text-xs text-[#323956] dark:text-blue-400 flex items-center mt-1">
+                          <Cloud className="h-3 w-3 mr-1" />
+                          Cloud Storage
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        by {report.uploadedBy || 'Super Admin'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleViewReport(report)}
+                          className="text-[#323956] dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                          title="View Report Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDownloadReport(report)}
+                          className="text-primary-600 dark:text-blue-400 hover:text-primary-900 dark:hover:text-blue-300"
+                          title="Download Report"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReport(report.id)}
+                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Subscription Popup - Only show for non-Super Admin users */}
@@ -1194,12 +1396,12 @@ const ResponseUploadModal = ({
                     <div className="flex text-sm text-gray-600">
                       <label htmlFor="response-file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-[#323956] hover:text-[#323956]">
                         <span>Upload Response File</span>
-                        <input 
-                          id="response-file-upload" 
-                          name="response-file-upload" 
-                          type="file" 
+                        <input
+                          id="response-file-upload"
+                          name="response-file-upload"
+                          type="file"
                           className="sr-only"
-                          accept=".pdf,.jpeg,.jpg,.png,.doc,.docx"
+                          accept=".pdf,.jpeg,.jpg,.png,.doc,.docx,.edf,.csv,.txt,.xml,.json,.xlsx,.xls,.dcm"
                           onChange={onFileSelect || (() => {})}
                         />
                       </label>
@@ -1208,7 +1410,7 @@ const ResponseUploadModal = ({
                   </>
                 )}
                 <p className="text-xs text-gray-500">
-                  PDF, JPEG, PNG, DOC, DOCX up to 50MB
+                  PDF, JPEG, PNG, DOC, DOCX, EDF, CSV, TXT, XML, JSON, XLSX, DICOM up to 50MB
                   {selectedFile && (
                     <button
                       type="button"
@@ -1434,12 +1636,12 @@ const UploadReportModal = ({
                     <div className="flex text-sm text-gray-600">
                       <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500">
                         <span>Upload to S3</span>
-                        <input 
-                          id="file-upload" 
-                          name="file-upload" 
-                          type="file" 
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
                           className="sr-only"
-                          accept=".pdf,.jpeg,.jpg,.png,.edf"
+                          accept=".pdf,.jpeg,.jpg,.png,.edf,.csv,.txt,.xml,.json,.doc,.docx,.xlsx,.xls,.dcm"
                           onChange={onFileSelect}
                         />
                       </label>
@@ -1448,7 +1650,7 @@ const UploadReportModal = ({
                   </>
                 )}
                 <p className="text-xs text-gray-500">
-                  PDF, JPEG, PNG or EDF up to 50MB
+                  PDF, JPEG, PNG, EDF, CSV, TXT, XML, JSON, DOC, DOCX, XLSX, DICOM up to 50MB
                   {selectedFile && (
                     <button
                       type="button"

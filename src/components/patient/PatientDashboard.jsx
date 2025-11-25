@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import bookingService from '../../services/bookingService';
 import progressTrackingService from '../../services/progressTrackingService';
+import { supabase } from '../../lib/supabaseClient';
+import DatabaseService from '../../services/databaseService';
+import StorageService from '../../services/storageService';
+import toast from 'react-hot-toast';
+import ProfileModal from '../layout/ProfileModal';
 import {
   User,
   FileText,
@@ -22,12 +27,19 @@ import {
   ChevronRight,
   Plus,
   Activity,
-  LogOut
+  LogOut,
+  Eye,
+  Home,
+  Pill,
+  Shield,
+  Briefcase,
+  Cake
 } from 'lucide-react';
 
 const PatientDashboard = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   // Get active tab from URL pathname
   // Example: /dashboard/profile -> activeTab = 'profile'
   // Example: /dashboard -> activeTab = 'profile' (default)
@@ -38,9 +50,115 @@ const PatientDashboard = () => {
   const [progressData, setProgressData] = useState(null);
   const [currentStatus, setCurrentStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [patientUid, setPatientUid] = useState(null);
+  const [clinicalReport, setClinicalReport] = useState(null);
+  const [showReportDetail, setShowReportDetail] = useState(false);
+  const [patientReports, setPatientReports] = useState([]);
+  const [expandedReportId, setExpandedReportId] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  // Fetch clinical report for the patient
+  const fetchClinicalReport = async (patientId) => {
+    try {
+      console.log('INFO: Fetching clinical report for patient:', patientId);
+
+      if (!supabase) {
+        console.warn('WARNING: Supabase not available');
+        return;
+      }
+
+      const { data: reports, error } = await supabase
+        .from('clinical_reports')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('ERROR: Failed to fetch clinical report:', error);
+        return;
+      }
+
+      if (reports && reports.length > 0) {
+        console.log('SUCCESS: Clinical report found:', reports[0]);
+        setClinicalReport(reports[0]);
+      } else {
+        console.log('INFO: No clinical report found for this patient');
+        setClinicalReport(null);
+      }
+    } catch (error) {
+      console.error('ERROR: Exception fetching clinical report:', error);
+    }
+  };
+
+  // Fetch all reports for the patient (including response reports from super admin)
+  const fetchPatientReports = async (patientId) => {
+    try {
+      console.log('INFO: Fetching reports for patient:', patientId);
+
+      const reports = await DatabaseService.getReportsByPatient(patientId);
+      console.log(`SUCCESS: Found ${reports.length} reports for patient`);
+
+      setPatientReports(reports || []);
+    } catch (error) {
+      console.error('ERROR: Failed to fetch patient reports:', error);
+      setPatientReports([]);
+    }
+  };
+
+  // Reload profile image from database
+  const reloadProfileImage = async () => {
+    try {
+      console.log('=== RELOADING PROFILE IMAGE FROM DATABASE ===');
+      console.log('INFO: User email:', user?.email);
+
+      if (!user?.email) {
+        console.warn('WARNING: No user email available to reload profile image');
+        return;
+      }
+
+      const DatabaseService = (await import('../../services/databaseService')).default;
+
+      // Find patient record by email
+      const allPatients = await DatabaseService.get('patients');
+      const userEmailLower = user.email.trim().toLowerCase();
+      const patientRecord = allPatients.find(p => {
+        if (!p.email) return false;
+        return p.email.trim().toLowerCase() === userEmailLower;
+      });
+
+      if (patientRecord) {
+        console.log('SUCCESS: Patient record found for reload');
+        console.log('DEBUG: Profile image fields in database:');
+        console.log('  - profile_image:', patientRecord.profile_image);
+        console.log('  - avatar_url:', patientRecord.avatar_url);
+        console.log('  - profileImage:', patientRecord.profileImage);
+        console.log('  - avatar:', patientRecord.avatar);
+
+        // Get profile image from database (priority order)
+        const profileImage = patientRecord.profile_image || patientRecord.avatar_url ||
+                           patientRecord.profileImage || patientRecord.avatar;
+
+        if (profileImage) {
+          console.log('SUCCESS: Profile image found in database:', profileImage);
+          setProfileImageUrl(profileImage);
+          console.log('SUCCESS: Profile image state updated');
+        } else {
+          console.warn('WARNING: No profile image found in database after reload');
+        }
+      } else {
+        console.error('ERROR: Patient record not found for reload');
+      }
+
+      console.log('=== END PROFILE IMAGE RELOAD ===');
+    } catch (error) {
+      console.error('ERROR: Failed to reload profile image:', error);
+    }
   };
 
   // Load real patient data from database
@@ -88,9 +206,54 @@ const PatientDashboard = () => {
         }
 
         if (patientRecord) {
+          console.log('=== PATIENT RECORD LOADED ===');
           console.log('SUCCESS: Patient record found!');
+          console.log('INFO: Patient ID:', patientRecord.id);
+          console.log('INFO: Patient Email:', patientRecord.email);
           console.log('INFO: Patient record fields:', Object.keys(patientRecord));
           console.log('INFO: Full patient record:', patientRecord);
+
+          // Store patient UID (external_id)
+          if (patientRecord.external_id || patientRecord.externalId) {
+            setPatientUid(patientRecord.external_id || patientRecord.externalId);
+            console.log('INFO: Patient UID:', patientRecord.external_id || patientRecord.externalId);
+          }
+
+          // Debug: Log all possible avatar field values from both sources
+          console.log('=== PROFILE IMAGE FETCH DEBUG ===');
+          console.log('FROM USER OBJECT:');
+          console.log('  - user.avatar:', user.avatar);
+          console.log('  - user.profile_image:', user.profile_image);
+          console.log('  - user.profileImage:', user.profileImage);
+          console.log('  - user.avatar_url:', user.avatar_url);
+          console.log('FROM DATABASE (patientRecord):');
+          console.log('  - patientRecord.avatar:', patientRecord.avatar);
+          console.log('  - patientRecord.profile_image:', patientRecord.profile_image);
+          console.log('  - patientRecord.profileImage:', patientRecord.profileImage);
+          console.log('  - patientRecord.avatar_url:', patientRecord.avatar_url);
+          console.log('  - patientRecord.avatarUrl:', patientRecord.avatarUrl);
+
+          // Load profile image from user/patient record (check all possible field names)
+          // Priority: database first (patientRecord), then user object
+          const profileImage = patientRecord.profile_image || patientRecord.avatar_url ||
+                             patientRecord.profileImage || patientRecord.avatar ||
+                             user.avatar || user.profile_image || user.profileImage || user.avatar_url;
+
+          if (profileImage) {
+            console.log('SUCCESS: Profile image URL found:', profileImage);
+            console.log('SUCCESS: Setting profileImageUrl state to:', profileImage);
+            setProfileImageUrl(profileImage);
+          } else {
+            console.warn('WARNING: No profile image found in any field!');
+            console.log('INFO: Patient may not have uploaded a profile image yet');
+          }
+          console.log('=== END PROFILE IMAGE FETCH DEBUG ===');
+
+          // Fetch clinical report for this patient
+          await fetchClinicalReport(user.id);
+
+          // Fetch all reports for this patient (including response reports)
+          await fetchPatientReports(user.id);
 
           // Fetch clinic data if patient has clinic_id or org_id
           let clinicData = null;
@@ -154,6 +317,19 @@ const PatientDashboard = () => {
               const patientByEmail = patients.find(p => p.email === user.email);
               if (patientByEmail) {
                 console.log('SUCCESS: Found patient by email:', patientByEmail);
+
+                // Store patient UID
+                if (patientByEmail.external_id || patientByEmail.externalId) {
+                  setPatientUid(patientByEmail.external_id || patientByEmail.externalId);
+                  console.log('INFO: Patient UID:', patientByEmail.external_id || patientByEmail.externalId);
+                }
+
+                // Fetch clinical report for this patient
+                await fetchClinicalReport(user.id);
+
+                // Fetch all reports for this patient (including response reports)
+                await fetchPatientReports(user.id);
+
                 // Retry with the found patient
                 const clinicId = patientByEmail.clinicId || patientByEmail.clinic_id || patientByEmail.orgId || patientByEmail.org_id || patientByEmail.ownerId || patientByEmail.owner_id;
                 let clinicData = null;
@@ -403,136 +579,917 @@ const PatientDashboard = () => {
     { id: 'journey', label: 'Recurring Journey', icon: Calendar }
   ];
 
+  // Helper functions for clinical report display
+  const getAge = (dob) => {
+    if (!dob) return 'N/A';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-GB');
+  };
+
+  const renderCheckboxList = (data, labelMap) => {
+    if (!data) return <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>;
+
+    const items = Object.entries(data)
+      .filter(([key, value]) => key !== 'other' && value === true)
+      .map(([key]) => labelMap[key] || key);
+
+    if (items.length === 0 && !data.other) {
+      return <p className="text-gray-500 dark:text-gray-400 text-sm">None reported</p>;
+    }
+
+    return (
+      <div className="space-y-1">
+        {items.length > 0 && (
+          <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300">
+            {items.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        )}
+        {data.other && (
+          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+            <span className="font-semibold">Other:</span> {data.other}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  // Label maps for clinical report data
+  const presentingComplaintsLabels = {
+    headaches: 'Headaches / Migraines',
+    seizures: 'Seizures / Epileptic Episodes',
+    dizziness: 'Dizziness / Balance Problems',
+    attention: 'Attention / Concentration Difficulties',
+    memory: 'Memory Issues',
+    sleep: 'Sleep Disturbances',
+    anxiety: 'Anxiety / Panic Symptoms',
+    depression: 'Depression / Low Mood',
+    irritability: 'Irritability / Emotional Dysregulation',
+    fatigue: 'Fatigue / Low Energy'
+  };
+
+  const symptomDurationLabels = {
+    sudden: 'Sudden Onset',
+    gradual: 'Gradual Onset',
+    acute: 'Acute (<1 month)',
+    subacute: 'Subacute (1–6 months)',
+    chronic: 'Chronic (>6 months)'
+  };
+
+  const pastMedicalHistoryLabels = {
+    neurological: 'Neurological Disorders',
+    psychiatric: 'Psychiatric Disorders',
+    cardiovascular: 'Cardiovascular Conditions',
+    endocrine: 'Endocrine/Metabolic',
+    chronicPain: 'Chronic Pain / Fibromyalgia'
+  };
+
+  const medicationsLabels = {
+    antidepressants: 'Antidepressants',
+    anxiolytics: 'Anxiolytics / Benzodiazepines',
+    antipsychotics: 'Antipsychotics',
+    moodStabilizers: 'Mood Stabilizers',
+    antiepileptics: 'Antiepileptics / Anticonvulsants',
+    stimulants: 'Stimulants (ADHD medications)',
+    sleepAids: 'Sleep Aids / Sedatives'
+  };
+
+  const familyHistoryLabels = {
+    epilepsy: 'Epilepsy / Seizures',
+    dementia: 'Dementia / Cognitive Decline',
+    adhd: 'ADHD / Learning Disorders',
+    moodDisorders: 'Mood Disorders',
+    anxiety: 'Anxiety / OCD',
+    substanceAbuse: 'Substance Abuse'
+  };
+
   const ProfileSection = () => (
     <div className="space-y-6">
       {/* Personal Details */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-[#E4EFFF] dark:bg-blue-900/30 rounded-lg">
-            <User className="h-6 w-6 text-[#323956] dark:text-blue-400" />
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Header - Using Brand Color #323956 */}
+        <div style={{ backgroundColor: '#323956' }} className="px-6 py-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg" style={{ backgroundColor: '#E4EFFF' }}>
+              <User className="h-6 w-6" style={{ color: '#323956' }} />
+            </div>
+            <h2 className="text-xl font-bold text-white">Personal Details</h2>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Personal Details</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Full Name</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.name}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Email</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.email}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Phone</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.phone}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Date of Birth</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.dateOfBirth}</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Address</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.address}</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Emergency Contact</label>
-            <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">{patientData.profile.emergencyContact}</p>
+        <div className="p-6" style={{ backgroundColor: '#E4EFFF' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Full Name */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <User className="h-3.5 w-3.5" />
+                <span>Full Name</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.name}</p>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Mail className="h-3.5 w-3.5" />
+                <span>Email</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.email}</p>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Phone className="h-3.5 w-3.5" />
+                <span>Phone</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.phone}</p>
+              </div>
+            </div>
+
+            {/* Date of Birth */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Cake className="h-3.5 w-3.5" />
+                <span>Date of Birth</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.dateOfBirth}</p>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="md:col-span-2 group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Address</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.address}</p>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="md:col-span-2 group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Shield className="h-3.5 w-3.5" />
+                <span>Emergency Contact</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.profile.emergencyContact}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Clinic Information */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-[#E4EFFF] dark:bg-blue-900/30 rounded-lg">
-            <Heart className="h-6 w-6 text-[#323956] dark:text-blue-400" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Your Clinic</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Clinic Name</label>
-            <p className="text-gray-900 dark:text-white font-medium">{patientData.clinic.name}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Primary Doctor</label>
-            <p className="text-gray-900 dark:text-white font-medium">{patientData.clinic.doctorName}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Phone</label>
-            <p className="text-[#323956] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer">{patientData.clinic.phone}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Email</label>
-            <p className="text-[#323956] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer">{patientData.clinic.email}</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Address</label>
-            <p className="text-gray-900 dark:text-white">{patientData.clinic.address}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Test History */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-[#E4EFFF] dark:bg-blue-900/30 rounded-lg">
-            <Activity className="h-6 w-6 text-[#323956] dark:text-blue-400" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Test History</h2>
-        </div>
-
-        <div className="space-y-3">
-          {patientData.reports && Array.isArray(patientData.reports) && patientData.reports.map((report) => (
-            <div key={report.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">{report.type}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{report.date}</p>
-              </div>
-              <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-sm rounded-full">
-                {report.status}
-              </span>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Header - Using Brand Color #323956 */}
+        <div style={{ backgroundColor: '#323956' }} className="px-6 py-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg" style={{ backgroundColor: '#CAE0FF' }}>
+              <Heart className="h-6 w-6" style={{ color: '#323956' }} />
             </div>
-          ))}
+            <h2 className="text-xl font-bold text-white">Your Clinic</h2>
+          </div>
+        </div>
+
+        <div className="p-6" style={{ backgroundColor: '#CAE0FF' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Clinic Name */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Briefcase className="h-3.5 w-3.5" />
+                <span>Clinic Name</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-semibold" style={{ color: '#323956' }}>{patientData.clinic.name}</p>
+              </div>
+            </div>
+
+            {/* Primary Doctor */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <User className="h-3.5 w-3.5" />
+                <span>Primary Doctor</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-semibold" style={{ color: '#323956' }}>{patientData.clinic.doctorName}</p>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Phone className="h-3.5 w-3.5" />
+                <span>Phone</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <a href={`tel:${patientData.clinic.phone}`} className="font-medium flex items-center space-x-2 hover:opacity-80" style={{ color: '#323956' }}>
+                  <span>{patientData.clinic.phone}</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <Mail className="h-3.5 w-3.5" />
+                <span>Email</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <a href={`mailto:${patientData.clinic.email}`} className="font-medium flex items-center space-x-2 hover:opacity-80" style={{ color: '#323956' }}>
+                  <span>{patientData.clinic.email}</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="md:col-span-2 group">
+              <label className="flex items-center space-x-2 text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#323956' }}>
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Address</span>
+              </label>
+              <div className="bg-white border border-gray-300 p-3.5 rounded-lg hover:border-[#323956] transition-colors">
+                <p className="font-medium" style={{ color: '#323956' }}>{patientData.clinic.address}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Clinical Report Information */}
+      {clinicalReport && (
+        <>
+          {/* Patient Information from Clinical Report */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                <User className="h-6 w-6 text-blue-900 dark:text-blue-100" />
+              </div>
+              <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100">Clinical Report Information</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Full Name</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.full_name || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Date of Birth</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">
+                  {formatDate(clinicalReport.date_of_birth)} (Age: {getAge(clinicalReport.date_of_birth)} years)
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Gender</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.gender || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Handedness</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.handedness || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Occupation</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.occupation || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Patient ID</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.patient_uid || patientUid || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Date of Test</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{formatDate(clinicalReport.date_of_test)}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Referring Physician</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.referring_physician || 'N/A'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Reason for Referral</label>
+                <p className="text-gray-900 dark:text-white bg-white dark:bg-gray-700 p-3 rounded-lg">{clinicalReport.referral_reason || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Clinical & Medical History */}
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg">
+                <Activity className="h-6 w-6 text-green-900 dark:text-green-100" />
+              </div>
+              <h2 className="text-xl font-semibold text-green-900 dark:text-green-100">Clinical & Medical History</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">Presenting Complaints:</p>
+                {renderCheckboxList(clinicalReport.presenting_complaints, presentingComplaintsLabels)}
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">Duration & Onset of Symptoms:</p>
+                {renderCheckboxList(clinicalReport.symptom_duration, symptomDurationLabels)}
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">Past Medical History:</p>
+                {renderCheckboxList(clinicalReport.past_medical_history, pastMedicalHistoryLabels)}
+              </div>
+            </div>
+          </div>
+
+          {/* Medication History */}
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                <Heart className="h-6 w-6 text-purple-900 dark:text-purple-100" />
+              </div>
+              <h2 className="text-xl font-semibold text-purple-900 dark:text-purple-100">Medication History</h2>
+            </div>
+
+            <div className="space-y-3">
+              {renderCheckboxList(clinicalReport.medications, medicationsLabels)}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 
-  const ReportsSection = () => (
-    <div className="space-y-6">
-      {/* NeuroSense Reports */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-[#E4EFFF] dark:bg-blue-900/30 rounded-lg">
-            <Brain className="h-6 w-6 text-[#323956] dark:text-blue-400" />
+  const ReportsSection = () => {
+    // Define 7 brain health parameters
+    const brainParameters = [
+      {
+        id: 1,
+        name: 'Cognition',
+        value: '85.50',
+        unit: 'Score',
+        status: 'normal',
+        range: 'Normal Range',
+        description: 'Cognition refers to mental processes like thinking, memory, and problem-solving. Good cognitive health supports daily functioning and quality of life.',
+        normal: 4,
+        borderline: 1,
+        abnormal: 2
+      },
+      {
+        id: 2,
+        name: 'Stress',
+        value: '120.00',
+        unit: 'Score',
+        status: 'high',
+        range: 'Higher Than Normal',
+        description: 'Stress is the body\'s response to challenges. Chronic stress can affect mental and physical health, impacting mood, sleep, and overall well-being.',
+        normal: 3,
+        borderline: 2,
+        abnormal: 3
+      },
+      {
+        id: 3,
+        name: 'Focus + Attention',
+        value: '78.30',
+        unit: 'Score',
+        status: 'normal',
+        range: 'Normal Range',
+        description: 'Focus and attention involve the ability to concentrate on tasks. Strong attention skills support productivity, learning, and daily activities.',
+        normal: 5,
+        borderline: 1,
+        abnormal: 1
+      },
+      {
+        id: 4,
+        name: 'Burnout & Fatigue',
+        value: '95.20',
+        unit: 'Score',
+        status: 'borderline',
+        range: 'Borderline',
+        description: 'Burnout and fatigue result from prolonged stress or overwork. Managing these is essential for maintaining energy levels and preventing exhaustion.',
+        normal: 2,
+        borderline: 3,
+        abnormal: 2
+      },
+      {
+        id: 5,
+        name: 'Emotional Regulation',
+        value: '72.10',
+        unit: 'Score',
+        status: 'normal',
+        range: 'Normal Range',
+        description: 'Emotional regulation is the ability to manage and respond to emotions effectively. Good emotional regulation supports mental health and relationships.',
+        normal: 6,
+        borderline: 0,
+        abnormal: 1
+      },
+      {
+        id: 6,
+        name: '[+ Under 18] Learning',
+        value: '88.90',
+        unit: 'Score',
+        status: 'normal',
+        range: 'Normal Range',
+        description: 'Learning capacity is crucial for development in young individuals. It involves acquiring knowledge, skills, and adapting to new information.',
+        normal: 5,
+        borderline: 1,
+        abnormal: 1
+      },
+      {
+        id: 7,
+        name: 'Creativity',
+        value: '81.40',
+        unit: 'Score',
+        status: 'normal',
+        range: 'Normal Range',
+        description: 'Creativity involves generating new ideas and solutions. It supports innovation, problem-solving, and personal expression.',
+        normal: 4,
+        borderline: 2,
+        abnormal: 1
+      }
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* NeuroSense Reports */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-2 bg-[#E4EFFF] dark:bg-blue-900/30 rounded-lg">
+              <Brain className="h-6 w-6 text-[#323956] dark:text-blue-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">NeuroSense Reports</h2>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">NeuroSense Reports</h2>
-        </div>
 
         <div className="grid gap-4">
-          {patientData.reports && Array.isArray(patientData.reports) && patientData.reports.map((report) => (
-            <div key={report.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-gray-900/20 transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{report.type}</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{report.summary}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span> {report.date}</span>
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded">
-                      {report.status}
-                    </span>
+          {clinicalReport ? (
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              {/* Test Card Header */}
+              <div className="flex items-center p-5 bg-white dark:bg-gray-800">
+                {/* Progress circle */}
+                <div className="mr-4">
+                  <div className="w-16 h-16 rounded-full border-4 border-green-500 flex items-center justify-center">
+                    <svg className="w-16 h-16 transform -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#e5e7eb"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke="#22c55e"
+                        strokeWidth="4"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 28}`}
+                        strokeDashoffset={`${2 * Math.PI * 28 * (1 - 0.85)}`}
+                      />
+                    </svg>
                   </div>
                 </div>
-                <button className="flex items-center space-x-2 bg-[#323956] dark:bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-[#232D3C] dark:hover:bg-blue-700 transition-colors">
-                  <Download className="h-4 w-4" />
-                  <span>Download PDF</span>
-                </button>
+
+                {/* Test details */}
+                <div className="flex-1">
+                  <div className="mb-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Test Name</p>
+                    <h3 className="font-semibold text-blue-600 dark:text-blue-400">
+                      Clinical NeuroSense QEEG Report
+                    </h3>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Collected</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {new Date(clinicalReport.created_at || clinicalReport.date_of_test).toLocaleDateString('en-GB', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col space-y-2 ml-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        // Check if clinical report has an associated file
+                        if (clinicalReport.file_path || clinicalReport.filePath || clinicalReport.report_file || clinicalReport.fileName || clinicalReport.file_name) {
+                          const filePath = clinicalReport.file_path || clinicalReport.filePath || clinicalReport.report_file;
+
+                          // Get original filename with extension
+                          let fileName = clinicalReport.fileName || clinicalReport.file_name || 'Clinical_NeuroSense_QEEG_Report';
+
+                          // If filePath exists but no fileName, extract from path
+                          if (filePath && !fileName.includes('.')) {
+                            const pathParts = filePath.split('/');
+                            const fileNameFromPath = pathParts[pathParts.length - 1];
+                            if (fileNameFromPath) {
+                              fileName = fileNameFromPath;
+                            }
+                          }
+
+                          // Ensure fileName has an extension
+                          if (!fileName.includes('.')) {
+                            fileName = fileName + '.pdf'; // Default to PDF if no extension
+                          }
+
+                          // Get signed URL from Supabase Storage
+                          const downloadUrl = await StorageService.getSignedUrl(filePath, 300);
+
+                          if (downloadUrl) {
+                            // Fetch the file as blob to force download
+                            const response = await fetch(downloadUrl);
+                            const blob = await response.blob();
+
+                            // Create blob URL
+                            const blobUrl = window.URL.createObjectURL(blob);
+
+                            // Create download link
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = fileName;
+                            link.style.display = 'none';
+                            document.body.appendChild(link);
+                            link.click();
+
+                            // Cleanup
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(blobUrl);
+
+                            toast.success(`Downloading ${fileName}`);
+                          } else {
+                            toast.error('Could not generate download link');
+                          }
+                        } else {
+                          // No file available - this is just database data
+                          toast.info('This report is displayed as parameters only. No file available for download.');
+                        }
+                      } catch (error) {
+                        console.error('Download error:', error);
+                        toast.error(`Download failed: ${error.message}`);
+                      }
+                    }}
+                    className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download</span>
+                  </button>
+                  <button
+                    onClick={() => setShowReportDetail(!showReportDetail)}
+                    className="bg-gray-700 dark:bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>View Detail</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Expandable Test Details Section - All Parameters */}
+              {showReportDetail && (
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-6 space-y-4">
+                  {/* Map through all 7 brain parameters */}
+                  {brainParameters.map((parameter) => (
+                    <div key={parameter.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+                      {/* Combined Header Row with Table Headers and Filters */}
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-300 dark:border-gray-600">
+                        {/* Table Headers */}
+                        <div className="grid grid-cols-3 gap-8 flex-1">
+                          <div>
+                            <span className="text-sm font-semibold" style={{ color: '#323956' }}>Parameter Name</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold" style={{ color: '#323956' }}>Result</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold" style={{ color: '#323956' }}>Range</span>
+                          </div>
+                        </div>
+
+                        {/* Filter Checkboxes */}
+                        <div className="flex items-center space-x-3 ml-6">
+                          <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#DC2626' }}>
+                            <input type="checkbox" className="rounded w-3 h-3" />
+                            <span>Less than 0.00</span>
+                          </label>
+                          <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#F59E0B' }}>
+                            <input type="checkbox" className="rounded w-3 h-3" />
+                            <span>Between 0.00 to 6.45</span>
+                          </label>
+                          <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#14B8A6' }}>
+                            <input type="checkbox" className="rounded w-3 h-3" />
+                            <span>Between 6.45 to 123.55</span>
+                          </label>
+                          <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#DC2626' }}>
+                            <input type="checkbox" className="rounded w-3 h-3" />
+                            <span>Greater than 125.00</span>
+                          </label>
+
+                          {/* Result Button */}
+                          <button className="px-5 py-1.5 text-white text-sm rounded-md hover:opacity-90 transition-colors ml-2" style={{ backgroundColor: '#323956' }}>
+                            Result
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Parameter Data Row */}
+                      <div className="grid grid-cols-3 gap-8">
+                        <div>
+                          <span className="font-semibold" style={{ color: '#323956' }}>{parameter.name}</span>
+                        </div>
+                        <div>
+                          <span className={`font-bold ${
+                            parameter.status === 'high' ? 'text-red-600' :
+                            parameter.status === 'borderline' ? 'text-orange-500' :
+                            'text-green-600'
+                          }`}>
+                            {parameter.value} {parameter.unit}
+                          </span>
+                        </div>
+                        <div>
+                          <span className={`text-sm font-medium ${
+                            parameter.status === 'normal' ? 'text-green-600' :
+                            parameter.status === 'borderline' ? 'text-orange-500' :
+                            'text-red-600'
+                          }`}>
+                            {parameter.range}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Visual Progress Bar */}
+                      <div className="pt-2">
+                        <div className="flex items-center justify-end mb-2">
+                          <span className="text-sm font-bold" style={{ color: '#323956' }}>{parameter.value}</span>
+                        </div>
+                        <div className="relative h-3 bg-gradient-to-r from-green-400 via-yellow-400 via-orange-400 to-red-500 rounded-full shadow-inner"></div>
+                      </div>
+
+                      {/* Educational Information */}
+                      <div className="bg-gray-50 dark:bg-gray-700/50 border-l-4 p-4 rounded text-xs leading-relaxed" style={{ borderColor: '#323956', color: '#323956' }}>
+                        <p>
+                          <strong>{parameter.name}:</strong> {parameter.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* Uploaded Response Reports */}
+          {patientReports.length > 0 && patientReports.map((report) => (
+            <div key={report.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              {/* Report Card Header */}
+              <div className="flex items-center p-5 bg-white dark:bg-gray-800">
+                {/* File Icon */}
+                <div className="mr-4">
+                  <div className="w-16 h-16 rounded-lg bg-[#E4EFFF] dark:bg-blue-900/30 flex items-center justify-center">
+                    <FileText className="h-8 w-8 text-[#323956] dark:text-blue-400" />
+                  </div>
+                </div>
+
+                {/* Report details */}
+                <div className="flex-1">
+                  <div className="mb-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">File Name</p>
+                    <h3 className="font-semibold text-blue-600 dark:text-blue-400">
+                      {report.fileName || report.file_name || 'Report'}
+                    </h3>
+                    {report.reportData?.isResponseReport && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 mt-1">
+                        Response Report
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Collected</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {new Date(report.createdAt || report.created_at).toLocaleDateString('en-GB', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col space-y-2 ml-4">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const filePath = report.filePath || report.file_path || report.storagePath || report.reportData?.filePath;
+
+                        if (!filePath) {
+                          toast.error('File path not found');
+                          return;
+                        }
+
+                        // Get original filename with extension
+                        let fileName = report.fileName || report.file_name || report.reportData?.fileName;
+
+                        // If no fileName, extract from filePath
+                        if (!fileName && filePath) {
+                          const pathParts = filePath.split('/');
+                          fileName = pathParts[pathParts.length - 1];
+                        }
+
+                        // Fallback to generic name with extension if still not found
+                        if (!fileName) {
+                          fileName = 'report.pdf';
+                        }
+
+                        // Get signed URL from Supabase Storage
+                        const downloadUrl = await StorageService.getSignedUrl(filePath, 300);
+
+                        if (downloadUrl) {
+                          // Fetch the file as blob to force download
+                          const response = await fetch(downloadUrl);
+                          const blob = await response.blob();
+
+                          // Create blob URL
+                          const blobUrl = window.URL.createObjectURL(blob);
+
+                          // Create download link
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.download = fileName;
+                          link.style.display = 'none';
+                          document.body.appendChild(link);
+                          link.click();
+
+                          // Cleanup
+                          document.body.removeChild(link);
+                          window.URL.revokeObjectURL(blobUrl);
+
+                          toast.success(`Downloading ${fileName}`);
+                        } else {
+                          toast.error('Could not generate download link');
+                        }
+                      } catch (error) {
+                        console.error('Download error:', error);
+                        toast.error(`Download failed: ${error.message}`);
+                      }
+                    }}
+                    className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Toggle inline expansion
+                      if (expandedReportId === report.id) {
+                        setExpandedReportId(null);
+                      } else {
+                        setExpandedReportId(report.id);
+                      }
+                    }}
+                    className="bg-gray-700 dark:bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>View Detail</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Expandable Test Details Section - All Parameters */}
+              {expandedReportId === report.id && (
+                <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-6 space-y-4">
+                  {/* Map through all 7 brain parameters */}
+                  {brainParameters.map((parameter) => (
+                    <div key={parameter.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+                      {/* Table Structure with Headers, Data, and Filters */}
+                      <div className="space-y-3">
+                        {/* Row 1: Headers + Checkboxes */}
+                        <div className="flex items-center justify-between">
+                          {/* Left: Table Headers (3 columns) */}
+                          <div className="flex items-center space-x-16 flex-1">
+                            <div className="w-40">
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Parameter<br/>Name</span>
+                            </div>
+                            <div className="w-40">
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Result</span>
+                            </div>
+                            <div className="w-40">
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Range</span>
+                            </div>
+                          </div>
+
+                          {/* Right: Filter Checkboxes + Result Button */}
+                          <div className="flex items-center space-x-3">
+                            <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#DC2626' }}>
+                              <input type="checkbox" className="rounded w-3 h-3" />
+                              <span>Less than 0.00</span>
+                            </label>
+                            <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#F59E0B' }}>
+                              <input type="checkbox" className="rounded w-3 h-3" />
+                              <span>Between 0.00 to 6.45</span>
+                            </label>
+                            <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#14B8A6' }}>
+                              <input type="checkbox" className="rounded w-3 h-3" />
+                              <span>Between 6.45 to 123.55</span>
+                            </label>
+                            <label className="flex items-center space-x-1.5 text-xs" style={{ color: '#DC2626' }}>
+                              <input type="checkbox" className="rounded w-3 h-3" />
+                              <span>Greater than 125.00</span>
+                            </label>
+                            <button className="px-5 py-1.5 text-white text-sm rounded-md hover:opacity-90 transition-colors" style={{ backgroundColor: '#323956' }}>
+                              Result
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Row 2: Data Values (3 columns aligned with headers) */}
+                        <div className="flex items-center space-x-16 pb-3 border-b border-gray-300 dark:border-gray-600">
+                          <div className="w-40">
+                            <p className="font-semibold text-gray-900 dark:text-white text-base">{parameter.name}</p>
+                          </div>
+                          <div className="w-40">
+                            <p className="font-semibold text-gray-900 dark:text-white text-base">
+                              {parameter.value} {parameter.unit}
+                            </p>
+                          </div>
+                          <div className="w-40">
+                            <p className="text-gray-900 dark:text-white text-base">{parameter.range}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar with Multi-Color Gradient */}
+                      <div className="w-full">
+                        <div className="flex justify-end mb-1">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{parameter.value}</span>
+                        </div>
+                        <div className="relative w-full h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #10B981 0%, #10B981 33%, #F59E0B 33%, #F59E0B 66%, #DC2626 66%, #DC2626 100%)' }}>
+                          {/* Value Marker */}
+                          <div
+                            className="absolute top-0 bottom-0 w-1 bg-gray-800 dark:bg-white shadow-lg"
+                            style={{ left: `${Math.min((parseFloat(parameter.value) / 150) * 100, 100)}%`, transform: 'translateX(-50%)' }}
+                          >
+                            {/* Diamond marker at top */}
+                            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-gray-800 dark:bg-white rotate-45"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Parameter Description */}
+                      <div className="mt-3 p-3 rounded-lg border-l-4" style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}>
+                        <p className="text-sm text-gray-800">
+                          <span className="font-semibold text-gray-900">{parameter.name}:</span> {parameter.description}
+                        </p>
+                      </div>
+
+                      {/* Analysis Summary */}
+                      <div className="grid grid-cols-3 gap-4 mt-3">
+                        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{parameter.normal}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Normal</p>
+                        </div>
+                        <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                          <p className="text-2xl font-bold text-orange-500 dark:text-orange-400">{parameter.borderline}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Borderline</p>
+                        </div>
+                        <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{parameter.abnormal}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Abnormal</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
+
+          {/* No Reports Message */}
+          {!clinicalReport && patientReports.length === 0 && (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <p className="text-lg font-medium">No Reports Available</p>
+              <p className="text-sm mt-2">Your reports will appear here once they are generated by your clinic.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -582,8 +1539,10 @@ const PatientDashboard = () => {
           ))}
         </div>
       </div>
+
     </div>
   );
+  };
 
   const ResourcesSection = () => (
     <div className="space-y-6">
@@ -869,33 +1828,95 @@ const PatientDashboard = () => {
     }
   };
 
+  // Component to display detailed clinical report information
+  const InfoField = ({ label, value }) => (
+    <div>
+      <p className="text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">{label}</p>
+      <p className="text-sm text-gray-900 dark:text-white">{value || 'N/A'}</p>
+    </div>
+  );
+
   return (
+    <>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #323956 0%, #1e2538 100%)' }}>
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            {/* Left Section - Logo & Branding */}
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-[#CAE0FF] dark:bg-blue-900/30 rounded-lg">
-                <Brain className="h-8 w-8 text-[#323956] dark:text-blue-400" />
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+                <img
+                  src="/header logo.png"
+                  alt="Brain Health Portal Logo"
+                  className="h-12 w-12 object-contain"
+                />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Brain Health Portal</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Welcome back, {user?.name || 'Patient'}</p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">NeuroSense</h1>
+                <p className="text-sm text-blue-200">Welcome back, <span className="font-medium text-white">{user?.name || 'Patient'}</span></p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Patient Portal</p>
+            {/* Right Section - Patient Info & Actions */}
+            <div className="flex items-center space-x-6">
+              {/* Patient ID Card */}
+              <div className="hidden md:block bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+                <div className="text-right">
+                  <p className="text-xs text-blue-200 font-medium mb-0.5">Patient ID</p>
+                  <p className="text-sm font-bold text-white tracking-wide">
+                    {patientUid || user?.name}
+                  </p>
+                </div>
               </div>
-              <div className="w-10 h-10 bg-[#CAE0FF] dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-[#323956] dark:text-blue-400" />
-              </div>
+
+              {/* User Avatar - Clickable */}
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="relative group focus:outline-none"
+                title="Edit Profile Picture"
+              >
+                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg transition-all duration-200 group-hover:shadow-xl group-hover:scale-105 cursor-pointer" style={{ background: profileImageUrl ? 'transparent' : 'linear-gradient(135deg, #CAE0FF 0%, #E4EFFF 100%)' }}>
+                  {profileImageUrl ? (
+                    <img
+                      src={profileImageUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover pointer-events-none"
+                      onError={(e) => {
+                        // Fallback to icon if image fails to load
+                        e.target.style.display = 'none';
+                        e.target.parentElement.style.background = 'linear-gradient(135deg, #CAE0FF 0%, #E4EFFF 100%)';
+                        const icon = document.createElement('div');
+                        icon.className = 'w-full h-full flex items-center justify-center';
+                        icon.innerHTML = '<svg class="h-6 w-6" style="color: #323956" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>';
+                        e.target.parentElement.appendChild(icon);
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                      <User className="h-6 w-6" style={{ color: '#323956' }} />
+                    </div>
+                  )}
+                </div>
+                {/* Camera Icon Overlay */}
+                <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-[#323956] group-hover:scale-110 transition-transform pointer-events-none"></div>
+              </button>
+
+              {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl border border-white/20"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
@@ -907,23 +1928,24 @@ const PatientDashboard = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <Link
                   key={tab.id}
                   to={`/dashboard/${tab.id}`}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-[#323956] dark:border-blue-400 text-[#323956] dark:text-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-b from-[#323956] to-[#232D3C] text-white shadow-lg -mb-px'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-[#323956] dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span>{tab.label}</span>
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-[#CAE0FF]' : ''}`} />
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </Link>
               );
             })}
@@ -936,6 +1958,35 @@ const PatientDashboard = () => {
         {renderContent()}
       </div>
     </div>
+
+    {/* Profile Modal */}
+    <ProfileModal
+      isOpen={isProfileModalOpen}
+      onClose={() => setIsProfileModalOpen(false)}
+      onProfileUpdate={async (updatedData) => {
+        console.log('DASHBOARD: onProfileUpdate called with data:', updatedData);
+
+        // Update profile image URL when user uploads new avatar
+        if (updatedData.avatar) {
+          console.log('DASHBOARD: Avatar update detected, setting immediate preview');
+          // Set immediate preview
+          setProfileImageUrl(updatedData.avatar);
+
+          // Wait a moment for database to be updated
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Reload from database to ensure we have the saved version
+          await reloadProfileImage();
+
+          toast.success('Profile image updated successfully!');
+        } else {
+          console.log('DASHBOARD: No avatar in updated data, but reloading to get latest');
+          // Still reload to get any other profile updates
+          await reloadProfileImage();
+        }
+      }}
+    />
+    </>
   );
 };
 

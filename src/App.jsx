@@ -282,9 +282,33 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
+            <Route
+              path="/dashboard/reports"
+              element={
+                <ProtectedRoute requiredRole="patient">
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/resources"
+              element={
+                <ProtectedRoute requiredRole="patient">
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/journey"
+              element={
+                <ProtectedRoute requiredRole="patient">
+                  <PatientDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-            
+
+
             {/* Catch all route - redirect to landing page */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

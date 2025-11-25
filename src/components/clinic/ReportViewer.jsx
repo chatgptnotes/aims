@@ -22,6 +22,7 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
   const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
+  const [responseReports, setResponseReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState('');
   const [dateFilter, setDateFilter] = useState('');
@@ -130,8 +131,30 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
     console.log('DEBUG: Current filters:', { searchTerm, selectedPatient, dateFilter });
     console.log('DEBUG: Patients available:', patients?.length || 0);
 
-    let filtered = [...reports];
-    console.log('DEBUG: Starting with reports:', filtered.length);
+    // Separate response reports from regular reports
+    const allResponseReports = reports.filter(report => {
+      const isResponseReport = report.reportData?.isResponseReport ||
+                              report.report_data?.isResponseReport ||
+                              report.reportData?.report_type === 'Response Report' ||
+                              report.reportData?.reportType === 'Response Report' ||
+                              report.fileName?.toLowerCase().includes('response');
+      return isResponseReport;
+    });
+
+    const regularReports = reports.filter(report => {
+      const isResponseReport = report.reportData?.isResponseReport ||
+                              report.report_data?.isResponseReport ||
+                              report.reportData?.report_type === 'Response Report' ||
+                              report.reportData?.reportType === 'Response Report' ||
+                              report.fileName?.toLowerCase().includes('response');
+      return !isResponseReport;
+    });
+
+    console.log('DEBUG: Response reports found:', allResponseReports.length);
+    console.log('DEBUG: Regular reports found:', regularReports.length);
+
+    let filtered = [...regularReports];
+    console.log('DEBUG: Starting with regular reports:', filtered.length);
 
     // Search filter
     if (searchTerm) {
@@ -185,9 +208,12 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
 
     // Sort by creation date (newest first)
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    allResponseReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    console.log('DEBUG: Final filtered reports:', filtered.length);
+    console.log('DEBUG: Final filtered regular reports:', filtered.length);
+    console.log('DEBUG: Final response reports:', allResponseReports.length);
     setFilteredReports(filtered);
+    setResponseReports(allResponseReports);
   };
 
   // Check if clinic has reached report limit
@@ -660,11 +686,96 @@ const ReportViewer = ({ clinicId, patients = [], reports: initialReports, onUpda
         </div>
       </div>
 
-      {/* Reports Grid/List */}
+      {/* Response Reports from Super Admin */}
+      {responseReports.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border-2 border-green-500 overflow-hidden">
+          <div className="px-6 py-4 border-b border-green-200 bg-green-50">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-green-900 flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span>Response Reports from NeuroSense (</span><span>{responseReports.length})</span>
+              </h3>
+              <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                Admin Responses
+              </span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              Analysis reports sent by NeuroSense Admin for your patients
+            </p>
+          </div>
+
+          <div className="divide-y divide-gray-200">
+            {responseReports.map((report) => {
+              const patient = (patients || []).find(p =>
+                p.id === report.patientId ||
+                p.id === report.patient_id ||
+                p.id === report.reportData?.patientId
+              );
+
+              return (
+                <div key={report.id} className="p-6 hover:bg-green-50 transition-colors border-l-4 border-green-500">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-lg font-medium text-gray-900">
+                            {report.fileName || 'Response Report'}
+                          </h4>
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
+                            NEW
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-1">
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              {patient?.name || patient?.fullName || patient?.full_name || 'Unknown Patient'}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              {new Date(report.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+                            From Super Admin
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleViewReport(report)}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        title="View Report"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDownloadReport(report)}
+                        className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        title="Download Report"
+                      >
+                        <Download className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Regular Patient Reports */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
           <h3 className="text-lg font-medium text-gray-900">
-            Reports ({filteredReports.length})
+            Your Uploaded Reports ({filteredReports.length})
           </h3>
         </div>
         

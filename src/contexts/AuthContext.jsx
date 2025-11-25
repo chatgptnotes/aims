@@ -314,15 +314,33 @@ export const AuthProvider = ({ children }) => {
             }
 
             console.log(' Fetched patient data from database:', patientData);
+            console.log('DEBUG: Patient avatar fields:', {
+              avatar: patientData?.avatar,
+              profile_image: patientData?.profile_image,
+              profileImage: patientData?.profileImage,
+              avatar_url: patientData?.avatar_url
+            });
 
             if (patientData) {
+              // Map avatar fields from database to user object
+              const avatarUrl = patientData.avatar || patientData.profile_image || patientData.profileImage || patientData.avatar_url;
+
               latestUserData = {
                 ...response.user,
                 ...patientData,
-                name: patientData.name || patientData.full_name || response.user.name
+                name: patientData.name || patientData.full_name || response.user.name,
+                avatar: avatarUrl,
+                profile_image: avatarUrl,
+                profileImage: avatarUrl,
+                avatar_url: avatarUrl
               };
               console.log('SUCCESS: Patient data fetched from database');
               console.log('SUCCESS: Merged user data:', latestUserData);
+              console.log('SUCCESS: Avatar fields set:', {
+                avatar: !!latestUserData.avatar,
+                profile_image: !!latestUserData.profile_image,
+                avatarUrl: avatarUrl
+              });
             } else {
               console.warn('WARNING: No patient data found for this user!');
               console.log('INFO:  This might be a new patient, using API response data');
@@ -636,10 +654,20 @@ export const AuthProvider = ({ children }) => {
 
       // Update local state immediately for better UX
       const updatedUser = { ...user, ...userData };
+
+      // If avatar is being updated, also add to profile_image and avatar_url for consistency
+      if (userData.avatar) {
+        updatedUser.profile_image = userData.avatar;
+        updatedUser.avatar_url = userData.avatar;
+        updatedUser.profileImage = userData.avatar;
+        console.log('STORAGE: Avatar fields added to user object for consistency');
+      }
+
       setUser(updatedUser);
 
       // Update localStorage
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('STORAGE: User object saved to localStorage:', updatedUser);
 
       // SUCCESS: CRITICAL: Update Supabase Auth password FIRST if password is being changed
       if (userData.password && supabase) {
@@ -695,9 +723,61 @@ export const AuthProvider = ({ children }) => {
           console.log('SUCCESS: Clinic admin profile saved to database');
           console.log('SUCCESS: Update result:', updateResult);
         } else {
-          // For regular users, update in appropriate table
-          await DatabaseService.update('users', user.id, userData);
-          console.log('SUCCESS: User profile saved to database');
+          // For regular users (patients), find patient record and update
+          console.log('INFO: Updating patient profile...');
+          console.log('INFO: User email:', user.email);
+
+          // Find patient record by email
+          const allPatients = await DatabaseService.get('patients');
+          const userEmailLower = user.email.trim().toLowerCase();
+          const patientRecord = allPatients.find(p => {
+            if (!p.email) return false;
+            return p.email.trim().toLowerCase() === userEmailLower;
+          });
+
+          if (!patientRecord) {
+            console.error('ERROR: Patient record not found for email:', user.email);
+            throw new Error('Patient record not found');
+          }
+
+          console.log('INFO: Found patient record ID:', patientRecord.id);
+          console.log('INFO: Patient record email:', patientRecord.email);
+
+          // Map avatar field to database fields
+          const patientData = { ...userData };
+          console.log('DEBUG: Original userData:', userData);
+          console.log('DEBUG: userData.avatar:', userData.avatar);
+
+          if (patientData.avatar) {
+            // Map avatar to both profile_image and avatar_url for compatibility
+            patientData.profile_image = patientData.avatar;
+            patientData.avatar_url = patientData.avatar;
+            patientData.profileImage = patientData.avatar;
+            console.log('STORAGE: Avatar mapped to profile_image/avatar_url for patients table');
+            console.log('STORAGE: Avatar URL being saved:', patientData.avatar);
+            console.log('STORAGE: profile_image field:', patientData.profile_image);
+            console.log('STORAGE: avatar_url field:', patientData.avatar_url);
+            // Don't save the original avatar field to database
+            delete patientData.avatar;
+          } else {
+            console.log('WARNING: No avatar in userData to save');
+          }
+
+          // Remove password fields from patient data (handled separately by Supabase Auth)
+          delete patientData.password;
+          delete patientData.currentPassword;
+          delete patientData.confirmPassword;
+
+          console.log('DATABASE: About to save patientData:', patientData);
+          console.log('DATABASE: Saving to patients table, record ID:', patientRecord.id);
+          console.log('DATABASE: Fields being updated:', Object.keys(patientData));
+
+          // Update patient record in database
+          const updateResult = await DatabaseService.update('patients', patientRecord.id, patientData);
+          console.log('SUCCESS: Patient profile saved to database');
+          console.log('SUCCESS: Update result:', updateResult);
+          console.log('SUCCESS: Verify - profile_image saved:', !!patientData.profile_image);
+          console.log('SUCCESS: Verify - avatar_url saved:', !!patientData.avatar_url);
         }
       } catch (dbError) {
         console.error('ERROR: Database update failed:', dbError);

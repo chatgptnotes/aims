@@ -35,14 +35,23 @@ export const checkUploadRequirements = (clinicId, patient, user, file) => {
       errors.push('File size exceeds 50MB limit');
     }
 
-    // Validate file extension for EEG/qEEG files
-    const validExtensions = ['.edf', '.eeg', '.bdf'];
+    // Validate file extension for medical report formats
+    const validExtensions = [
+      '.edf', '.eeg', '.bdf',          // EEG/qEEG formats
+      '.pdf',                           // PDF documents
+      '.jpg', '.jpeg', '.png',          // Images
+      '.doc', '.docx',                  // Word documents
+      '.csv', '.txt',                   // Data files
+      '.xml', '.json',                  // Structured data
+      '.xlsx', '.xls',                  // Excel files
+      '.dcm'                            // DICOM medical imaging
+    ];
     const fileName = file.name.toLowerCase();
     const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
 
     if (!hasValidExtension) {
       const fileExt = fileName.substring(fileName.lastIndexOf('.'));
-      errors.push(`Invalid file format: ${fileExt}. Only EEG/qEEG files (.edf, .eeg, .bdf) are allowed`);
+      errors.push(`Invalid file format: ${fileExt}. Allowed: PDF, EDF, EEG, BDF, JPEG, PNG, DOC, DOCX, CSV, TXT, XML, JSON, XLSX, DICOM`);
     }
   }
   

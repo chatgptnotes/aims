@@ -248,14 +248,23 @@ class StorageService {
       throw new Error(`File size exceeds 50MB limit. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
     }
 
-    // Strict validation: Check file extension for EEG/qEEG formats ONLY
+    // Validation: Check file extension for medical report formats
     const fileName = file.name.toLowerCase();
-    const validExtensions = ['.edf', '.eeg', '.bdf'];
+    const validExtensions = [
+      '.edf', '.eeg', '.bdf',          // EEG/qEEG formats
+      '.pdf',                           // PDF documents
+      '.jpg', '.jpeg', '.png',          // Images
+      '.doc', '.docx',                  // Word documents
+      '.csv', '.txt',                   // Data files
+      '.xml', '.json',                  // Structured data
+      '.xlsx', '.xls',                  // Excel files
+      '.dcm'                            // DICOM medical imaging
+    ];
     const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
 
     if (!hasValidExtension) {
       const fileExt = fileName.substring(fileName.lastIndexOf('.'));
-      throw new Error(`Invalid file format! Only EEG/qEEG files are allowed (.edf, .eeg, .bdf). You uploaded: ${fileExt}`);
+      throw new Error(`Invalid file format! Allowed formats: PDF, EDF, EEG, BDF, JPEG, PNG, DOC, DOCX, CSV, TXT, XML, JSON, XLSX, DICOM. You uploaded: ${fileExt}`);
     }
 
     return true;

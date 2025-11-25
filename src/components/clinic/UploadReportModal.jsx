@@ -183,12 +183,21 @@ const UploadReportModal = ({ clinicId, patient, onUpload, onClose }) => {
     try {
       const file = data.reportFile[0];
 
-      // Strict validation: ONLY allow EEG/qEEG formats
-      const validEEGFormats = ['.edf', '.eeg', '.bdf'];
+      // Validation: Allow medical report formats
+      const validFormats = [
+        '.edf', '.eeg', '.bdf',          // EEG/qEEG formats
+        '.pdf',                           // PDF documents
+        '.jpg', '.jpeg', '.png',          // Images
+        '.doc', '.docx',                  // Word documents
+        '.csv', '.txt',                   // Data files
+        '.xml', '.json',                  // Structured data
+        '.xlsx', '.xls',                  // Excel files
+        '.dcm'                            // DICOM medical imaging
+      ];
       const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
 
-      if (!validEEGFormats.includes(fileExt)) {
-        toast.error(`Invalid file format! Only EEG/qEEG files are allowed (.edf, .eeg, .bdf). You uploaded: ${fileExt}`);
+      if (!validFormats.includes(fileExt)) {
+        toast.error(`Invalid file format! Allowed formats: PDF, EDF, EEG, BDF, JPEG, PNG, DOC, DOCX, CSV, TXT, XML, JSON, XLSX, DICOM. You uploaded: ${fileExt}`);
         return;
       }
 

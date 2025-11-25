@@ -3,7 +3,7 @@ import { X, Camera, User, Mail, Building, Shield, Save, Upload, CheckCircle, Pho
 import { useAuth } from '../../contexts/AuthContext';
 import StorageService from '../../services/storageService';
 
-const ProfileModal = ({ isOpen, onClose }) => {
+const ProfileModal = ({ isOpen, onClose, onProfileUpdate }) => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -81,31 +81,50 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      console.log('STORAGE: Saving profile data to database:', formData);
+      console.log('=== PROFILE SAVE STARTED ===');
+      console.log('STORAGE: User ID:', user.id);
+      console.log('STORAGE: User Role:', user.role);
+      console.log('STORAGE: User Email:', user.email);
+      console.log('STORAGE: Form Data:', formData);
+      console.log('STORAGE: Selected File:', selectedFile?.name);
 
       // Upload avatar to Supabase Storage if a new file was selected
       let avatarUrl = formData.avatar;
       if (selectedFile) {
         try {
           console.log('AVATAR: Uploading new avatar to Supabase Storage...');
+          console.log('AVATAR: File details:', {
+            name: selectedFile.name,
+            size: selectedFile.size,
+            type: selectedFile.type
+          });
+
           const uploadResult = await StorageService.uploadAvatar(
             selectedFile,
             user.id,
-            user.role
+            user.role || 'user'
           );
+
+          console.log('AVATAR: Upload result:', uploadResult);
 
           if (uploadResult.success) {
             avatarUrl = uploadResult.url;
             console.log('AVATAR: Upload successful! URL:', avatarUrl);
           } else {
-            throw new Error('Avatar upload failed');
+            throw new Error('Avatar upload failed - no success flag');
           }
         } catch (uploadError) {
           console.error('AVATAR: Upload error:', uploadError);
+          console.error('AVATAR: Error details:', {
+            message: uploadError.message,
+            stack: uploadError.stack
+          });
           alert('Failed to upload avatar: ' + uploadError.message);
           setIsLoading(false);
           return;
         }
+      } else {
+        console.log('AVATAR: No new file selected, keeping existing avatar');
       }
 
       // Validate password change only if user wants to change password (all three fields filled)
@@ -143,32 +162,48 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
       // Prepare data to send
       const dataToSave = { ...formData, avatar: avatarUrl };
+      console.log('DATABASE: Data to save:', dataToSave);
 
       // Remove password fields if not changing password
       if (!formData.password) {
         delete dataToSave.currentPassword;
         delete dataToSave.password;
         delete dataToSave.confirmPassword;
+        console.log('DATABASE: Not updating password');
       } else {
         // Remove currentPassword and confirmPassword, only send new password
         delete dataToSave.currentPassword;
         delete dataToSave.confirmPassword;
-        console.log('AUTH: Password will be updated');
+        console.log('DATABASE: Password will be updated');
       }
 
+      console.log('DATABASE: Calling updateUser function...');
       // Update user data including profile picture and password
       const result = await updateUser(dataToSave);
+      console.log('DATABASE: updateUser result:', result);
 
       if (result.success) {
+        console.log('=== PROFILE SAVE SUCCESSFUL ===');
         console.log('SUCCESS: Profile saved successfully to database');
+        console.log('SUCCESS: Avatar URL saved:', avatarUrl);
         setShowSuccess(true);
         setSelectedFile(null); // Clear selected file after successful save
+
+        // Call the callback to update parent component with new profile data
+        if (onProfileUpdate) {
+          console.log('CALLBACK: Calling onProfileUpdate with data:', dataToSave);
+          onProfileUpdate({ ...dataToSave });
+        } else {
+          console.warn('WARNING: onProfileUpdate callback not provided');
+        }
+
         setTimeout(() => {
           setIsEditing(false);
           setShowSuccess(false);
           onClose();
         }, 1500);
       } else {
+        console.error('=== PROFILE SAVE FAILED ===');
         console.error('ERROR: Failed to save profile:', result.error);
         alert(result.error || 'Failed to save profile');
       }

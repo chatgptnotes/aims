@@ -209,7 +209,8 @@ class DatabaseService {
       'patients': [
         'id', 'org_id', 'clinic_id', 'owner_user', 'external_id', 'name', 'full_name', 'date_of_birth',
         'gender', 'phone', 'email', 'address', 'medical_history', 'improvement_focus',
-        'brain_fitness_score', 'emergency_contact', 'created_at', 'updated_at'
+        'brain_fitness_score', 'emergency_contact', 'created_at', 'updated_at',
+        'avatar', 'profile_image', 'profileImage', 'avatar_url'
       ],
       'reports': [
         // Actual schema from 004_simple_clinic_tables.sql:
