@@ -30,7 +30,8 @@ import {
   TrendingUp,
   Zap,
   Menu,
-  X
+  X,
+  Cpu
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -52,6 +53,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
         { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/admin' },
         { id: 'clinics', label: 'Clinic Management', icon: Building2, path: '/admin/clinics' },
         { id: 'reports', label: 'Patient Reports', icon: FileSpreadsheet, path: '/admin/reports' },
+        { id: 'algorithm-processor', label: 'Algorithm Processor', icon: Cpu, path: '/admin/algorithm-processor' },
         { id: 'payments', label: 'Payment History', icon: CreditCard, path: '/admin/payments' },
         { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/admin/analytics' },
         { id: 'alerts', label: 'Alerts & Monitoring', icon: Monitor, path: '/admin/alerts' },

@@ -36,6 +36,7 @@ class DatabaseService {
       'reports': 'reports',              // Fixed: Use 'reports' not 'eeg_reports'
       'subscriptions': 'subscriptions',
       'payments': 'payment_history',
+      'algorithmResults': 'algorithm_results',  // QEEG algorithm processing results
       'usage': 'organizations',          // Temporary mapping to existing table
       'alerts': 'organizations'          // Temporary mapping to existing table
     };
@@ -227,6 +228,10 @@ class DatabaseService {
         'id', 'clinic_id', 'plan', 'status', 'amount', 'currency', 'package_name', 'payment_method',
         'payment_id', 'reports_allowed', 'environment', 'plan_details', 'subscription', 'payment_details',
         'created_at', 'updated_at'
+      ],
+      'algorithm_results': [
+        'id', 'patient_id', 'patient_name', 'clinic_id', 'clinic_name', 'results',
+        'eyes_open_file', 'eyes_closed_file', 'processed_at', 'processed_by', 'created_at'
       ]
     };
 

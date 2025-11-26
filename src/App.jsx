@@ -164,6 +164,14 @@ function App() {
               }
             />
             <Route
+              path="/admin/algorithm-processor"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/alerts"
               element={
                 <ProtectedRoute requiredRole="super_admin">

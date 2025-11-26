@@ -14,6 +14,7 @@ import BrandingConfiguration from './BrandingConfiguration';
 import AdvancedAnalytics from './AdvancedAnalytics';
 import NotificationCenter from './NotificationCenter';
 import AgreementManager from './AgreementManager';
+import AlgorithmDataProcessor from './AlgorithmDataProcessor';
 import { useAuth } from '../../contexts/AuthContext';
 
 const SuperAdminPanel = () => {
@@ -138,6 +139,8 @@ const SuperAdminPanel = () => {
           return <AnalyticsDashboard analytics={analytics} />;
         case 'advanced-analytics':
           return <AdvancedAnalytics />;
+        case 'algorithm-processor':
+          return <AlgorithmDataProcessor />;
         case 'data-access':
           return <DataAccess />;
         case 'branding':
@@ -194,6 +197,7 @@ const SuperAdminPanel = () => {
       case 'alerts': return 'Alerts & Monitoring';
       case 'analytics': return 'Analytics & Reports';
       case 'advanced-analytics': return 'Advanced Analytics & Tracking';
+      case 'algorithm-processor': return 'Algorithm Data Processor';
       case 'data-access': return 'Data Access Center';
       case 'branding': return 'Branding & Co-labeling';
       case 'notifications': return 'Notification Center';
