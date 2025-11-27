@@ -1,12 +1,12 @@
 /**
- * QEEG Algorithm Calculator
+ * P&ID Algorithm Calculator
  * Based on Rhea's Report - Calculates 7 brain health parameters
  * Each parameter has 3 sub-metrics, scored 0-3, classified as Low/Medium/High
  */
 
 class AlgorithmCalculator {
-  constructor(qeegData) {
-    this.data = qeegData;
+  constructor(pidData) {
+    this.data = pidData;
     this.results = {
       parameters: [],
       rawCalculations: {},
@@ -37,7 +37,7 @@ class AlgorithmCalculator {
   // ==================== HELPER METHODS ====================
 
   /**
-   * Get value from QEEG data table
+   * Get value from P&ID data table
    * @param {string} condition - 'EC' (Eyes Closed) or 'EO' (Eyes Open)
    * @param {string} powerType - 'absolute' or 'relative'
    * @param {string} channel - e.g., 'Fz', 'Cz', 'Pz'

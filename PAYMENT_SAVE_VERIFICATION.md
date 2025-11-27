@@ -183,7 +183,7 @@ Verify clinic exists in database and the clinicId is correct.
 {
   "id": "uuid",
   "payment_id": "pay_RbxIc4v7f3fz2o",
-  "order_id": "neuro360_1699999999_abc123",
+  "order_id": "aims_1699999999_abc123",
   "clinic_id": "uuid-of-clinic",
   "amount": 1.00,
   "currency": "INR",

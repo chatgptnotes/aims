@@ -4,7 +4,7 @@
 // Handles all system-wide logging:
 // - User actions (audit_logs)
 // - Report downloads (download_logs)
-// - Patient portal access (access_logs)
+// - Supervisor portal access (access_logs)
 // =====================================================
 
 import DatabaseService from './databaseService';
@@ -123,7 +123,7 @@ class AuditService {
   }
 
   /**
-   * Log patient creation
+   * Log supervisor creation
    */
   async logPatientCreation(patientData) {
     return this.logAction({
@@ -297,11 +297,11 @@ class AuditService {
   }
 
   // =====================================================
-  // ACCESS LOGS - Patient Portal Access Tracking
+  // ACCESS LOGS - Supervisor Portal Access Tracking
   // =====================================================
 
   /**
-   * Log patient portal access
+   * Log supervisor portal access
    * @param {Object} accessData - Access details
    * @returns {Promise<Object>} Created access log entry
    */
@@ -351,7 +351,7 @@ class AuditService {
   }
 
   /**
-   * Log patient dashboard view
+   * Log supervisor dashboard view
    */
   async logDashboardView(patientId) {
     return this.logAccess({

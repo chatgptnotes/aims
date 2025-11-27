@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const qeegRoutes = require('./routes/qeegRoutes');
+const pidRoutes = require('./routes/pidRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,13 +19,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use('/api/qeeg', qeegRoutes);
+app.use('/api/pid', pidRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Neuro360 Backend Server is running',
+    message: 'AIMS Backend Server is running',
     timestamp: new Date().toISOString()
   });
 });
@@ -42,8 +42,8 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Neuro360 Backend Server running on port ${PORT}`);
-  console.log(`📊 QEEG Processing API: http://localhost:${PORT}/api/qeeg`);
+  console.log(`🚀 AIMS Backend Server running on port ${PORT}`);
+  console.log(`📊 P&ID Processing API: http://localhost:${PORT}/api/pid`);
   console.log(`💚 Health Check: http://localhost:${PORT}/api/health`);
 });
 

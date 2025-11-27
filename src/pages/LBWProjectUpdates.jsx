@@ -10,14 +10,14 @@ const LBWProjectUpdates = () => {
     {
       number: 1,
       title: "Measure your brain activity",
-      description: "Electrical signals generated in the brain reflect your current mental state. Neurosense uses proprietary technology to study and measure your brain activity",
+      description: "Electrical signals generated in the brain reflect your current mental state. AIMS uses proprietary technology to study and measure your brain activity",
       image: "/neuro1.mp4",
       isVideo: true
     },
     {
       number: 2,
       title: "Understand your brain",
-      description: "NeuroSense scans, decodes, and provides you with in depth insights into your brain. Your Brain Map, explained.",
+      description: "AIMS scans, decodes, and provides you with in depth insights into your brain. Your Brain Map, explained.",
       image: "/neuro2.mp4",
       isVideo: true
     },
@@ -31,7 +31,7 @@ const LBWProjectUpdates = () => {
     {
       number: 4,
       title: "Practice for best results",
-      description: "We turn your data into clear next steps. You implement, we adapt. Personalized insights, targeted changes, measurable gains. Get the exact changes in your brain, stay consistent, and watch progress stack tracked with metrics in the NeuroSense webapp.",
+      description: "We turn your data into clear next steps. You implement, we adapt. Personalized insights, targeted changes, measurable gains. Get the exact changes in your brain, stay consistent, and watch progress stack tracked with metrics in the AIMS webapp.",
       image: "/neuro4.mp4",
       isVideo: true
     }
@@ -50,7 +50,7 @@ const LBWProjectUpdates = () => {
             A Step-By-Step Guide to Doing
           </h1>
           <h1 className="text-4xl md:text-5xl font-normal text-gray-900">
-            Neurofeedback With <span className="text-[#00897B]">NeuroSense</span>
+            Neurofeedback With <span className="text-[#00897B]">AIMS</span>
           </h1>
         </div>
 
@@ -106,11 +106,11 @@ const LBWProjectUpdates = () => {
           ))}
         </div>
 
-        {/* Why is NeuroSense better for you Section */}
+        {/* Why is AIMS better for you Section */}
         <div className="mt-20 mb-16">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-12">
-              Why is NeuroSense better for you
+              Why is AIMS better for you
             </h2>
 
             <div className="relative">
@@ -121,11 +121,11 @@ const LBWProjectUpdates = () => {
 
                 <div className="text-base sm:text-lg text-gray-700 leading-relaxed space-y-4 text-left">
                   <p>
-                    Quantitative EEG (qEEG) has emerged as a scientifically validated tool in brain wellness and care, enabling the visualization and measurement of electrical activity patterns that reflect cognitive performance, emotional regulation, and mental resilience. Unlike conventional EEG, qEEG maps the brain's functional networks using advanced analytics and normative databases, allowing clinicians to identify dysregulated circuits linked to stress, focus, sleep, and mood.
+                    Quantitative EEG (P&ID) has emerged as a scientifically validated tool in brain wellness and care, enabling the visualization and measurement of electrical activity patterns that reflect cognitive performance, emotional regulation, and mental resilience. Unlike conventional EEG, P&ID maps the brain's functional networks using advanced analytics and normative databases, allowing clinicians to identify dysregulated circuits linked to stress, focus, sleep, and mood.
                   </p>
 
                   <p>
-                    At NeuroSense, we have harnessed this evidence backed technology to create an integrative, clinical grade brain assessment system that translates complex neurodata into clear, actionable insights for personalized brain optimization. By combining qEEG findings with lifestyle, nutrition, and neuro modulation strategies, NeuroSense bridges the gap between medical neuroscience and everyday brain care.
+                    At AIMS, we have harnessed this evidence backed technology to create an integrative, clinical grade brain assessment system that translates complex neurodata into clear, actionable insights for personalized brain optimization. By combining P&ID findings with lifestyle, nutrition, and neuro modulation strategies, AIMS bridges the gap between medical neuroscience and everyday brain care.
                   </p>
                 </div>
 
@@ -148,13 +148,13 @@ const LBWProjectUpdates = () => {
             <div className="bg-gray-50 rounded-3xl p-10 text-center hover:shadow-xl transition-all duration-300">
               <h2 className="text-3xl font-semibold text-gray-900 mb-4">For clinics</h2>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                Explore NeuroSense's remote care capabilities and how to get started.
+                Explore AIMS's remote care capabilities and how to get started.
               </p>
               <button
                 onClick={() => navigate('/lbw')}
                 className="bg-[#00897B] hover:bg-[#00796B] text-white px-6 py-3 rounded-full text-base font-medium transition-all inline-flex items-center gap-2"
               >
-                Learn more about NeuroSense Clinical
+                Learn more about AIMS Clinical
                 <span>→</span>
               </button>
             </div>
@@ -163,7 +163,7 @@ const LBWProjectUpdates = () => {
             <div className="bg-[#C8E6E1] rounded-3xl p-10 text-center hover:shadow-xl transition-all duration-300">
               <h2 className="text-3xl font-semibold text-gray-900 mb-4">For individuals</h2>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                Enroll in our at home neurofeedback program or find a nearby NeuroSense provider.
+                Enroll in our at home neurofeedback program or find a nearby AIMS provider.
               </p>
               <button
                 onClick={() => navigate('/register')}

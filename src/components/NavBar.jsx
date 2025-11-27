@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Brain, Menu, X } from 'lucide-react';
+import { Factory, Menu, X } from 'lucide-react';
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -33,44 +33,44 @@ const NavBar = () => {
           <div className="hidden lg:flex items-center bg-white backdrop-blur-md rounded-full shadow-md px-8 py-4 gap-6">
             {/* Logo INSIDE Pill */}
             <div className="flex items-center pr-3 border-r border-gray-200 cursor-pointer" onClick={() => navigate('/')}>
-              <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
-              <span className="ml-1.5 text-base font-normal text-gray-900">
-                NeuroSense<sup className="text-[10px]">®</sup>
+              <Factory className="h-6 w-6 text-[#1e3a5f]" />
+              <span className="ml-1.5 text-lg font-bold text-gray-900">
+                AIMS
               </span>
             </div>
 
             {/* Navigation Links */}
-            <Link to="/lbw" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
-              For clinicians
-            </Link>
-            <Link to="/technicians" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
-              For technicians
-            </Link>
-            <Link to="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+            <a href="/#features" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+              Features
+            </a>
+            <a href="/#how-it-works" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
               How it works
-            </Link>
+            </a>
+            <a href="/#pricing" className="text-gray-700 hover:text-gray-900 text-sm font-normal transition-colors whitespace-nowrap">
+              Pricing
+            </a>
 
             {/* Action Buttons Inside Same Pill */}
             <button
               onClick={handlePersonalSignup}
-              className="bg-[#00897B] hover:bg-[#00796B] text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
+              className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
             >
-              Start
+              Start Free Trial
             </button>
             <button
               onClick={handleClinicSignup}
               className="bg-gray-900 hover:bg-black text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
             >
-              For clinics
+              Request Demo
             </button>
           </div>
 
           {/* Mobile - Logo and Menu Button */}
           <div className="lg:hidden flex items-center justify-between w-full">
             <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-              <Brain className="h-5 w-5 text-white bg-gray-900 p-0.5 rounded" />
-              <span className="ml-1.5 text-base font-normal text-gray-900">
-                NeuroSense<sup className="text-[10px]">®</sup>
+              <Factory className="h-6 w-6 text-[#1e3a5f]" />
+              <span className="ml-1.5 text-lg font-bold text-gray-900">
+                AIMS
               </span>
             </div>
             <button
@@ -97,38 +97,38 @@ const NavBar = () => {
             <div className="p-6">
               {/* Logo */}
               <div className="flex items-center mb-12 mt-2">
-                <Brain className="h-6 w-6 text-white bg-gray-900 p-1 rounded" />
-                <span className="ml-2 text-lg font-normal text-gray-900">
-                  NeuroSense<sup className="text-[10px]">®</sup>
+                <Factory className="h-8 w-8 text-[#1e3a5f]" />
+                <span className="ml-2 text-xl font-bold text-gray-900">
+                  AIMS
                 </span>
               </div>
 
               {/* Navigation Links */}
               <div className="flex flex-col space-y-6 mb-12">
-                <Link to="/lbw" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  For clinicians
-                </Link>
-                <Link to="/technicians" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  For technicians
-                </Link>
-                <Link to="/lbw-updates" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <a href="/#features" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  Features
+                </a>
+                <a href="/#how-it-works" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   How it works
-                </Link>
+                </a>
+                <a href="/#pricing" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  Pricing
+                </a>
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col space-y-4">
                 <button
                   onClick={handlePersonalSignup}
-                  className="bg-[#00897B] hover:bg-[#00796B] text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
+                  className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
                 >
-                  Start
+                  Start Free Trial
                 </button>
                 <button
                   onClick={handleClinicSignup}
                   className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
                 >
-                  For clinics
+                  Request Demo
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-# Neuro360 Migration Instructions
+# AIMS Migration Instructions
 
 ---
 

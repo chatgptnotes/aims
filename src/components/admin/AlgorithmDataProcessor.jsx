@@ -4,7 +4,7 @@ import DatabaseService from '../../services/databaseService';
 import toast from 'react-hot-toast';
 
 const AlgorithmDataProcessor = () => {
-  const [patients, setPatients] = useState([]);
+  const [supervisors, setPatients] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showProcessingUI, setShowProcessingUI] = useState(false);
@@ -43,7 +43,7 @@ const AlgorithmDataProcessor = () => {
       const algorithmResults = await DatabaseService.get('algorithmResults') || [];
 
       // Enrich patients with clinic names and algorithm status
-      const enrichedPatients = patientsData.map(patient => {
+      const enrichedPatients = patientsData.map(supervisor => {
         const patientResults = algorithmResults.filter(r => r.patientId === patient.id);
         const lastResult = patientResults.length > 0
           ? patientResults.sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0]
@@ -108,9 +108,9 @@ const AlgorithmDataProcessor = () => {
     loadPatients();
   };
 
-  // Helper function to get patient name (handles different field names)
+  // Helper function to get supervisor name (handles different field names)
   const getPatientName = (patient) => {
-    return patient?.fullName || patient?.full_name || patient?.name || patient?.email || 'Unknown Patient';
+    return patient?.fullName || patient?.full_name || patient?.name || patient?.email || 'Unknown Supervisor';
   };
 
   // Helper function to get status badge
@@ -139,7 +139,7 @@ const AlgorithmDataProcessor = () => {
   };
 
   // Filter patients based on search and filters
-  const filteredPatients = patients.filter(patient => {
+  const filteredSupervisors = supervisors.filter(supervisor => {
     const matchesSearch = searchTerm === '' ||
       getPatientName(patient).toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -155,8 +155,8 @@ const AlgorithmDataProcessor = () => {
   // Group filtered patients by clinic
   const groupedPatients = clinics.map(clinic => ({
     clinic,
-    patients: filteredPatients.filter(p => p.clinicId === clinic.id)
-  })).filter(group => group.patients.length > 0);
+    patients: filteredSupervisors.filter(p => p.clinicId === clinic.id)
+  })).filter(group => group.supervisors.length > 0);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -182,14 +182,14 @@ const AlgorithmDataProcessor = () => {
     }
   };
 
-  const processQEEGFiles = async () => {
+  const processPIDFiles = async () => {
     setIsProcessing(true);
     setConsoleLog([]);
     setProgress(0);
 
     try {
       // Console log: Starting process
-      setConsoleLog(prev => [...prev, '🚀 Starting QEEG analysis...']);
+      setConsoleLog(prev => [...prev, '🚀 Starting P&ID analysis...']);
       setProgress(10);
 
       // Create FormData to send files
@@ -205,17 +205,17 @@ const AlgorithmDataProcessor = () => {
 
       // Call backend API
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${apiUrl}/qeeg/process`, {
+      const response = await fetch(`${apiUrl}/pid/process`, {
         method: 'POST',
         body: formData
       });
 
-      setConsoleLog(prev => [...prev, '📊 Parsing QEEG data tables...']);
+      setConsoleLog(prev => [...prev, '📊 Parsing P&ID data tables...']);
       setProgress(40);
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to process QEEG files');
+        throw new Error(errorData.message || 'Failed to process P&ID files');
       }
 
       const data = await response.json();
@@ -272,13 +272,13 @@ const AlgorithmDataProcessor = () => {
       setProcessingComplete(true);
       setIsSaved(false); // Mark as not saved yet
 
-      toast.success('QEEG analysis completed successfully!');
+      toast.success('P&ID analysis completed successfully!');
 
     } catch (error) {
-      console.error('Error processing QEEG files:', error);
+      console.error('Error processing P&ID files:', error);
       setConsoleLog(prev => [...prev, `❌ Error: ${error.message}`]);
       setIsProcessing(false);
-      toast.error(error.message || 'Failed to process QEEG files');
+      toast.error(error.message || 'Failed to process P&ID files');
     }
   };
 
@@ -312,7 +312,7 @@ const AlgorithmDataProcessor = () => {
       setIsSaving(false);
       toast.success('✅ Results saved to database successfully!');
 
-      // Reload history and patient list to update status
+      // Reload history and supervisor list to update status
       loadProcessingHistory(selectedPatient.id);
       loadPatients();
     } catch (error) {
@@ -330,9 +330,9 @@ const AlgorithmDataProcessor = () => {
 
   const handleExecuteCalculation = () => {
     if (eyesOpenFile && eyesClosedFile) {
-      processQEEGFiles();
+      processPIDFiles();
     } else {
-      toast.error('Please upload both QEEG data files');
+      toast.error('Please upload both P&ID data files');
     }
   };
 
@@ -349,7 +349,7 @@ const AlgorithmDataProcessor = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'neurosense-algorithm-results.csv';
+      a.download = 'aims-algorithm-results.csv';
       a.click();
       window.URL.revokeObjectURL(url);
     }
@@ -383,20 +383,20 @@ const AlgorithmDataProcessor = () => {
     );
   }
 
-  // Patient List View
+  // Supervisor List View
   if (!showProcessingUI) {
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary to-navy-700 rounded-lg p-6 text-white shadow-lg">
-          <h1 className="text-2xl font-bold">NeuroSense - Algorithm 1 Data Processor</h1>
-          <p className="text-primary-light mt-2">Select a patient to generate Algorithm 1 report</p>
+          <h1 className="text-2xl font-bold">AIMS - Algorithm 1 Data Processor</h1>
+          <p className="text-primary-light mt-2">Select a supervisor to generate Algorithm 1 report</p>
         </div>
 
         {/* Filter Bar */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Patient Search */}
+            {/* Supervisor Search */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Search Patient
@@ -484,13 +484,13 @@ const AlgorithmDataProcessor = () => {
                 </span>
               )}
               <span className="text-xs text-gray-500 dark:text-gray-400 self-center">
-                ({filteredPatients.length} {filteredPatients.length === 1 ? 'patient' : 'patients'} found)
+                ({filteredSupervisors.length} {filteredSupervisors.length === 1 ? 'patient' : 'patients'} found)
               </span>
             </div>
           )}
         </div>
 
-        {/* Patient List - Clinic-wise */}
+        {/* Supervisor List - Clinic-wise */}
         <div className="space-y-4">
           {groupedPatients.length > 0 ? (
             groupedPatients.map(({ clinic, patients: clinicPatients }) => (
@@ -508,13 +508,13 @@ const AlgorithmDataProcessor = () => {
                 </div>
               </div>
 
-              {/* Patient Table */}
+              {/* Supervisor Table */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Patient Name
+                        Supervisor Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Email
@@ -531,7 +531,7 @@ const AlgorithmDataProcessor = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {clinicPatients.map(patient => (
+                    {clinicPatients.map(supervisor => (
                       <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -609,9 +609,9 @@ const AlgorithmDataProcessor = () => {
           className="flex items-center text-primary-light hover:text-white mb-3 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Patient List
+          Back to Supervisor List
         </button>
-        <h1 className="text-2xl font-bold">NeuroSense - Algorithm 1 Data Processor</h1>
+        <h1 className="text-2xl font-bold">AIMS - Algorithm 1 Data Processor</h1>
         <p className="text-primary-light mt-2">
           Processing for: <span className="font-semibold">{getPatientName(selectedPatient)}</span> | {selectedPatient?.clinicName}
         </p>
@@ -619,10 +619,10 @@ const AlgorithmDataProcessor = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Panel - QEEG Data Input */}
+        {/* Left Panel - P&ID Data Input */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            QEEG Data Input (Pages 13 & 24)
+            P&ID Data Input (Pages 13 & 24)
           </h2>
 
           {/* Eyes Open Upload */}
@@ -962,7 +962,7 @@ const AlgorithmDataProcessor = () => {
           About Algorithm 1 Processing
         </h3>
         <p className="text-sm text-navy-800 dark:text-gray-300">
-          This processor analyzes QEEG data files (Eyes Open and Eyes Closed) and generates 7 key parameters using proprietary
+          This processor analyzes P&ID data files (Eyes Open and Eyes Closed) and generates 7 key parameters using proprietary
           binary scoring logic. The algorithm evaluates brain activity patterns to assess cognitive and emotional health markers.
         </p>
       </div>

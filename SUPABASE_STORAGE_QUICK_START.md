@@ -40,7 +40,7 @@
 
 ### Supabase Dashboard → SQL Editor → New Query
 
-**Copy-Paste करें:** `D:\Neuro360\supabase\storage-policies.sql`
+**Copy-Paste करें:** `D:\AIMS\supabase\storage-policies.sql`
 
 **Run करें!**
 

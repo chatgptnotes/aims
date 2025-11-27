@@ -137,7 +137,7 @@ ORDER BY created_at DESC;
 Payment Details       | Plan Details          | Amount & Status | Purchase Date     | Expiry Date       | Actions
 ------------------------------------------------------------------------------------------------------------------
 pay_RbxIc4v7f3fz2o   | Trial Package         | ₹1             | 05/11/2025       | 05/11/2026       | View History
-Order: neuro360_xxx   | 5 EEG reports         | ₹499          | 11:26:59 am      | 365 days left    | 0/5 used
+Order: aims_xxx   | 5 EEG reports         | ₹499          | 11:26:59 am      | 365 days left    | 0/5 used
 razorpay • online     | 40% OFF               | Captured       | Purchase Date    | 1 year           |
 ```
 
@@ -152,7 +152,7 @@ razorpay • online     | 40% OFF               | Captured       | Purchase Date
 ### 2. **Payment Details Column**
 Shows:
 - Payment ID (e.g., pay_RbxIc4v7f3fz2o)
-- Order ID (e.g., neuro360_1699999999_abc123)
+- Order ID (e.g., aims_1699999999_abc123)
 - Gateway info (razorpay • online)
 
 ### 3. **Plan Details Column**

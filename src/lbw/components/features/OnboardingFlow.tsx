@@ -18,8 +18,8 @@ interface OnboardingData {
   improvementFocus: ImprovementFocus[]
   
   // Step 3: Conditional assessments based on focus
-  hasCompletedQEEG: boolean
-  qeegFile?: File
+  hasCompletedP&ID: boolean
+  pidFile?: File
   
   // Step 4: Health & Lifestyle
   currentSymptoms: string[]
@@ -38,7 +38,7 @@ const initialData: OnboardingData = {
   gender: '',
   email: '',
   improvementFocus: [],
-  hasCompletedQEEG: false,
+  hasCompletedP&ID: false,
   currentSymptoms: [],
   medications: [],
   sleepHours: '',
@@ -63,7 +63,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     
     // Add conditional steps based on focus
     if (data.improvementFocus.includes('adhd') || data.improvementFocus.includes('stress')) {
-      steps += 1 // QEEG and assessment step
+      steps += 1 // P&ID and assessment step
     }
     
     steps += 1 // Health & lifestyle
@@ -288,9 +288,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   }
 
   const renderConditionalAssessmentStep = () => {
-    const needsQEEG = data.improvementFocus.includes('adhd') || data.improvementFocus.includes('stress')
+    const needsP&ID = data.improvementFocus.includes('adhd') || data.improvementFocus.includes('stress')
     
-    if (!needsQEEG) {
+    if (!needsPID) {
       // Skip this step if not needed
       return renderHealthLifestyleStep()
     }
@@ -298,64 +298,64 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">QEEG Brain Mapping</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">P&ID Brain Mapping</h2>
           <p className="text-gray-700 dark:text-gray-200 text-base font-medium leading-6">
-            Based on your focus areas, a QEEG brain scan will provide valuable insights for your personalized program.
+            Based on your focus areas, a P&ID brain scan will provide valuable insights for your personalized program.
           </p>
         </div>
 
         <Card variant="gradient">
           <CardContent className="text-center">
             <div className="text-4xl mb-4"></div>
-            <h3 className="font-semibold text-gray-900 mb-2">QEEG Brain Scan</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">P&ID Brain Scan</h3>
             <p className="text-gray-600 mb-4">
-              A QEEG (Quantitative Electroencephalogram) provides detailed insights into your brain's electrical activity, 
+              A P&ID (Quantitative Electroencephalogram) provides detailed insights into your brain's electrical activity, 
               helping us create the most effective personalized treatment plan.
             </p>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-base font-semibold text-gray-800 dark:text-gray-100 mb-2 leading-6">
-                  Have you completed a QEEG scan?
+                  Have you completed a P&ID scan?
                 </label>
                 <div className="flex space-x-4 justify-center">
                   <Button
-                    variant={data.hasCompletedQEEG ? 'brain' : 'outline'}
-                    onClick={() => updateData('hasCompletedQEEG', true)}
+                    variant={data.hasCompletedP&ID ? 'brain' : 'outline'}
+                    onClick={() => updateData('hasCompletedPID', true)}
                   >
                     Yes, I have
                   </Button>
                   <Button
-                    variant={!data.hasCompletedQEEG ? 'brain' : 'outline'}
-                    onClick={() => updateData('hasCompletedQEEG', false)}
+                    variant={!data.hasCompletedP&ID ? 'brain' : 'outline'}
+                    onClick={() => updateData('hasCompletedPID', false)}
                   >
                     No, I need one
                   </Button>
                 </div>
               </div>
 
-              {data.hasCompletedQEEG && (
+              {data.hasCompletedP&ID && (
                 <div>
                   <label className="block text-base font-semibold text-gray-800 dark:text-gray-100 mb-2 leading-6">
-                    Upload your QEEG results (PDF or image)
+                    Upload your P&ID results (PDF or image)
                   </label>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => updateData('qeegFile', e.target.files?.[0])}
+                    onChange={(e) => updateData('pidFile', e.target.files?.[0])}
                     className="block w-full text-base text-gray-700 dark:text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-base file:font-semibold file:bg-brain-50 file:text-brain-700 hover:file:bg-brain-100 font-medium"
                   />
                 </div>
               )}
 
-              {!data.hasCompletedQEEG && (
+              {!data.hasCompletedP&ID && (
                 <div className="bg-white rounded-lg p-4 border border-brain-200">
-                  <h4 className="font-medium text-gray-900 mb-2">Book Your QEEG Scan</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">Book Your P&ID Scan</h4>
                   <p className="text-base text-gray-700 dark:text-gray-200 mb-3 font-medium leading-6">
-                    We'll help you schedule a QEEG scan with one of our certified providers.
+                    We'll help you schedule a P&ID scan with one of our certified providers.
                   </p>
                   <Button variant="wellness" size="sm">
-                    Find QEEG Provider
+                    Find P&ID Provider
                   </Button>
                 </div>
               )}
@@ -576,7 +576,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       case 2:
         return data.improvementFocus.length > 0
       case 3:
-        return true // QEEG step is optional
+        return true // P&ID step is optional
       case 4:
         return data.sleepHours && data.exerciseFrequency
       case 5:

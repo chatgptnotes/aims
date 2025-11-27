@@ -1,5 +1,5 @@
 # UI Specification Document
-## Health & Wellness Tech Platform - Neuro360
+## Health & Wellness Tech Platform - AIMS
 
 **Version:** 1.0
 **Last Updated:** November 2025
@@ -578,7 +578,7 @@ Column 4: Newsletter Signup
 
 **Bottom Section:**
 ```
-Left:  Copyright © 2025 Neuro360. All rights reserved.
+Left:  Copyright © 2025 AIMS. All rights reserved.
 Right: Legal Links (Privacy Policy | Terms of Service | Cookie Settings)
 ```
 
@@ -975,9 +975,9 @@ Experience measurable improvements in focus, calm, sleep, and performance
 ## Contact & Questions
 
 For questions about this specification or implementation details, please contact:
-- **Design Lead:** [design@neuro360.com]
-- **Frontend Lead:** [dev@neuro360.com]
-- **Project Manager:** [pm@neuro360.com]
+- **Design Lead:** [design@aims.com]
+- **Frontend Lead:** [dev@aims.com]
+- **Project Manager:** [pm@aims.com]
 
 ---
 

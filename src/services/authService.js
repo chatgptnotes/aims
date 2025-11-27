@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import DatabaseService from './databaseService';
-import { generatePatientUID } from '../utils/patientUidGenerator';
+import { generateSupervisorUID } from '../utils/supervisorUidGenerator';
 
 // Import shared Supabase service to avoid multiple client instances
 import SupabaseService from './supabaseService';
@@ -57,15 +57,68 @@ export const authService = {
     const normalizedEmail = email.trim().toLowerCase();
 
     // SUCCESS: CHECK STATIC CREDENTIALS FIRST (before Supabase)
-    // STATIC SUPER ADMIN CREDENTIALS
-    if (normalizedEmail === 'superadmin@neuro360.com' && password === 'admin123') {
+    // STATIC SUPER ADMIN CREDENTIALS FOR AIMS
+    if (normalizedEmail === 'admin@aims-system.com' && password === 'admin123') {
+      console.log('SUCCESS: AIMS admin login successful');
+      return {
+        success: true,
+        token: `local_token_${Date.now()}`,
+        user: {
+          id: 'aims-admin-001',
+          email: 'admin@aims-system.com',
+          name: 'AIMS Administrator',
+          role: 'super_admin',
+          avatar: null,
+          isActivated: true
+        }
+      };
+    }
+
+    // STATIC ENGINEER CREDENTIALS FOR AIMS
+    if (normalizedEmail === 'engineer@aims-system.com' && password === 'engineer123') {
+      console.log('SUCCESS: AIMS engineer login successful');
+      return {
+        success: true,
+        token: `local_token_${Date.now()}`,
+        user: {
+          id: 'aims-engineer-001',
+          email: 'engineer@aims-system.com',
+          name: 'Project Engineer',
+          role: 'clinic_admin',
+          avatar: null,
+          isActivated: true,
+          clinicId: 'aims-project-001'
+        }
+      };
+    }
+
+    // STATIC SUPERVISOR CREDENTIALS FOR AIMS
+    if (normalizedEmail === 'supervisor@aims-system.com' && password === 'supervisor123') {
+      console.log('SUCCESS: AIMS supervisor login successful');
+      return {
+        success: true,
+        token: `local_token_${Date.now()}`,
+        user: {
+          id: 'aims-supervisor-001',
+          email: 'supervisor@aims-system.com',
+          name: 'Project Supervisor',
+          role: 'patient',
+          avatar: null,
+          isActivated: true,
+          clinicId: 'aims-project-001'
+        }
+      };
+    }
+
+    // Legacy super admin credential
+    if (normalizedEmail === 'superadmin@aims.com' && password === 'admin123') {
       console.log('SUCCESS: Static super admin login successful');
       return {
         success: true,
         token: `local_token_${Date.now()}`,
         user: {
           id: 'static-super-admin-001',
-          email: 'superadmin@neuro360.com',
+          email: 'superadmin@aims.com',
           name: 'Super Admin',
           role: 'super_admin',
           avatar: null,
@@ -226,7 +279,7 @@ export const authService = {
         id: data.user.id,
         email: data.user.email,
         name: profile?.full_name || data.user.user_metadata?.full_name || 'User',
-        role: profile?.role || data.user.user_metadata?.role || 'patient',
+        role: profile?.role || data.user.user_metadata?.role || 'supervisor',
         avatar: profile?.avatar_url,
         isActivated: true
       };
@@ -304,14 +357,14 @@ export const authService = {
       }
 
       // STATIC SUPER ADMIN CREDENTIALS
-      if (email === 'superadmin@neuro360.com' && password === 'admin123') {
+      if (email === 'superadmin@aims.com' && password === 'admin123') {
         console.log('SUCCESS: Static super admin login successful');
         return {
           success: true,
           token: `local_token_${Date.now()}`,
           user: {
             id: 'static-super-admin-001',
-            email: 'superadmin@neuro360.com',
+            email: 'superadmin@aims.com',
             name: 'Super Admin',
             role: 'super_admin',
             avatar: null,
@@ -456,7 +509,7 @@ export const authService = {
     }
   },
 
-  async registerWithEmail({ name, email, password, confirmPassword, userType = 'patient', dateOfBirth, gender, phone, clinicName }) {
+  async registerWithEmail({ name, email, password, confirmPassword, userType = 'supervisor', dateOfBirth, gender, phone, clinicName }) {
     try {
       console.log('AUTH: Attempting registration with:', { name, email, userType, clinicName });
 
@@ -473,13 +526,13 @@ export const authService = {
       if (password !== confirmPassword) {
         throw new Error('Passwords do not match');
       }
-      if (!['patient', 'clinic', 'super_admin'].includes(userType)) {
+      if (!['supervisor', 'clinic', 'super_admin'].includes(userType)) {
         throw new Error('Invalid user type selected');
       }
 
       // For patients, validate clinic exists if clinic name is provided
       let registeredClinic = null;
-      if (userType === 'patient' && clinicName && clinicName.trim()) {
+      if (userType === 'supervisor' && clinicName && clinicName.trim()) {
         console.log('AUTH: Validating clinic name:', clinicName);
 
         // Search in organizations table (primary) and fallback to clinics table (legacy)
@@ -491,7 +544,7 @@ export const authService = {
         }
 
         if (!clinics || clinics.length === 0) {
-          throw new Error('This clinic is not available in NeuroSense. Please check the clinic name or contact support.');
+          throw new Error('This clinic is not available in AIMS. Please check the clinic name or contact support.');
         }
 
         // Store clinic reference for later use
@@ -577,18 +630,18 @@ export const authService = {
       await supabase.from('profiles').insert(profileData);
 
       // Handle user type specific data creation
-      if (userType === 'patient') {
+      if (userType === 'supervisor') {
         // For patients registered with a clinic, link to clinic's organization
         // For individual patients, create a personal organization
         try {
-          console.log(' Creating patient organization and patient record...');
+          console.log(' Creating supervisor organization and supervisor record...');
 
           let targetOrgId = null;
           let targetOrgResult = null;
 
           if (registeredClinic) {
-            // Patient is registering with a clinic - find or create clinic's organization
-            console.log('AUTH: Linking patient to clinic:', registeredClinic.name);
+            // Supervisor is registering with a clinic - find or create clinic's organization
+            console.log('AUTH: Linking supervisor to clinic:', registeredClinic.name);
 
             // First, try to find the clinic's organization
             const { data: clinicOrgs } = await supabase
@@ -619,17 +672,17 @@ export const authService = {
               console.log('SUCCESS: Created clinic organization:', newClinicOrg.name);
             }
 
-            // Create organization membership for the patient (as member, not owner)
+            // Create organization membership for the supervisor (as member, not owner)
             await supabase.from('org_memberships').insert({
               org_id: targetOrgId,
               user_id: data.user.id,
               role: 'member',
               created_at: new Date().toISOString()
             });
-            console.log('SUCCESS: Patient added to clinic organization');
+            console.log('SUCCESS: Supervisor added to clinic organization');
 
           } else {
-            // Individual patient - create personal organization
+            // Individual supervisor - create personal organization
             const personalOrgData = {
               name: `${name.trim()} - Personal Account`,
               type: 'personal',
@@ -643,7 +696,7 @@ export const authService = {
             targetOrgResult = personalOrgResult;
             targetOrgId = personalOrgResult.id;
 
-            // Create organization membership for the patient
+            // Create organization membership for the supervisor
             await supabase.from('org_memberships').insert({
               org_id: targetOrgId,
               user_id: data.user.id,
@@ -653,10 +706,10 @@ export const authService = {
           }
 
           if (targetOrgId) {
-            // Generate patient UID in format CLINICCODE-YYYYMM-XXXX
-            const patientUID = await generatePatientUID(targetOrgId);
+            // Generate supervisor UID in format CLINICCODE-YYYYMM-XXXX
+            const patientUID = await generateSupervisorUID(targetOrgId);
 
-            // Create patient record in patients table
+            // Create supervisor record in patients table
             const patientData = {
               org_id: targetOrgId,
               owner_user: data.user.id,
@@ -676,16 +729,16 @@ export const authService = {
               updated_at: new Date().toISOString()
             };
 
-            await supabase.from('patients').insert(patientData);
-            console.log('SUCCESS: Patient record created in patients table', {
+            await supabase.from('supervisors').insert(patientData);
+            console.log('SUCCESS: Supervisor record created in patients table', {
               orgId: targetOrgId,
               clinicId: registeredClinic?.id,
               clinicName: registeredClinic?.name
             });
           }
         } catch (patientError) {
-          console.warn('WARNING: Failed to create patient record:', patientError);
-          // Don't fail registration if patient record creation fails
+          console.warn('WARNING: Failed to create supervisor record:', patientError);
+          // Don't fail registration if supervisor record creation fails
         }
       }
 

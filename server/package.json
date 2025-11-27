@@ -1,13 +1,13 @@
 {
-  "name": "neuro360-backend",
+  "name": "aims-backend",
   "version": "1.0.0",
-  "description": "Backend server for Neuro360 QEEG Algorithm Processing",
+  "description": "Backend server for AIMS P&ID Algorithm Processing",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": ["neuro360", "qeeg", "backend", "openai"],
+  "keywords": ["aims", "pid", "backend", "openai"],
   "author": "",
   "license": "ISC",
   "dependencies": {

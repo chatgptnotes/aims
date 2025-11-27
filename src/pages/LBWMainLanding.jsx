@@ -38,7 +38,7 @@ const LBWMainLanding = () => {
       icon: <Users className="w-8 h-8" />,
       path: '/coaching',
       color: 'from-green-500 to-teal-600',
-      items: ['Brain Performance', 'Nervous System', 'qEEG Consultation', 'Stress Management', 'ADHD Support']
+      items: ['Brain Performance', 'Nervous System', 'P&ID Consultation', 'Stress Management', 'ADHD Support']
     },
     {
       title: 'Progress Tracking',
@@ -49,10 +49,10 @@ const LBWMainLanding = () => {
       items: ['Weekly Reports', 'Goal Setting', 'Improvement Metrics', 'Personalized Insights']
     },
     {
-      title: 'qEEG Analysis',
+      title: 'P&ID Analysis',
       description: 'Advanced brain mapping and neurofeedback protocols',
       icon: <Activity className="w-8 h-8" />,
-      path: '/lbw/qeeg',
+      path: '/lbw/pid',
       color: 'from-purple-500 to-pink-600',
       items: ['Brain Mapping', 'Wave Analysis', 'Neurofeedback', 'Custom Protocols']
     },

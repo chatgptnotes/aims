@@ -242,7 +242,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
 <body>
     <div class="invoice-container">
         <div class="invoice-header">
-            <div class="company-logo"> NeuroSense360</div>
+            <div class="company-logo"> AIMS</div>
             <div class="invoice-title">INVOICE</div>
             <div class="invoice-subtitle">EEG Management Platform</div>
         </div>
@@ -362,7 +362,7 @@ const PaymentHistoryModal = ({ isOpen, payment, onClose }) => {
         </div>
         
         <div class="footer">
-            <p><strong>Thank you for choosing NeuroSense360!</strong></p>
+            <p><strong>Thank you for choosing AIMS!</strong></p>
             <p>EEG Management Platform • Professional Healthcare Solutions</p>
             <p>This is a computer generated invoice and does not require physical signature.</p>
             <p><small>Generated on: ${new Date().toLocaleString('en-IN')} | Invoice: ${invoiceData.invoiceNumber}</small></p>

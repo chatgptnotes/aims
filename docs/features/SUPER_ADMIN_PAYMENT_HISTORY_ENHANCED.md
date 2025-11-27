@@ -49,7 +49,7 @@ The Super Admin can now view comprehensive payment history for all clinics with 
 - **Complete transaction history** with all metadata
 
 ### **📄 Invoice Features**
-- **Company branding** with NeuroSense360 logo
+- **Company branding** with AIMS logo
 - **Professional layout** with gradients and styling
 - **Detailed billing information** with clinic details
 - **Package breakdown** with features and pricing

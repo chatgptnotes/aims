@@ -11,7 +11,7 @@
 ```
 🌐 Browser में जाएं: https://supabase.com
 🔐 Login करें
-📁 Neuro360 project चुनें
+📁 AIMS project चुनें
 ```
 
 ### 2. Storage Page खोलें
@@ -63,7 +63,7 @@ Buckets
 
 ### 2. यह SQL Copy करें
 
-**File:** `D:\Neuro360\supabase\single-bucket-policies.sql`
+**File:** `D:\AIMS\supabase\single-bucket-policies.sql`
 
 या direct copy करें:
 

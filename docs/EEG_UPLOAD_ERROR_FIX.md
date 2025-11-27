@@ -36,14 +36,14 @@ if (!file.type) {
 
 **After:**
 ```javascript
-// Validate file extension for EEG/qEEG files
+// Validate file extension for EEG/P&ID files
 const validExtensions = ['.edf', '.eeg', '.bdf'];
 const fileName = file.name.toLowerCase();
 const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
 
 if (!hasValidExtension) {
   const fileExt = fileName.substring(fileName.lastIndexOf('.'));
-  errors.push(`Invalid file format: ${fileExt}. Only EEG/qEEG files (.edf, .eeg, .bdf) are allowed`);
+  errors.push(`Invalid file format: ${fileExt}. Only EEG/P&ID files (.edf, .eeg, .bdf) are allowed`);
 }
 ```
 
@@ -64,7 +64,7 @@ contentType: file.type  // ❌ Empty string causes issues
 
 **After:**
 ```javascript
-// Determine content type for EEG/qEEG files
+// Determine content type for EEG/P&ID files
 let contentType = file.type;
 if (!contentType || contentType === '') {
   // EDF/EEG/BDF files often don't have a MIME type, use generic binary
@@ -105,7 +105,7 @@ if (!contentType || contentType === '') {
 # Windows: Ctrl + Shift + Delete
 # Mac: Cmd + Shift + Delete
 # Or run:
-cd D:\Neuro360
+cd D:\AIMS
 complete-cache-clear.bat
 ```
 
@@ -114,7 +114,7 @@ complete-cache-clear.bat
 If you haven't already, download test files:
 
 ```bash
-cd D:\Neuro360
+cd D:\AIMS
 download-sample-eeg-files.bat
 ```
 
@@ -124,7 +124,7 @@ This downloads:
 
 ### **Step 3: Test Upload**
 
-1. **Login** to Neuro360
+1. **Login** to AIMS
 2. **Navigate** to Patient Management
 3. **Click** "Upload New Report" for any patient
 4. **Select** an `.edf` file
@@ -134,17 +134,17 @@ This downloads:
 
 ✅ **Success Message:**
 ```
-🚀 EEG/qEEG processing workflow started!
+🚀 EEG/P&ID processing workflow started!
 📋 Workflow ID: 11fd4d05...
 ⏱️ Estimated completion: 8 minutes
-🔄 Processing: Upload → qEEG Pro → NeuroSense → Care Plan
+🔄 Processing: Upload → P&ID Pro → AIMS → Care Plan
 ```
 
 ✅ **Console Output:**
 ```
 🔍 Upload Requirements Check
   ✅ All requirements met - proceeding with upload
-🧠 Starting EEG/qEEG processing workflow for: SC4001E0-PSG.edf
+🧠 Starting EEG/P&ID processing workflow for: SC4001E0-PSG.edf
 ```
 
 ❌ **If you see errors:**

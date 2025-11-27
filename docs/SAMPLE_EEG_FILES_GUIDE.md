@@ -1,6 +1,6 @@
-# Sample EEG/qEEG Files for Testing Upload
+# Sample EEG/P&ID Files for Testing Upload
 
-This guide provides resources to download **sample EEG files** (.edf, .eeg, .bdf formats) for testing your Neuro360 upload functionality.
+This guide provides resources to download **sample EEG files** (.edf, .eeg, .bdf formats) for testing your AIMS upload functionality.
 
 ---
 
@@ -104,7 +104,7 @@ curl -O https://physionet.org/files/chbmit/1.0.0/chb01/chb01_01.edf
 
 ## 📋 File Format Information
 
-### **Supported Formats in Neuro360:**
+### **Supported Formats in AIMS:**
 
 | Format | Extension | Description | Common Use |
 |--------|-----------|-------------|------------|
@@ -122,7 +122,7 @@ curl -O https://physionet.org/files/chbmit/1.0.0/chb01/chb01_01.edf
 1. Click any URL above
 2. Browser will download the .edf file
 3. Save to your computer
-4. Upload to Neuro360
+4. Upload to AIMS
 
 ### **Method 2: Command Line (Windows)**
 

@@ -71,11 +71,11 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
-        // Default super admin user if no stored user
+        // Default SME user for AIMS if no stored user
         const defaultUser = {
-          id: 'dev-super-admin',
-          name: 'Super Admin (Dev)',
-          email: 'superadmin@neurosense360.com',
+          id: 'dev-sme',
+          name: 'SME Admin (AIMS)',
+          email: 'sme@aims.com',
           role: 'super_admin',
           profilePicture: null,
           isActivated: true,
@@ -170,24 +170,24 @@ export const AuthProvider = ({ children }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Determine user role based on email patterns
-      const email = credentials.email || 'dev@neurosense360.com';
+      const email = credentials.email || 'dev@aims.com';
       let userRole = 'super_admin'; // default
       let userName = 'Development User';
       let clinicId = null;
 
       // Role detection based on email patterns
-      if (email.includes('superadmin') || email.includes('admin@neurosense')) {
+      if (email.includes('superadmin') || email.includes('admin@aims')) {
         userRole = 'super_admin';
         userName = 'Super Admin (Dev)';
         clinicId = null;
       } else if (email.includes('clinic') || email.includes('@clinic') ||
                  email.includes('doctor') || email.includes('dr.')) {
         userRole = 'clinic_admin';
-        userName = 'Clinic Admin (Dev)';
+        userName = 'Engineer (Dev)';
         clinicId = 'dev-clinic-123';
       } else if (email.includes('patient')) {
         userRole = 'patient';
-        userName = 'Patient (Dev)';
+        userName = 'Supervisor (Dev)';
         clinicId = 'dev-clinic-123';
       }
 
@@ -395,7 +395,7 @@ export const AuthProvider = ({ children }) => {
       const defaultUser = {
         id: 'dev-user-' + Date.now(),
         name: userData.name || 'Development User',
-        email: userData.email || 'dev@neurosense360.com',
+        email: userData.email || 'dev@aims.com',
         role: userData.userType === 'super_admin' ? 'super_admin' :
               userData.userType === 'patient' ? 'patient' : 'clinic_admin',
         profilePicture: null,

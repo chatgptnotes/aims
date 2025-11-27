@@ -42,7 +42,7 @@ const BrandingConfiguration = () => {
       coBrandingFee: 299,
       poweredByRequired: true,
       poweredByPosition: 'footer-right',
-      poweredByText: 'Powered by NeuroSense360',
+      poweredByText: 'Powered by AIMS',
       brandingNotes: ''
     }
   });
@@ -265,7 +265,7 @@ const BrandingConfiguration = () => {
                 />
               )}
             </div>
-            <div className="text-2xl font-bold text-gray-800">NeuroSense360</div>
+            <div className="text-2xl font-bold text-gray-800">AIMS</div>
           </div>
 
           {/* Sample content */}
@@ -396,14 +396,14 @@ const BrandingConfiguration = () => {
                 </div>
               )}
 
-              {/* Powered by NeuroSense (Always Required) */}
+              {/* Powered by AIMS (Always Required) */}
               <div className="p-4 bg-[#E4EFFF] rounded-lg border border-blue-200">
                 <div className="flex items-center gap-2 text-blue-800 mb-2">
                   <Check className="w-4 h-4" />
-                  <span className="font-medium">Powered by NeuroSense360 (Required)</span>
+                  <span className="font-medium">Powered by AIMS (Required)</span>
                 </div>
                 <p className="text-sm text-[#323956]">
-                  All co-branded interfaces must display "Powered by NeuroSense360" attribution.
+                  All co-branded interfaces must display "Powered by AIMS" attribution.
                 </p>
               </div>
             </div>

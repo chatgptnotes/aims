@@ -80,7 +80,7 @@ CREATE TABLE file_metadata (
 
   -- File information
   filename VARCHAR(255) NOT NULL,
-  file_type VARCHAR(50) NOT NULL, -- patient_profile, qeeg_profile, neurosense_report, care_plan
+  file_type VARCHAR(50) NOT NULL, -- patient_profile, pid_profile, neurosense_report, care_plan
   file_size BIGINT,
   mime_type VARCHAR(100),
 

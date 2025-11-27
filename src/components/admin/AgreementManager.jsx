@@ -96,7 +96,7 @@ const AgreementManager = () => {
         documentUrl: '#',
         signatories: [
           { name: 'Dr. John Smith', role: 'Clinic Director', signedAt: '2025-09-01T10:30:00Z' },
-          { name: 'Admin User', role: 'NeuroSense Admin', signedAt: '2025-09-01T11:00:00Z' }
+          { name: 'Admin User', role: 'AIMS Admin', signedAt: '2025-09-01T11:00:00Z' }
         ]
       },
       {

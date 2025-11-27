@@ -40,7 +40,7 @@ class EmailService {
     const emailData = {
       to: clinic.email,
       toName: clinic.contactPerson || clinic.name,
-      subject: 'Neuro360 - Account Credentials & Activation Required',
+      subject: 'AIMS - Account Credentials & Activation Required',
       templateData: {
         clinicName: clinic.name,
         contactPerson: clinic.contactPerson || clinic.name,
@@ -91,7 +91,7 @@ OTP_Expires: ${templateData.expiryMinutes} minutes`;
 
 Dear ${templateData.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 Please use the credentials above to login and activate your account.
 
@@ -103,8 +103,8 @@ Next Steps:
 5. Change your password for security
 
 Best regards,
-Neuro360 Team
-EMAIL: support@neuro360.com`;
+AIMS Team
+EMAIL: support@aims.com`;
 
       console.log('Sending real email via Web3Forms to:', emailData.to);
       console.log('Credentials being sent:', credentials);
@@ -112,11 +112,11 @@ EMAIL: support@neuro360.com`;
       // Create form data for Web3Forms
       const formData = new FormData();
       formData.append('access_key', '0d1c4e4b-7f66-4a6f-9a3e-6b8c4e9a5f2d'); // Public Web3Forms key
-      formData.append('subject', 'Neuro360 - Account Credentials & Activation');
+      formData.append('subject', 'AIMS - Account Credentials & Activation');
       formData.append('email', emailData.to);
       formData.append('name', templateData.contactPerson);
       formData.append('message', emailContent);
-      formData.append('from_name', 'Neuro360 Team');
+      formData.append('from_name', 'AIMS Team');
       formData.append('redirect', 'false');
 
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -161,17 +161,17 @@ OTP_Expires: ${templateData.expiryMinutes} minutes`;
       console.log('=================================');
 
       // Create email subject and body
-      const subject = encodeURIComponent('Neuro360 - Account Credentials & Activation');
+      const subject = encodeURIComponent('AIMS - Account Credentials & Activation');
       const body = encodeURIComponent(`${credentials}
 
 Dear ${templateData.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 Please use the credentials above to login and activate your account.
 
 Best regards,
-Neuro360 Team`);
+AIMS Team`);
 
       // Try multiple approaches to send/show the email
       const approaches = [];
@@ -202,7 +202,7 @@ Neuro360 Team`);
       // Approach 3: Copy to clipboard
       try {
         if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(`TO: ${emailData.to}\nSUBJECT: Neuro360 - Account Credentials\n\n${credentials}`);
+          await navigator.clipboard.writeText(`TO: ${emailData.to}\nSUBJECT: AIMS - Account Credentials\n\n${credentials}`);
           approaches.push('Copied to clipboard');
         }
       } catch (error) {
@@ -315,7 +315,7 @@ Neuro360 Team`);
       
       const formData = new FormData();
       formData.append('_to', emailData.to);
-      formData.append('_subject', 'Neuro360 - Account Credentials & Activation Required');
+      formData.append('_subject', 'AIMS - Account Credentials & Activation Required');
       formData.append('_template', 'table');
       formData.append('_captcha', 'false');
       
@@ -330,11 +330,11 @@ Neuro360 Team`);
       
       // Also add a complete message field
       formData.append('Complete_Message', `
- NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
+ AIMS - ACCOUNT CREDENTIALS & ACTIVATION
 
 Dear ${templateData.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 AUTH: LOGIN CREDENTIALS:
 Username: ${templateData.username}
@@ -359,8 +359,8 @@ WARNING: SECURITY REMINDERS:
 - Activate within 15 minutes
 
 Best regards,
-Neuro360 Team
-EMAIL: support@neuro360.com
+AIMS Team
+EMAIL: support@aims.com
       `);
 
       console.log('Sending FormSubmit email with credentials:', {
@@ -400,7 +400,7 @@ EMAIL: support@neuro360.com
       const result = await Email.send({
         SecureToken: import.meta.env.VITE_EMAILJS_SECURE_TOKEN || "your_secure_token_here",
         To: emailData.to,
-        From: "noreply@neurosense360.com",
+        From: "noreply@aims.com",
         Subject: emailData.subject,
         Body: htmlContent
       });
@@ -425,7 +425,7 @@ EMAIL: support@neuro360.com
     const emailSubject = encodeURIComponent(emailData.subject);
     const emailBody = encodeURIComponent(`Dear ${templateData.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 AUTH: LOGIN CREDENTIALS:
 Username: ${templateData.username}
@@ -448,8 +448,8 @@ WARNING: SECURITY REMINDERS:
 - Activate within 15 minutes
 
 Best regards,
-Neuro360 Team
-EMAIL: support@neuro360.com`);
+AIMS Team
+EMAIL: support@aims.com`);
 
     // Create mailto URL
     const mailtoUrl = `mailto:${emailData.to}?subject=${emailSubject}&body=${emailBody}`;
@@ -515,8 +515,8 @@ ${decodeURIComponent(emailBody)}`;
       const templateParams = {
         to_name: templateData.contactPerson,
         to_email: emailData.to,
-        from_name: 'Neuro360 Team',
-        subject: 'Neuro360 - Account Credentials & Activation',
+        from_name: 'AIMS Team',
+        subject: 'AIMS - Account Credentials & Activation',
         message: `Clinic_Name: ${templateData.clinicName}
 Username: ${templateData.username}
 Password: ${templateData.password}
@@ -526,12 +526,12 @@ OTP_Expires: ${templateData.expiryMinutes} minutes
 
 Dear ${templateData.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 Please use the credentials above to login and activate your account.
 
 Best regards,
-Neuro360 Team`
+AIMS Team`
       };
 
       console.log('Sending email via EmailJS...', { to: emailData.to, templateParams });
@@ -641,7 +641,7 @@ Neuro360 Team`
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neuro360 - Account Credentials</title>
+    <title>AIMS - Account Credentials</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
@@ -656,14 +656,14 @@ Neuro360 Team`
 </head>
 <body>
     <div class="header">
-        <h1> Neuro360</h1>
+        <h1> AIMS</h1>
         <p>Your Account Credentials & Activation</p>
     </div>
     
     <div class="content">
         <h2>Hello ${data.contactPerson},</h2>
         
-        <p>Welcome to Neuro360! Your clinic account has been successfully created. Please find your login credentials and activation details below:</p>
+        <p>Welcome to AIMS! Your clinic account has been successfully created. Please find your login credentials and activation details below:</p>
         
         <div class="credentials">
             <h3>AUTH: Login Credentials</h3>
@@ -703,9 +703,9 @@ Neuro360 Team`
         <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
         
         <div class="footer">
-            <p><strong>Neuro360 Team</strong><br>
+            <p><strong>AIMS Team</strong><br>
             EEG Report Management Platform<br>
-            EMAIL: support@neuro360.com |  +1 (555) 123-4567</p>
+            EMAIL: support@aims.com |  +1 (555) 123-4567</p>
             
             <p><small>This is an automated email. Please do not reply to this message.</small></p>
         </div>
@@ -718,11 +718,11 @@ Neuro360 Team`
   // Generate plain text email content for console logging
   generateEmailText(data) {
     return `
- NEURO360 - ACCOUNT CREDENTIALS & ACTIVATION
+ AIMS - ACCOUNT CREDENTIALS & ACTIVATION
 
 Hello ${data.contactPerson},
 
-Welcome to Neuro360! Your clinic account has been successfully created.
+Welcome to AIMS! Your clinic account has been successfully created.
 
 AUTH: LOGIN CREDENTIALS:
 Username: ${data.username}
@@ -747,8 +747,8 @@ WARNING: SECURITY REMINDERS:
 - Contact support if you didn't request this
 
 Best regards,
-Neuro360 Team
-EMAIL: support@neuro360.com
+AIMS Team
+EMAIL: support@aims.com
     `;
   }
 
@@ -765,7 +765,7 @@ EMAIL: support@neuro360.com
     const testData = {
       to: 'test@example.com',
       toName: 'Test User',
-      subject: 'Neuro360 - Email Test',
+      subject: 'AIMS - Email Test',
       templateData: {
         clinicName: 'Test Clinic',
         contactPerson: 'Test User',

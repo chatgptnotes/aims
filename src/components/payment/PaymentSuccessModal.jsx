@@ -32,7 +32,7 @@ const PaymentSuccessModal = ({
       };
 
       const invoiceContent = `
-INVOICE - NeuroSense360
+INVOICE - AIMS
 ========================
 
 Payment ID: ${invoiceData.paymentId}
@@ -130,7 +130,7 @@ Thank you for your business!
                 <h4 className="text-sm font-medium text-green-800">Reports Activated</h4>
                 <p className="text-sm text-green-700 mt-1">
                   Your new EEG reports are now available in your dashboard. 
-                  You can start uploading and analyzing patient data immediately.
+                  You can start uploading and analyzing supervisor data immediately.
                 </p>
               </div>
             </div>

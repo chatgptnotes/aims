@@ -106,7 +106,7 @@ const [patientData, setPatientData] = useState({
   reports: [
     {
       id: 1,
-      type: 'NeuroSense QEEG Report',
+      type: 'AIMS P&ID Report',
       date: '2024-09-15',
       status: 'Available',
       summary: 'Comprehensive brain activity analysis...'

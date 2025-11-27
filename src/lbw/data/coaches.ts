@@ -76,20 +76,20 @@ export const sampleCoaches: Coach[] = [
     name: 'Dr. Lisa Thompson',
     title: 'Neurofeedback Expert',
     specialty: ['adhd', 'memory', 'stress'] as ImprovementFocus[],
-    bio: 'Dr. Thompson is a leading expert in qEEG analysis and neurofeedback training. She has conducted over 1000 brain maps and specializes in personalized brain training protocols.',
+    bio: 'Dr. Thompson is a leading expert in P&ID analysis and neurofeedback training. She has conducted over 1000 brain maps and specializes in personalized brain training protocols.',
     imageUrl: '/avatars/lisa-thompson.jpg',
     rating: 4.9,
     totalSessions: 320,
     certifications: [
       'Ph.D. Neuroscience',
       'BCIA Certified Neurofeedback',
-      'qEEG Diplomat',
+      'P&ID Diplomat',
       'Brain Mapping Specialist'
     ],
     languages: ['English', 'French'],
     pricing: [
       {
-        sessionType: 'qEEG Consultation',
+        sessionType: 'P&ID Consultation',
         price: 150,
         duration: 90
       },

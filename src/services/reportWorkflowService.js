@@ -1,11 +1,11 @@
 /**
  * Standardized Report Generation Workflow Service
- * Orchestrates the complete data flow: EDF Upload → qEEG Pro → NeuroSense → Care Plan
+ * Orchestrates the complete data flow: EDF Upload → P&ID Pro → AIMS → Care Plan
  */
 
 import DatabaseService from './databaseService';
-import QEEGProService from './qeegProService';
-import NeuroSenseService from './neuroSenseService';
+import PIDProService from './pidProService';
+import AIMSService from './aimsService';
 import StorageService from './storageService';
 import toast from 'react-hot-toast';
 
@@ -17,7 +17,7 @@ class ReportWorkflowService {
   /**
    * Start complete EDF processing workflow
    * @param {File} edfFile - The EDF file to process
-   * @param {Object} patientInfo - Patient information
+   * @param {Object} patientInfo - Supervisor information
    * @param {string} clinicId - Clinic identifier
    * @returns {Promise<string>} Workflow ID for tracking
    */
@@ -38,8 +38,8 @@ class ReportWorkflowService {
         status: 'started',
         steps: {
           fileUpload: { status: 'pending', startedAt: null, completedAt: null },
-          qeegProcessing: { status: 'pending', startedAt: null, completedAt: null },
-          neuroSenseAnalysis: { status: 'pending', startedAt: null, completedAt: null },
+          pidProcessing: { status: 'pending', startedAt: null, completedAt: null },
+          aimsAnalysis: { status: 'pending', startedAt: null, completedAt: null },
           carePlanGeneration: { status: 'pending', startedAt: null, completedAt: null },
           reportFinalization: { status: 'pending', startedAt: null, completedAt: null }
         },
@@ -72,11 +72,11 @@ class ReportWorkflowService {
       // Step 1: Upload EDF file to S3
       await this.executeFileUpload(workflowId, edfFile, patientInfo, clinicId);
 
-      // Step 2: Process through qEEG Pro
-      await this.executeQEEGProcessing(workflowId, edfFile, patientInfo);
+      // Step 2: Process through P&ID Pro
+      await this.executePIDProcessing(workflowId, edfFile, patientInfo);
 
-      // Step 3: Analyze through NeuroSense
-      await this.executeNeuroSenseAnalysis(workflowId, patientInfo);
+      // Step 3: Analyze through AIMS
+      await this.executeAIMSAnalysis(workflowId, patientInfo);
 
       // Step 4: Generate care plan
       await this.executeCarePlanGeneration(workflowId, patientInfo);
@@ -145,7 +145,7 @@ class ReportWorkflowService {
         // Store extra data in JSONB report_data column
         report_data: {
           title: edfFile.name.replace(/\.(edf|eeg|bdf)$/i, ''),
-          type: 'EEG/qEEG Analysis',
+          type: 'EEG/P&ID Analysis',
           report_type: 'eeg_analysis',
           patient_name: patientInfo.name,
           workflow_id: workflowId,
@@ -187,16 +187,16 @@ class ReportWorkflowService {
   }
 
   /**
-   * Step 2: Process through qEEG Pro
+   * Step 2: Process through P&ID Pro
    */
-  async executeQEEGProcessing(workflowId, edfFile, patientInfo) {
+  async executePIDProcessing(workflowId, edfFile, patientInfo) {
     const workflow = this.workflows.get(workflowId);
-    workflow.steps.qeegProcessing.status = 'processing';
-    workflow.steps.qeegProcessing.startedAt = new Date().toISOString();
+    workflow.steps.pidProcessing.status = 'processing';
+    workflow.steps.pidProcessing.startedAt = new Date().toISOString();
     await this.updateWorkflowInDatabase(workflow);
 
     try {
-      // Update report progress - qEEG processing started
+      // Update report progress - P&ID processing started
       const reportId = workflow.results.reportId;
       if (reportId) {
         try {
@@ -205,8 +205,8 @@ class ReportWorkflowService {
             status: 'processing',
             report_data: {
               ...currentReport.report_data,
-              processing_status: 'qeeg_processing',
-              processing_step: 'qEEG Pro analysis in progress',
+              processing_status: 'pid_processing',
+              processing_step: 'P&ID Pro analysis in progress',
               progress: 40
             },
             updated_at: new Date().toISOString()
@@ -216,27 +216,27 @@ class ReportWorkflowService {
         }
       }
 
-      // Submit to qEEG Pro
-      const qeegResult = await QEEGProService.uploadForProcessing(edfFile, {
+      // Submit to P&ID Pro
+      const pidResult = await PIDProService.uploadForProcessing(edfFile, {
         patientId: patientInfo.id,
         patientName: patientInfo.name,
         clinicId: workflow.clinicId
       });
 
       // Wait for processing to complete (in real implementation, this would be a webhook/polling)
-      await this.waitForQEEGCompletion(qeegResult.jobId);
+      await this.waitForPIDCompletion(pidResult.jobId);
 
       // Download results
-      const qeegReport = await QEEGProService.downloadReport(qeegResult.jobId);
+      const pidReport = await PIDProService.downloadReport(pidResult.jobId);
 
-      workflow.steps.qeegProcessing.status = 'completed';
-      workflow.steps.qeegProcessing.completedAt = new Date().toISOString();
-      workflow.results.qeegProcessing = {
-        jobId: qeegResult.jobId,
-        report: qeegReport
+      workflow.steps.pidProcessing.status = 'completed';
+      workflow.steps.pidProcessing.completedAt = new Date().toISOString();
+      workflow.results.pidProcessing = {
+        jobId: pidResult.jobId,
+        report: pidReport
       };
 
-      // Update report progress - qEEG completed
+      // Update report progress - P&ID completed
       if (reportId) {
         try {
           const currentReport = await DatabaseService.findById('reports', reportId);
@@ -244,10 +244,10 @@ class ReportWorkflowService {
             status: 'processing',
             report_data: {
               ...currentReport.report_data,
-              processing_status: 'qeeg_completed',
-              processing_step: 'qEEG analysis completed',
+              processing_status: 'pid_completed',
+              processing_step: 'P&ID analysis completed',
               progress: 60,
-              qeeg_job_id: qeegResult.jobId
+              pid_job_id: pidResult.jobId
             },
             updated_at: new Date().toISOString()
           });
@@ -257,27 +257,27 @@ class ReportWorkflowService {
       }
 
       await this.updateWorkflowInDatabase(workflow);
-      console.log('SUCCESS: qEEG processing completed for workflow:', workflowId);
+      console.log('SUCCESS: P&ID processing completed for workflow:', workflowId);
 
     } catch (error) {
-      workflow.steps.qeegProcessing.status = 'failed';
-      workflow.steps.qeegProcessing.error = error.message;
+      workflow.steps.pidProcessing.status = 'failed';
+      workflow.steps.pidProcessing.error = error.message;
       await this.updateWorkflowInDatabase(workflow);
       throw error;
     }
   }
 
   /**
-   * Step 3: Analyze through NeuroSense
+   * Step 3: Analyze through AIMS
    */
-  async executeNeuroSenseAnalysis(workflowId, patientInfo) {
+  async executeAIMSAnalysis(workflowId, patientInfo) {
     const workflow = this.workflows.get(workflowId);
-    workflow.steps.neuroSenseAnalysis.status = 'processing';
-    workflow.steps.neuroSenseAnalysis.startedAt = new Date().toISOString();
+    workflow.steps.aimsAnalysis.status = 'processing';
+    workflow.steps.aimsAnalysis.startedAt = new Date().toISOString();
     await this.updateWorkflowInDatabase(workflow);
 
     try {
-      // Update report progress - NeuroSense analysis started
+      // Update report progress - AIMS analysis started
       const reportId = workflow.results.reportId;
       if (reportId) {
         try {
@@ -286,8 +286,8 @@ class ReportWorkflowService {
             status: 'processing',
             report_data: {
               ...currentReport.report_data,
-              processing_status: 'neurosense_analyzing',
-              processing_step: 'NeuroSense AI analysis in progress',
+              processing_status: 'aims_analyzing',
+              processing_step: 'AIMS AI analysis in progress',
               progress: 70
             },
             updated_at: new Date().toISOString()
@@ -297,28 +297,28 @@ class ReportWorkflowService {
         }
       }
 
-      const qeegReport = workflow.results.qeegProcessing.report;
+      const pidReport = workflow.results.pidProcessing.report;
 
-      // Process through NeuroSense algorithms
-      const neuroSenseResult = await NeuroSenseService.processQEEGReport(qeegReport, patientInfo);
+      // Process through AIMS algorithms
+      const aimsResult = await AIMSService.processPIDReport(pidReport, patientInfo);
 
-      // Save NeuroSense report
-      const savedReport = await NeuroSenseService.saveProcessedReport(
-        neuroSenseResult,
+      // Save AIMS report
+      const savedReport = await AIMSService.saveProcessedReport(
+        aimsResult,
         workflow.clinicId,
         patientInfo.id
       );
 
-      workflow.steps.neuroSenseAnalysis.status = 'completed';
-      workflow.steps.neuroSenseAnalysis.completedAt = new Date().toISOString();
-      workflow.results.neuroSenseAnalysis = {
+      workflow.steps.aimsAnalysis.status = 'completed';
+      workflow.steps.aimsAnalysis.completedAt = new Date().toISOString();
+      workflow.results.aimsAnalysis = {
         reportId: savedReport.id,
-        standardizedReport: neuroSenseResult.standardizedReport,
-        riskAssessment: neuroSenseResult.riskAssessment,
-        recommendations: neuroSenseResult.recommendations
+        standardizedReport: aimsResult.standardizedReport,
+        riskAssessment: aimsResult.riskAssessment,
+        recommendations: aimsResult.recommendations
       };
 
-      // Update report progress - NeuroSense completed
+      // Update report progress - AIMS completed
       if (reportId) {
         try {
           const currentReport = await DatabaseService.findById('reports', reportId);
@@ -326,10 +326,10 @@ class ReportWorkflowService {
             status: 'processing',
             report_data: {
               ...currentReport.report_data,
-              processing_status: 'neurosense_completed',
-              processing_step: 'NeuroSense analysis completed',
+              processing_status: 'aims_completed',
+              processing_step: 'AIMS analysis completed',
               progress: 85,
-              neurosense_report_id: savedReport.id
+              aims_report_id: savedReport.id
             },
             updated_at: new Date().toISOString()
           });
@@ -339,11 +339,11 @@ class ReportWorkflowService {
       }
 
       await this.updateWorkflowInDatabase(workflow);
-      console.log('SUCCESS: NeuroSense analysis completed for workflow:', workflowId);
+      console.log('SUCCESS: AIMS analysis completed for workflow:', workflowId);
 
     } catch (error) {
-      workflow.steps.neuroSenseAnalysis.status = 'failed';
-      workflow.steps.neuroSenseAnalysis.error = error.message;
+      workflow.steps.aimsAnalysis.status = 'failed';
+      workflow.steps.aimsAnalysis.error = error.message;
       await this.updateWorkflowInDatabase(workflow);
       throw error;
     }
@@ -379,11 +379,11 @@ class ReportWorkflowService {
         }
       }
 
-      const neuroSenseResults = workflow.results.neuroSenseAnalysis;
+      const aimsResults = workflow.results.aimsAnalysis;
 
       // Generate personalized care plan
-      const carePlan = await NeuroSenseService.generateCarePlan(
-        neuroSenseResults.riskAssessment,
+      const carePlan = await AIMSService.generateCarePlan(
+        aimsResults.riskAssessment,
         patientInfo
       );
 
@@ -393,7 +393,7 @@ class ReportWorkflowService {
         workflowId,
         patientId: patientInfo.id,
         clinicId: workflow.clinicId,
-        neuroSenseReportId: neuroSenseResults.reportId,
+        aimsReportId: aimsResults.reportId,
         carePlan,
         createdAt: new Date().toISOString(),
         status: 'active'
@@ -444,8 +444,8 @@ class ReportWorkflowService {
               type: 'complete_eeg_analysis',
               report_type: 'complete_eeg_analysis',
               original_file: workflow.results.fileUpload,
-              qeeg_report: workflow.results.qeegProcessing?.report || null,
-              neurosense_analysis: workflow.results.neuroSenseAnalysis || null,
+              pid_report: workflow.results.pidProcessing?.report || null,
+              aims_analysis: workflow.results.aimsAnalysis || null,
               care_plan: workflow.results.carePlanGeneration?.carePlan || null,
               processing_workflow: {
                 workflowId,
@@ -489,7 +489,7 @@ class ReportWorkflowService {
         await DatabaseService.add('reports', newReport);
       }
 
-      // Update patient status
+      // Update supervisor status
       await this.updatePatientStatus(patientInfo.id, 'report_completed');
 
       // Update clinic usage
@@ -562,23 +562,23 @@ class ReportWorkflowService {
   /**
    * Helper methods
    */
-  async waitForQEEGCompletion(jobId, maxWaitTime = 300000) { // 5 minutes max
+  async waitForPIDCompletion(jobId, maxWaitTime = 300000) { // 5 minutes max
     const startTime = Date.now();
 
     while (Date.now() - startTime < maxWaitTime) {
-      const status = await QEEGProService.checkProcessingStatus(jobId);
+      const status = await PIDProService.checkProcessingStatus(jobId);
 
       if (status.status === 'completed') {
         return status;
       } else if (status.status === 'failed') {
-        throw new Error(`qEEG processing failed: ${status.message}`);
+        throw new Error(`P&ID processing failed: ${status.message}`);
       }
 
       // Wait 5 seconds before checking again
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
-    throw new Error('qEEG processing timeout');
+    throw new Error('P&ID processing timeout');
   }
 
   calculateProcessingTime(workflow) {
@@ -609,7 +609,7 @@ class ReportWorkflowService {
         lastReportDate: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Failed to update patient status:', error);
+      console.error('Failed to update supervisor status:', error);
     }
   }
 

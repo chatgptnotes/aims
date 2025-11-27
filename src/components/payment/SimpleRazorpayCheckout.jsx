@@ -53,7 +53,7 @@ const SimpleRazorpayCheckout = ({ clinicInfo, onSuccess, onClose }) => {
     };
 
     const invoiceContent = `
-INVOICE - NeuroSense360
+INVOICE - AIMS
 ========================
 
 Payment ID: ${invoiceData.paymentId}
@@ -74,7 +74,7 @@ Status: Completed
 
 Thank you for your business!
 
---- NeuroSense360 EEG Management Platform ---
+--- AIMS EEG Management Platform ---
     `;
 
     const dataBlob = new Blob([invoiceContent], { type: 'text/plain' });

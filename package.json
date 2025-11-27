@@ -1,11 +1,13 @@
 {
-  "name": "@neuro360/web",
+  "name": "@aims/web",
   "private": true,
-  "version": "2.0.0",
+  "version": "1.0.0",
   "type": "module",
-  "description": "NeuroSense360 + LBW Brain Wellness Platform",
+  "description": "AIMS - Asset Information Management System for P&ID Analysis",
   "scripts": {
     "dev": "vite",
+    "dev:direct": "node node_modules/vite/bin/vite.js",
+    "dev:npx": "npx vite",
     "dev:backend": "cd server && npm run dev",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:backend\" --names \"frontend,backend\" --prefix-colors \"cyan,magenta\"",
     "start:backend": "cd server && npm start",
@@ -19,6 +21,10 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
     "@stripe/stripe-js": "^7.8.0",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.89.0",
@@ -28,6 +34,8 @@
     "framer-motion": "^12.23.14",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.294.0",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.394",
     "prop-types": "^15.8.1",
     "razorpay": "^2.9.6",
     "react": "^18.2.0",
@@ -40,6 +48,7 @@
     "smtpjs": "^0.0.1",
     "sonner": "^2.0.7",
     "uuid": "^11.1.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

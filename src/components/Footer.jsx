@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Brain, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin } from 'lucide-react';
+import { Factory, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -11,21 +11,21 @@ const Footer = () => {
           <div className="lg:col-span-1 space-y-6">
             {/* Logo */}
             <Link to="/" className="flex items-center">
-              <Brain className="h-6 w-6 text-white bg-white p-1 rounded" />
-              <span className="ml-2 text-lg font-normal">
-                NeuroSense<sup className="text-[10px]">®</sup>
+              <Factory className="h-8 w-8 text-white" />
+              <span className="ml-2 text-xl font-bold">
+                AIMS
               </span>
             </Link>
 
             {/* Tagline */}
             <p className="text-base">
-              Neurotherapy for a <span className="text-[#00897B]">better brain.</span>
+              Industrial Asset Management - <span className="text-[#1e3a5f]">Transform your P&ID workflows</span>
             </p>
 
             {/* Newsletter */}
             <div className="space-y-3">
               <p className="text-sm text-gray-400">
-                Develop a healthier brain with our science backed tips straight to your inbox.
+                Get the latest updates on industrial automation and asset management delivered to your inbox.
               </p>
               <div className="space-y-2">
                 <input
@@ -33,7 +33,7 @@ const Footer = () => {
                   placeholder="Your email address"
                   className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00897B]"
                 />
-                <button className="w-full px-6 py-2.5 bg-[#00897B] hover:bg-[#00796B] text-white rounded-lg text-sm font-medium transition-colors">
+                <button className="w-full px-6 py-2.5 bg-[#1e3a5f] hover:bg-[#152d4a] text-white rounded-lg text-sm font-medium transition-colors">
                   Subscribe
                 </button>
               </div>
@@ -58,23 +58,23 @@ const Footer = () => {
               </a>
             </div>
 
-            {/* Find a Clinic CTA */}
-            <div className="p-4 bg-[#00897B]/20 rounded-lg border border-[#00897B]/30">
+            {/* Get Started CTA */}
+            <div className="p-4 bg-[#1e3a5f]/20 rounded-lg border border-[#1e3a5f]/30">
               <p className="text-sm font-medium mb-1">Ready to start?</p>
               <a
-                href="/#clinic-locator"
+                href="/#pricing"
                 onClick={(e) => {
                   e.preventDefault();
-                  const element = document.getElementById('clinic-locator');
+                  const element = document.getElementById('pricing');
                   if (element) {
                     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   } else {
-                    window.location.href = '/#clinic-locator';
+                    window.location.href = '/#pricing';
                   }
                 }}
-                className="text-sm text-[#00897B] hover:underline cursor-pointer"
+                className="text-sm text-[#1e3a5f] hover:underline cursor-pointer"
               >
-                Find a clinic near you →
+                View pricing plans →
               </a>
             </div>
 
@@ -82,21 +82,21 @@ const Footer = () => {
             <div className="flex items-start gap-2 text-xs text-gray-400">
               <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-white">NeuroSense Inc.</p>
+                <p className="font-medium text-white">AIMS Inc.</p>
                 <p>175 Varick Street</p>
                 <p>New York, NY 10014, US</p>
               </div>
             </div>
           </div>
 
-          {/* For Clinics Column */}
+          {/* Solutions Column */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For clinics</h3>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Solutions</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">P&ID Processing</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Tag Extraction</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Tag Sheet Generation</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Project Management →</a></li>
             </ul>
           </div>
 
@@ -104,24 +104,24 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
             <ul className="space-y-3">
-              <li><Link to="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</Link></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Guide to Brainwaves</a></li>
-              <li><Link to="/science" className="text-base hover:text-[#00897B] transition-colors">Science</Link></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Reviews</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Blog</a></li>
-              <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FSA/HSA Eligible</a></li>
+              <li><a href="/#how-it-works" className="text-base hover:text-[#1e3a5f] transition-colors">How It Works</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Industry Standards</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Documentation</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Case Studies</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Blog</a></li>
+              <li><Link to="/faq" className="text-base hover:text-[#1e3a5f] transition-colors">FAQs</Link></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">API Documentation</a></li>
             </ul>
           </div>
 
-          {/* For Consumers Column */}
+          {/* Industries Column */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For consumers</h3>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Industries</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Start now</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Peak Performance</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense vs. Others</a></li>
-              <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Providers Library</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Oil & Gas</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Chemical Processing</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Power Generation</a></li>
+              <li><a href="#" className="text-base hover:text-[#1e3a5f] transition-colors">Manufacturing</a></li>
             </ul>
           </div>
 
@@ -141,7 +141,7 @@ const Footer = () => {
         {/* Bottom Copyright */}
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="text-center">
-            <p className="text-sm text-gray-400">&copy; 2024 NeuroSense Inc. All rights reserved.</p>
+            <p className="text-sm text-gray-400">&copy; 2024 AIMS Inc. All rights reserved.</p>
           </div>
         </div>
       </div>

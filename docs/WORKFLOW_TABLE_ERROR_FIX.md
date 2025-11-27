@@ -88,21 +88,21 @@ try {
 1. **Open Supabase Dashboard**
    - URL: https://supabase.com/dashboard
    - Login to your account
-   - Select your Neuro360 project
+   - Select your AIMS project
 
 2. **Go to SQL Editor**
    - Click "SQL Editor" in left sidebar
    - Click "New Query"
 
 3. **Apply Migration 011 (workflows table)**
-   - Open file: `D:\Neuro360\supabase\migrations\011_create_workflows_table.sql`
+   - Open file: `D:\AIMS\supabase\migrations\011_create_workflows_table.sql`
    - Copy entire contents
    - Paste into SQL Editor
    - Click "Run" button
    - Wait for success message
 
 4. **Apply Migration 012 (uploaded_files table)**
-   - Open file: `D:\Neuro360\supabase\migrations\012_create_uploaded_files_table.sql`
+   - Open file: `D:\AIMS\supabase\migrations\012_create_uploaded_files_table.sql`
    - Copy entire contents
    - Paste into SQL Editor
    - Click "Run" button
@@ -120,7 +120,7 @@ try {
 
 **Windows:**
 ```bash
-cd D:\Neuro360
+cd D:\AIMS
 apply-workflow-migrations.bat
 ```
 
@@ -136,7 +136,7 @@ This script will:
 If you have Supabase CLI installed and linked:
 
 ```bash
-cd D:\Neuro360
+cd D:\AIMS
 supabase db push
 ```
 
@@ -159,8 +159,8 @@ supabase migration up
 - Patient and clinic information
 - Step-by-step progress tracking:
   - File Upload (pending → processing → completed)
-  - qEEG Processing (pending → processing → completed)
-  - NeuroSense Analysis (pending → processing → completed)
+  - P&ID Processing (pending → processing → completed)
+  - AIMS Analysis (pending → processing → completed)
   - Care Plan Generation (pending → processing → completed)
   - Report Finalization (pending → processing → completed)
 - Results from each step

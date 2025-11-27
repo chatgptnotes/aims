@@ -1,4 +1,4 @@
-# 🔐 NeuroSense360 - Login Guide
+# 🔐 AIMS - Login Guide
 
 ## 🚀 Quick Start
 
@@ -8,7 +8,7 @@ Your application is now running on: **http://localhost:3000**
 
 ### 🔴 Super Admin Access (RESTRICTED)
 - **URL**: http://localhost:3000/admin
-- **Email**: `admin@neurosense360.com`
+- **Email**: `admin@aims.com`
 - **Password**: `admin123`
 - **Role**: `super_admin`
 - **Access**: ✅ Super Admin Panel ONLY
@@ -51,7 +51,7 @@ Your application is now running on: **http://localhost:3000**
 ## 🔄 Testing the Role-Based Access Control
 
 ### ✅ Allowed Access Patterns:
-1. **Super Admin** (`admin@neurosense360.com`):
+1. **Super Admin** (`admin@aims.com`):
    - ✅ Can access: `/admin` (Super Admin Panel)
    - ❌ **BLOCKED**: `/clinic`, `/clinic/subscription`
    - ⚠️  Can access: `/dashboard` (fallback for regular users)
@@ -80,7 +80,7 @@ Your application is now running on: **http://localhost:3000**
 4. **Result**: ❌ Access Denied page with clear error message
 
 #### ✅ Role-Specific Dashboard Test:
-1. **Super Admin** (`admin@neurosense360.com`) sees: Super Admin Panel + Analytics
+1. **Super Admin** (`admin@aims.com`) sees: Super Admin Panel + Analytics
 2. **Clinic Admin** (`clinic@demo.com`) sees: Clinic Portal + Reports + Billing  
 3. **Regular User** (`user@demo.com`) sees: Profile + Notifications + Activity only
 
@@ -99,7 +99,7 @@ Your application is now running on: **http://localhost:3000**
 5. **Protects Routes**: All protected routes now require re-authentication
 
 ### 🎯 Testing Logout:
-1. **Login** with any credentials (admin@neurosense360.com/admin123, etc.)
+1. **Login** with any credentials (admin@aims.com/admin123, etc.)
 2. **Navigate** to your role-appropriate dashboard
 3. **Click "Logout"** button in the top-right corner
 4. **Verify** you're redirected to login page and must re-authenticate

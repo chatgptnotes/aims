@@ -74,11 +74,11 @@ CREATE POLICY "Doctors can view their clinic algorithm_results"
     );
 
 -- Add comments
-COMMENT ON TABLE public.algorithm_results IS 'Stores QEEG algorithm processing results with 7 brain health parameters';
+COMMENT ON TABLE public.algorithm_results IS 'Stores P&ID algorithm processing results with 7 brain health parameters';
 COMMENT ON COLUMN public.algorithm_results.id IS 'Unique identifier in format: alg_timestamp_patientId';
 COMMENT ON COLUMN public.algorithm_results.patient_id IS 'UUID reference to patients table';
 COMMENT ON COLUMN public.algorithm_results.clinic_id IS 'UUID reference to clinics table';
 COMMENT ON COLUMN public.algorithm_results.results IS 'JSON array containing 7 parameter scores with sub-metrics';
-COMMENT ON COLUMN public.algorithm_results.eyes_open_file IS 'Filename of uploaded Eyes Open QEEG data';
-COMMENT ON COLUMN public.algorithm_results.eyes_closed_file IS 'Filename of uploaded Eyes Closed QEEG data';
+COMMENT ON COLUMN public.algorithm_results.eyes_open_file IS 'Filename of uploaded Eyes Open P&ID data';
+COMMENT ON COLUMN public.algorithm_results.eyes_closed_file IS 'Filename of uploaded Eyes Closed P&ID data';
 COMMENT ON COLUMN public.algorithm_results.processed_by IS 'User ID or role who processed the data';

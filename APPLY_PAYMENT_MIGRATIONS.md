@@ -8,7 +8,7 @@ Follow these simple steps to enable payment data storage in your database.
 ### Step 1: Open Supabase Dashboard
 1. Go to https://supabase.com
 2. Login to your account
-3. Select your NeuroSense360 project
+3. Select your AIMS project
 4. Click on **SQL Editor** in the left sidebar
 
 ### Step 2: Run Migration 1 - Create payment_history Table

@@ -82,7 +82,7 @@ export interface Database {
           user_id: string
           datetime: string
           duration: number
-          session_type: 'brain_coaching' | 'nervous_system' | 'qeeg_consultation'
+          session_type: 'brain_coaching' | 'nervous_system' | 'pid_consultation'
           status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
           notes: string | null
           session_notes: string | null

@@ -26,7 +26,7 @@ Print करो और desk पर रखो! 📋
 ```
 https://supabase.com
 → Login
-→ Neuro360 project
+→ AIMS project
 → Storage
 → [+ Create bucket]
 

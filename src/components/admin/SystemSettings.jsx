@@ -47,7 +47,7 @@ const SystemSettings = () => {
             </label>
             <input
               type="text"
-              defaultValue="NeuroSense360"
+              defaultValue="AIMS"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
@@ -58,7 +58,7 @@ const SystemSettings = () => {
             </label>
             <input
               type="email"
-              defaultValue="support@neurosense360.com"
+              defaultValue="support@aims.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>

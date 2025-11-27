@@ -30,7 +30,7 @@ import {
   X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import QEEGFileViewer from './QEEGFileViewer';
+import PIDFileViewer from './PIDFileViewer';
 import PersonalizedCarePlan from './PersonalizedCarePlan';
 import fileManagementService from '../../services/fileManagementService';
 import analyticsService from '../../services/analyticsService';
@@ -45,7 +45,7 @@ const DataAccess = () => {
   const [patients, setPatients] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showQEEGViewer, setShowQEEGViewer] = useState(false);
+  const [showPIDViewer, setShowPIDViewer] = useState(false);
   const [showCarePlan, setShowCarePlan] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState(null);
 
@@ -57,7 +57,7 @@ const DataAccess = () => {
   const loadRealData = async () => {
     setLoading(true);
     try {
-      console.log('REFRESH: Loading real clinic and patient data...');
+      console.log('REFRESH: Loading real clinic and supervisor data...');
 
       // Get real system analytics for clinic data
       const systemAnalytics = await analyticsService.getSystemAnalytics();
@@ -100,12 +100,12 @@ const DataAccess = () => {
   // Generate new report
   const handleGenerateReport = async (type, patientId) => {
     try {
-      console.log(`FILE: Generating ${type} report for patient ${patientId}`);
+      console.log(`FILE: Generating ${type} report for supervisor ${patientId}`);
 
       let reportData;
       switch (type) {
-        case 'qeeg':
-          reportData = await fileManagementService.generateQEEGReport(patientId);
+        case 'pid':
+          reportData = await fileManagementService.generatePIDReport(patientId);
           break;
         case 'careplan':
           reportData = await fileManagementService.generateCarePlan(patientId);
@@ -226,7 +226,7 @@ const DataAccess = () => {
     'patient-1': [
       {
         id: 'file-1',
-        name: 'Patient Profile - John Smith.pdf',
+        name: 'Supervisor Profile - John Smith.pdf',
         type: 'patient_profile',
         size: '2.4 MB',
         created: '2025-09-01T09:00:00Z',
@@ -235,8 +235,8 @@ const DataAccess = () => {
       },
       {
         id: 'file-2',
-        name: 'qEEG Profile - Session 8.edf',
-        type: 'qeeg_profile',
+        name: 'P&ID Profile - Session 8.edf',
+        type: 'pid_profile',
         size: '15.7 MB',
         created: '2025-09-15T14:30:00Z',
         modified: '2025-09-15T14:30:00Z',
@@ -244,8 +244,8 @@ const DataAccess = () => {
       },
       {
         id: 'file-3',
-        name: 'NeuroSense Report - September 2025.pdf',
-        type: 'neurosense_report',
+        name: 'AIMS Report - September 2025.pdf',
+        type: 'aims_report',
         size: '3.1 MB',
         created: '2025-09-15T15:00:00Z',
         modified: '2025-09-15T15:00:00Z',
@@ -329,14 +329,14 @@ const DataAccess = () => {
     setSelectedFileId(file.id);
 
     switch (file.type) {
-      case 'qeeg_profile':
-        setShowQEEGViewer(true);
+      case 'pid_profile':
+        setShowPIDViewer(true);
         break;
       case 'care_plan':
         setShowCarePlan(true);
         break;
       case 'patient_profile':
-      case 'neurosense_report':
+      case 'aims_report':
       default:
         toast.info(`Opening ${file.name} in viewer...`);
         // For other file types, implement generic viewer or download
@@ -348,9 +348,9 @@ const DataAccess = () => {
     switch (type) {
       case 'patient_profile':
         return <User className="w-5 h-5 text-[#323956]" />;
-      case 'qeeg_profile':
+      case 'pid_profile':
         return <Brain className="w-5 h-5 text-purple-500" />;
-      case 'neurosense_report':
+      case 'aims_report':
         return <Activity className="w-5 h-5 text-[#323956]" />;
       case 'care_plan':
         return <Heart className="w-5 h-5 text-red-500" />;
@@ -362,11 +362,11 @@ const DataAccess = () => {
   const getFileTypeLabel = (type) => {
     switch (type) {
       case 'patient_profile':
-        return 'Patient Profile';
-      case 'qeeg_profile':
-        return 'qEEG Profile';
-      case 'neurosense_report':
-        return 'NeuroSense Report';
+        return 'Supervisor Profile';
+      case 'pid_profile':
+        return 'P&ID Profile';
+      case 'aims_report':
+        return 'AIMS Report';
       case 'care_plan':
         return 'Care Plan';
       default:
@@ -396,7 +396,7 @@ const DataAccess = () => {
       if (viewMode === 'files') {
         data = data.filter(file => file.type === filterType);
       } else if (viewMode === 'patients') {
-        data = data.filter(patient => patient.status === filterType);
+        data = data.filter(supervisor => patient.status === filterType);
       }
     }
 
@@ -470,8 +470,8 @@ const DataAccess = () => {
             >
               <option value="all">All File Types</option>
               <option value="patient_profile">Patient Profiles</option>
-              <option value="qeeg_profile">qEEG Profiles</option>
-              <option value="neurosense_report">NeuroSense Reports</option>
+              <option value="pid_profile">P&ID Profiles</option>
+              <option value="aims_report">AIMS Reports</option>
               <option value="care_plan">Care Plans</option>
             </select>
           )}
@@ -552,7 +552,7 @@ const DataAccess = () => {
               </div>
 
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredData().map(patient => (
+                {filteredData().map(supervisor => (
                   <div
                     key={patient.id}
                     onClick={() => handlePatientSelect(patient)}
@@ -708,24 +708,24 @@ const DataAccess = () => {
         </div>
       </div>
 
-      {/* qEEG File Viewer Modal */}
-      {showQEEGViewer && (
+      {/* P&ID File Viewer Modal */}
+      {showPIDViewer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-7xl w-full max-h-[95vh] overflow-y-auto">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">qEEG Analysis Viewer</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">P&ID Analysis Viewer</h3>
               <button
-                onClick={() => setShowQEEGViewer(false)}
+                onClick={() => setShowPIDViewer(false)}
                 className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6">
-              <QEEGFileViewer
+              <PIDFileViewer
                 fileId={selectedFileId}
                 patientId={selectedPatient?.id}
-                onClose={() => setShowQEEGViewer(false)}
+                onClose={() => setShowPIDViewer(false)}
               />
             </div>
           </div>

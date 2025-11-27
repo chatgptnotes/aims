@@ -30,13 +30,22 @@ class DatabaseService {
   // Map legacy table names to Supabase schema
   mapTableName(table) {
     const tableMapping = {
-      'clinics': 'clinics',              // Use existing clinics table
+      // Legacy table names - keep mapping to old tables for backward compatibility
+      // (both old and new tables exist in database)
+      'patients': 'patients',            // Old table still exists, used for backward compatibility
+      'clinics': 'clinics',              // Old table still exists, used for backward compatibility
+
+      // New table names (from recent migrations)
+      'supervisors': 'supervisors',      // New table for industrial supervisors
+      'project_areas': 'project_areas',  // New table for project areas/facilities
+      'engineers': 'engineers',          // New table for engineers
+
+      // Other table mappings
       'superAdmins': 'profiles',
-      'patients': 'patients',
-      'reports': 'reports',              // Fixed: Use 'reports' not 'eeg_reports'
+      'reports': 'reports',              // Shared by both old and new schema
       'subscriptions': 'subscriptions',
       'payments': 'payment_history',
-      'algorithmResults': 'algorithm_results',  // QEEG algorithm processing results
+      'algorithmResults': 'algorithm_results',  // P&ID algorithm processing results
       'usage': 'organizations',          // Temporary mapping to existing table
       'alerts': 'organizations'          // Temporary mapping to existing table
     };
@@ -64,7 +73,7 @@ class DatabaseService {
 
       // Transform data based on table type
       if (table === 'clinics' && actualTable === 'clinics') {
-        // Transform clinics data to camelCase format
+        // Transform project areas data to camelCase format (table name 'clinics' retained for DB compatibility)
         return data.map(clinic => ({
           id: clinic.id,
           name: clinic.name,
@@ -94,10 +103,11 @@ class DatabaseService {
         }));
       }
 
-      if (table === 'patients' && actualTable === 'patients') {
-        // Extra safety check for patients data
+      // Handle both 'patients' (old table) and 'supervisors' (new table)
+      if ((table === 'patients' && actualTable === 'patients') || (table === 'supervisors' && actualTable === 'supervisors')) {
+        // Extra safety check for patients/supervisors data
         if (!data || !Array.isArray(data) || data.length === 0) {
-          console.warn('WARNING: No patients data to transform, returning empty array');
+          console.warn('WARNING: No patients/supervisors data to transform, returning empty array');
           console.warn('WARNING: Data value:', data);
           console.warn('WARNING: Is array:', Array.isArray(data));
           console.warn('WARNING: Length:', data?.length);
@@ -162,7 +172,7 @@ class DatabaseService {
     try {
       const actualTable = this.mapTableName(table);
 
-      // Handle clinic creation specially
+      // Handle project area creation specially (table name 'clinics' retained for DB compatibility)
       if (table === 'clinics') {
         return await this.createClinic(item);
       }
@@ -208,14 +218,23 @@ class DatabaseService {
         'org_id', 'user_id', 'role', 'created_at'
       ],
       'patients': [
-        'id', 'org_id', 'clinic_id', 'owner_user', 'external_id', 'name', 'full_name', 'date_of_birth',
+        // Old table - for backward compatibility
+        'id', 'org_id', 'clinic_id', 'name', 'full_name', 'date_of_birth',
         'gender', 'phone', 'email', 'address', 'medical_history', 'improvement_focus',
         'brain_fitness_score', 'emergency_contact', 'created_at', 'updated_at',
-        'avatar', 'profile_image', 'profileImage', 'avatar_url'
+        'avatar', 'profile_image', 'profileImage', 'avatar_url', 'password'
+      ],
+      'supervisors': [
+        // New table for industrial supervisors
+        'id', 'user_id', 'project_area_id', 'first_name', 'last_name', 'email', 'phone', 'employee_id',
+        'safety_rating', 'clearance_level', 'emergency_contact_name', 'emergency_contact_phone',
+        'department', 'shift_schedule', 'work_location', 'certifications', 'training_expiry_date',
+        'last_safety_training', 'assigned_units', 'specialization', 'notes', 'is_active',
+        'created_at', 'updated_at', 'created_by', 'updated_by'
       ],
       'reports': [
         // Actual schema from 004_simple_clinic_tables.sql:
-        'id', 'clinic_id', 'patient_id', 'file_name', 'file_path',
+        'id', 'clinic_id', 'patient_id', 'supervisor_id', 'file_name', 'file_path',
         'report_data', 'status', 'created_at', 'updated_at'
         // Note: report_type, file_size, etc. should be stored in report_data JSONB
       ],
@@ -230,7 +249,7 @@ class DatabaseService {
         'created_at', 'updated_at'
       ],
       'algorithm_results': [
-        'id', 'patient_id', 'patient_name', 'clinic_id', 'clinic_name', 'results',
+        'id', 'patient_id', 'patient_name', 'supervisor_id', 'supervisor_name', 'clinic_id', 'clinic_name', 'results',
         'eyes_open_file', 'eyes_closed_file', 'processed_at', 'processed_by', 'created_at'
       ]
     };
@@ -404,10 +423,10 @@ class DatabaseService {
     return null;
   }
 
-  // Patient authentication
+  // Supervisor authentication
   async createPatientAuth(email, password, metadata = {}) {
     try {
-      console.log('AUTH: Creating patient authentication account:', email);
+      console.log('AUTH: Creating supervisor authentication account:', email);
 
       // Use Supabase Auth to create user
       const { data, error } = await this.supabaseService.supabase.auth.signUp({
@@ -416,7 +435,7 @@ class DatabaseService {
         options: {
           data: {
             ...metadata,
-            role: 'patient',
+            role: 'supervisor',
             created_by: 'clinic_admin'
           }
         }
@@ -427,7 +446,7 @@ class DatabaseService {
         throw error;
       }
 
-      console.log('SUCCESS: Patient auth account created successfully:', data.user?.id);
+      console.log('SUCCESS: Supervisor auth account created successfully:', data.user?.id);
 
       // Also create profile record in profiles table
       if (data.user) {
@@ -436,11 +455,11 @@ class DatabaseService {
             .from('profiles')
             .insert({
               id: data.user.id,
-              role: 'patient',
+              role: 'supervisor',
               full_name: metadata.full_name || '',
               created_at: new Date().toISOString()
             });
-          console.log('SUCCESS: Patient profile created');
+          console.log('SUCCESS: Supervisor profile created');
         } catch (profileError) {
           console.error('WARNING: Profile creation failed (continuing anyway):', profileError);
         }
@@ -448,17 +467,17 @@ class DatabaseService {
 
       return data;
     } catch (error) {
-      console.error('ERROR: Failed to create patient auth:', error);
+      console.error('ERROR: Failed to create supervisor auth:', error);
       throw error;
     }
   }
 
-  // Clinic specific methods
+  // Project area specific methods (database table 'clinics' retained for compatibility)
   async createClinic(clinicData) {
     try {
-      console.log('CLINIC: Creating clinic with data:', clinicData);
+      console.log('PROJECT_AREA: Creating project area with data:', clinicData);
 
-      // Create clinic record matching the exact schema
+      // Create project area record matching the exact schema
       // Preserve the data passed from authService (including pending approval status)
       const clinicRecord = {
         name: clinicData.name || clinicData.clinicName,
@@ -482,9 +501,9 @@ class DatabaseService {
         clinicRecord.id = clinicData.id;
       }
 
-      console.log('INFO: Clinic data to create:', clinicRecord);
+      console.log('INFO: Project area data to create:', clinicRecord);
 
-      // Use direct Supabase insert to clinics table
+      // Use direct Supabase insert to clinics table (table name retained for DB compatibility)
       const { data: clinic, error } = await this.supabaseService.supabase
         .from('clinics')
         .insert(clinicRecord)
@@ -496,7 +515,7 @@ class DatabaseService {
         throw error;
       }
 
-      console.log('SUCCESS: Clinic created:', clinic);
+      console.log('SUCCESS: Project area created:', clinic);
 
       // Return in camelCase format for consistency
       return {
@@ -520,7 +539,7 @@ class DatabaseService {
       };
 
     } catch (error) {
-      console.error('ERROR: Failed to create clinic:', error);
+      console.error('ERROR: Failed to create project area:', error);
       throw error;
     }
   }
@@ -540,16 +559,17 @@ class DatabaseService {
     };
   }
 
-  // Patient specific methods
-  async getPatientsByClinic(clinicId) {
-    return await this.findBy('patients', 'org_id', clinicId);
+  // Patient/Supervisor specific methods (using old 'patients' table for backward compatibility)
+  async getSupervisorsByClinic(clinicId) {
+    // Use old 'patients' table which maps to clinic_id
+    return await this.findBy('patients', 'clinic_id', clinicId);
   }
 
   // Reports specific methods
   async getReportsByClinic(clinicId) {
     try {
       if (!clinicId) {
-        console.warn('WARNING: getReportsByClinic: No clinicId provided');
+        console.warn('WARNING: getReportsByClinic: No project area ID provided');
         return [];
       }
 
@@ -567,14 +587,14 @@ class DatabaseService {
           return [];
         }
 
-        // Filter reports that belong to this clinic (check multiple field names)
+        // Filter reports that belong to this project area (check multiple field names)
         const clinicReports = (allReports || []).filter(report => {
           return report.clinic_id === clinicId ||
                  report.clinicId === clinicId ||
                  report.org_id === clinicId;
         });
 
-        console.log(`INFO: Found ${clinicReports.length} reports for clinic ${clinicId} (from ${allReports?.length || 0} total reports)`);
+        console.log(`INFO: Found ${clinicReports.length} reports for project area ${clinicId} (from ${allReports?.length || 0} total reports)`);
 
         // Fix old reports by updating them with clinic_id field if missing
         for (const report of clinicReports) {
@@ -595,7 +615,7 @@ class DatabaseService {
             console.log(`  FILE: Report file_path:`, report.file_path);
             console.log(`  FILE: Report report_data:`, report.report_data);
 
-            // Check if report_data has patient info
+            // Check if report_data has supervisor info
             if (report.report_data && typeof report.report_data === 'object') {
               const patientIdFromData = report.report_data.patientId || report.report_data.patient_id;
               if (patientIdFromData) {
@@ -649,11 +669,11 @@ class DatabaseService {
 
         return clinicReports.map(item => this.convertToCamelCase(item));
       } catch (error) {
-        console.error(`ERROR: Error getting reports for clinic ${clinicId}:`, error);
+        console.error(`ERROR: Error getting reports for project area ${clinicId}:`, error);
         return [];
       }
     } catch (error) {
-      console.error(`ERROR: Outer error getting reports for clinic ${clinicId}:`, error);
+      console.error(`ERROR: Outer error getting reports for project area ${clinicId}:`, error);
       return [];
     }
   }
@@ -661,10 +681,11 @@ class DatabaseService {
   async getReportsByPatient(patientId) {
     try {
       if (!patientId) {
-        console.warn('WARNING: getReportsByPatient: No patientId provided');
+        console.warn('WARNING: getReportsByPatient: No patient ID provided');
         return [];
       }
 
+      // Use patient_id field (old schema) for backward compatibility
       const reports = await this.findBy('reports', 'patient_id', patientId);
       console.log(`INFO: Found ${reports?.length || 0} reports for patient ${patientId}`);
       return reports || [];
@@ -677,10 +698,10 @@ class DatabaseService {
   async addReport(reportData) {
     const report = await this.add('reports', reportData);
 
-    // Get clinic ID from reportData (could be clinicId, orgId, or org_id)
+    // Get project area ID from reportData (could be clinicId, orgId, or org_id)
     const clinicId = reportData.clinicId || reportData.orgId || reportData.org_id;
 
-    // Update clinic usage
+    // Update project area usage
     if (clinicId) {
       try {
         const clinic = await this.findById('clinics', clinicId);
@@ -688,10 +709,10 @@ class DatabaseService {
           await this.update('clinics', clinic.id, {
             reportsUsed: (clinic.reportsUsed || 0) + 1
           });
-          console.log('SUCCESS: Updated clinic reports usage count');
+          console.log('SUCCESS: Updated project area reports usage count');
         }
       } catch (updateError) {
-        console.warn('WARNING: Could not update clinic usage:', updateError);
+        console.warn('WARNING: Could not update project area usage:', updateError);
         // Continue anyway - report was created successfully
       }
     }
@@ -707,7 +728,7 @@ class DatabaseService {
   async getAnalytics() {
     const clinics = await this.get('clinics');
     const reports = await this.get('reports');
-    const patients = await this.get('patients');
+    const patients = await this.get('patients'); // Use old table for backward compatibility
 
     const activeClinicCount = clinics.filter(c => c.isActive || c.is_active).length;
     const totalReportsCount = reports.length;
@@ -722,9 +743,9 @@ class DatabaseService {
     const usage = await this.get('usage');
 
     return {
-      activeClinics: activeClinicCount,
+      activeClinics: activeClinicCount,  // Clinics count
       totalReports: totalReportsCount,
-      totalPatients: totalPatientsCount,
+      totalPatients: totalPatientsCount,  // Patients count
       monthlyRevenue: totalRevenue,
       recentActivity: usage.slice(-10).reverse()
     };
@@ -748,9 +769,9 @@ class DatabaseService {
         const now = new Date();
 
         if (now > trialEndDate) {
-          console.log(`TIMER: Trial expired for clinic ${clinicId}`);
+          console.log(`TIMER: Trial expired for project area ${clinicId}`);
 
-          // Update clinic status
+          // Update project area status
           await this.update('clinics', clinicId, {
             subscriptionStatus: 'expired',
             isActive: false

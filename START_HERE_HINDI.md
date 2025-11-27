@@ -2,7 +2,7 @@
 
 ## ✅ क्या है?
 
-**एक bucket** में 50MB तक की EEG/qEEG files (.edf, .eeg, .bdf) store करने के लिए setup
+**एक bucket** में 50MB तक की EEG/P&ID files (.edf, .eeg, .bdf) store करने के लिए setup
 
 ---
 
@@ -16,7 +16,7 @@
 
 ```
 1. https://supabase.com खोलें
-2. Login → Neuro360 project
+2. Login → AIMS project
 3. Storage → Create bucket
 4. Name: patient-reports
 5. Private: ✓ YES

@@ -104,7 +104,7 @@ const immediateReport = {
   status: 'processing',
   report_data: {  // ← Store all extras here
     title: edfFile.name,
-    type: 'EEG/qEEG Analysis',
+    type: 'EEG/P&ID Analysis',
     patient_name: patientInfo.name,
     workflow_id: workflowId,
     processing_status: 'uploaded',
@@ -126,8 +126,8 @@ await DatabaseService.update('reports', reportId, {
   status: 'processing',
   report_data: {
     ...currentReport.report_data,  // Keep existing data
-    processing_status: 'qeeg_processing',
-    processing_step: 'qEEG Pro analysis in progress',
+    processing_status: 'pid_processing',
+    processing_step: 'P&ID Pro analysis in progress',
     progress: 40
   },
   updated_at: new Date().toISOString()
@@ -142,8 +142,8 @@ await DatabaseService.update('reports', reportId, {
   status: 'completed',
   report_data: {
     ...currentReport.report_data,
-    qeeg_report: workflow.results.qeegProcessing?.report,
-    neurosense_analysis: workflow.results.neuroSenseAnalysis,
+    pid_report: workflow.results.qeegProcessing?.report,
+    aims_analysis: workflow.results.neuroSenseAnalysis,
     care_plan: workflow.results.carePlanGeneration?.carePlan,
     processing_status: 'completed',
     progress: 100,
@@ -190,7 +190,7 @@ file_path: clinic-id/patient-id/2025-01-...edf
 status: processing
 report_data: {
   "title": "sample",
-  "type": "EEG/qEEG Analysis",
+  "type": "EEG/P&ID Analysis",
   "progress": 20,
   "processing_step": "File uploaded - Analysis in progress",
   ...
@@ -212,8 +212,8 @@ updated_at: 2025-11-05T10:23:18Z
    - Progress: 20% ✅
 
 2. **Progress Updates (throughout workflow):**
-   - qEEG: 40% → 60%
-   - NeuroSense: 70% → 85%
+   - P&ID: 40% → 60%
+   - AIMS: 70% → 85%
    - Care Plan: 90%
    - Complete: 100%
 

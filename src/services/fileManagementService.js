@@ -39,7 +39,7 @@ class FileManagementService {
 
       return data || [];
     } catch (error) {
-      console.error('Error fetching patient files:', error);
+      console.error('Error fetching supervisor files:', error);
       return this.getMockPatientFiles(patientId);
     }
   }
@@ -81,7 +81,7 @@ class FileManagementService {
    */
   async downloadReport(reportId, patientId, type = 'pdf') {
     try {
-      console.log(`FILE: Generating ${type.toUpperCase()} report for patient ${patientId}`);
+      console.log(`FILE: Generating ${type.toUpperCase()} report for supervisor ${patientId}`);
 
       const reportData = await this.generateReportData(reportId, patientId);
       const branding = await brandingService.getClinicBranding(reportData.clinicId);
@@ -123,17 +123,17 @@ class FileManagementService {
   }
 
   /**
-   * Generate QEEG report data
+   * Generate P&ID report data
    */
-  async generateQEEGReport(patientId, sessionId = null) {
+  async generatePIDReport(patientId, sessionId = null) {
     try {
       const reportData = {
-        id: `qeeg-${Date.now()}`,
-        type: 'QEEG Analysis',
+        id: `pid-${Date.now()}`,
+        type: 'P&ID Analysis',
         patient: await this.getPatientData(patientId),
         session: sessionId ? await this.getSessionData(sessionId) : null,
-        metrics: await this.generateQEEGMetrics(patientId),
-        analysis: await this.generateQEEGAnalysis(patientId),
+        metrics: await this.generatePIDMetrics(patientId),
+        analysis: await this.generatePIDAnalysis(patientId),
         recommendations: await this.generateRecommendations(patientId),
         generatedAt: new Date().toISOString(),
         clinicId: (await this.getPatientData(patientId)).clinicId
@@ -141,8 +141,8 @@ class FileManagementService {
 
       return reportData;
     } catch (error) {
-      console.error('Error generating QEEG report:', error);
-      return this.getMockQEEGReport(patientId);
+      console.error('Error generating P&ID report:', error);
+      return this.getMockPIDReport(patientId);
     }
   }
 
@@ -151,7 +151,7 @@ class FileManagementService {
    */
   async generateCarePlan(patientId) {
     try {
-      const patient = await this.getPatientData(patientId);
+      const supervisor = await this.getPatientData(patientId);
       const sessions = await this.getPatientSessions(patientId);
       const assessments = await this.getPatientAssessments(patientId);
 
@@ -256,8 +256,8 @@ class FileManagementService {
           ${this.generateReportContent(reportData)}
 
           <!-- Required Attribution -->
-          <div class="neurosense-attribution">
-            <span>${branding?.poweredByText || 'Powered by NeuroSense360'}</span>
+          <div class="aims-attribution">
+            <span>${branding?.poweredByText || 'Powered by AIMS'}</span>
           </div>
         </body>
       </html>
@@ -271,8 +271,8 @@ class FileManagementService {
    */
   generateReportContent(reportData) {
     switch (reportData.type) {
-      case 'QEEG Analysis':
-        return this.generateQEEGContent(reportData);
+      case 'P&ID Analysis':
+        return this.generatePIDContent(reportData);
       case 'Personalized Care Plan':
         return this.generateCarePlanContent(reportData);
       default:
@@ -280,7 +280,7 @@ class FileManagementService {
     }
   }
 
-  generateQEEGContent(reportData) {
+  generatePIDContent(reportData) {
     return `
       <div class="section">
         <h2> Brain Activity Metrics</h2>
@@ -351,7 +351,7 @@ class FileManagementService {
     // This would fetch real report data
     return {
       id: reportId,
-      type: 'QEEG Analysis',
+      type: 'P&ID Analysis',
       patient: { name: 'John Doe', id: patientId },
       date: new Date().toISOString().split('T')[0],
       clinicId: 'clinic-1'
@@ -359,7 +359,7 @@ class FileManagementService {
   }
 
   async getPatientData(patientId) {
-    // Mock patient data
+    // Mock supervisor data
     return {
       id: patientId,
       name: 'John Doe',
@@ -374,7 +374,7 @@ class FileManagementService {
     return [
       {
         id: `file-${patientId}-1`,
-        name: 'QEEG Analysis Report.pdf',
+        name: 'P&ID Analysis Report.pdf',
         type: 'report',
         size: 2456789,
         created_at: '2024-09-15T10:30:00Z',
@@ -404,10 +404,10 @@ class FileManagementService {
     ];
   }
 
-  getMockQEEGReport(patientId) {
+  getMockPIDReport(patientId) {
     return {
-      id: `qeeg-mock-${patientId}`,
-      type: 'QEEG Analysis',
+      id: `pid-mock-${patientId}`,
+      type: 'P&ID Analysis',
       patient: { name: 'Mock Patient', id: patientId },
       metrics: [
         { label: 'Alpha Waves', value: '8.2 Hz' },

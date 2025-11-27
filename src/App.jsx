@@ -16,7 +16,7 @@ import LBWCoaching from './pages/LBWCoaching.jsx';
 import LBWMainLanding from './pages/LBWMainLanding.jsx';
 import LBWDashboard from './pages/LBWDashboard.jsx';
 import LBWProgress from './pages/LBWProgress.jsx';
-import LBWQEEG from './pages/LBWQEEG.jsx';
+import LBWPID from './pages/LBWPID.jsx';
 import LBWContent from './pages/LBWContent.jsx';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
@@ -25,21 +25,21 @@ import ResetPasswordForm from './components/auth/ResetPasswordForm';
 import ActivationPending from './components/auth/ActivationPending';
 
 import SuperAdminPanel from './components/admin/SuperAdminPanel';
-import ClinicDashboard from './components/clinic/ClinicDashboard';
-import SubscriptionManager from './components/clinic/SubscriptionManager';
-import PatientDashboard from './components/patient/PatientDashboard';
+import EngineerDashboard from './components/engineer/EngineerDashboard';
+import SubscriptionManager from './components/engineer/SubscriptionManager';
+import SupervisorDashboard from './components/supervisor/SupervisorDashboard';
 import DashboardRouter from './components/DashboardRouter';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevelopmentModeHelper from './components/auth/DevelopmentModeHelper';
 
 
 function App() {
-  console.log('START: App component loading...');
+  console.log('START: AIMS App component loading...');
 
   // Test Supabase connection on app startup
   useEffect(() => {
     const runConnectionTest = async () => {
-      console.log('START: Neuro360 Multi-Auth System Starting...');
+      console.log('START: AIMS (Asset Information Management System) Starting...');
       await testSupabaseConnection();
     };
 
@@ -112,7 +112,7 @@ function App() {
             <Route path="/coaching" element={<LBWCoaching />} />
             <Route path="/lbw/dashboard" element={<LBWDashboard />} />
             <Route path="/lbw/progress" element={<LBWProgress />} />
-            <Route path="/lbw/qeeg" element={<LBWQEEG />} />
+            <Route path="/lbw/pid" element={<LBWPID />} />
             <Route path="/lbw/content" element={<LBWContent />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
@@ -188,12 +188,12 @@ function App() {
               }
             />
 
-            {/* Clinic Routes */}
+            {/* Engineer Routes (formerly Clinic Routes) */}
             <Route
               path="/clinic"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <ClinicDashboard />
+                  <EngineerDashboard />
                 </ProtectedRoute>
               }
             />
@@ -201,7 +201,7 @@ function App() {
               path="/clinic/patients"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <ClinicDashboard />
+                  <EngineerDashboard />
                 </ProtectedRoute>
               }
             />
@@ -209,7 +209,7 @@ function App() {
               path="/clinic/reports"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <ClinicDashboard />
+                  <EngineerDashboard />
                 </ProtectedRoute>
               }
             />
@@ -217,7 +217,7 @@ function App() {
               path="/clinic/subscription"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <ClinicDashboard />
+                  <EngineerDashboard />
                 </ProtectedRoute>
               }
             />
@@ -225,17 +225,17 @@ function App() {
               path="/clinic/usage"
               element={
                 <ProtectedRoute requiredRole="clinic_admin">
-                  <ClinicDashboard />
+                  <EngineerDashboard />
                 </ProtectedRoute>
               }
             />
 
-            {/* Patient Routes */}
+            {/* Supervisor Routes (formerly Patient Routes) */}
             <Route
               path="/patient"
               element={
                 <ProtectedRoute requiredRole="patient">
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -244,7 +244,7 @@ function App() {
               path="/patient-dashboard"
               element={
                 <ProtectedRoute requiredRole="patient">
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -262,7 +262,7 @@ function App() {
               path="/dashboard/profile"
               element={
                 <ProtectedRoute>
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -270,7 +270,7 @@ function App() {
               path="/dashboard/activity"
               element={
                 <ProtectedRoute>
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -278,7 +278,7 @@ function App() {
               path="/dashboard/notifications"
               element={
                 <ProtectedRoute>
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -286,7 +286,7 @@ function App() {
               path="/dashboard/settings"
               element={
                 <ProtectedRoute>
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -294,7 +294,7 @@ function App() {
               path="/dashboard/reports"
               element={
                 <ProtectedRoute requiredRole="patient">
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -302,7 +302,7 @@ function App() {
               path="/dashboard/resources"
               element={
                 <ProtectedRoute requiredRole="patient">
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />
@@ -310,7 +310,7 @@ function App() {
               path="/dashboard/journey"
               element={
                 <ProtectedRoute requiredRole="patient">
-                  <PatientDashboard />
+                  <SupervisorDashboard />
                 </ProtectedRoute>
               }
             />

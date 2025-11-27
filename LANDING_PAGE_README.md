@@ -1,4 +1,4 @@
-# 🧠 Neuro360 - World-Class Landing Page
+# 🧠 AIMS - World-Class Landing Page
 
 ## The Ultimate Myndlift-Inspired Health & Wellness Landing Page
 
@@ -118,7 +118,7 @@ npm run preview
 ## 📁 File Structure
 
 ```
-Neuro360/
+AIMS/
 ├── src/
 │   ├── components/
 │   │   └── LandingPage.jsx (1,640+ lines)
@@ -620,7 +620,7 @@ For questions or customization help:
 
 **Built with:** React, Vite, Tailwind CSS, Lucide Icons
 **Inspired by:** Myndlift.com
-**Created for:** Neuro360 Health & Wellness Platform
+**Created for:** AIMS Health & Wellness Platform
 **Version:** 3.0 Final
 **Status:** ✅ Production Ready
 

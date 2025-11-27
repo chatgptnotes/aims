@@ -52,11 +52,11 @@ const Technicians = () => {
       <main className="flex-grow py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Why NeuroSense Section */}
+          {/* Why AIMS Section */}
           <div className="mb-20">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Why NeuroSense for Technicians
+                Why AIMS for Technicians
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 Everything you need to deliver professional neurofeedback services
@@ -250,7 +250,7 @@ const Technicians = () => {
               </h2>
 
               <p className="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
-                Join the network of professional neurofeedback technicians using NeuroSense
+                Join the network of professional neurofeedback technicians using AIMS
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

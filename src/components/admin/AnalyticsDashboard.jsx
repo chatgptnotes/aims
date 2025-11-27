@@ -128,7 +128,7 @@ const AnalyticsDashboard = ({ analytics }) => {
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `neuro360-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `aims-analytics-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };

@@ -20,7 +20,7 @@ class BookingService {
     // Appointment types and durations
     this.appointmentTypes = {
       'initial-assessment': {
-        name: 'Initial QEEG Assessment',
+        name: 'Initial P&ID Assessment',
         duration: 60,
         description: 'Comprehensive baseline brain assessment',
         price: 150
@@ -43,8 +43,8 @@ class BookingService {
         description: 'Discussion of results and treatment plan',
         price: 75
       },
-      'qeeg-analysis': {
-        name: 'QEEG Analysis Review',
+      'pid-analysis': {
+        name: 'P&ID Analysis Review',
         duration: 45,
         description: 'Detailed review of brain analysis results',
         price: 120
@@ -169,7 +169,7 @@ class BookingService {
   }
 
   /**
-   * Get patient appointments
+   * Get supervisor appointments
    */
   async getPatientAppointments(patientId, limit = 10) {
     try {
@@ -202,7 +202,7 @@ class BookingService {
       }));
 
     } catch (error) {
-      console.error('ERROR: Failed to get patient appointments:', error);
+      console.error('ERROR: Failed to get supervisor appointments:', error);
       return this.getMockPatientAppointments(patientId);
     }
   }
@@ -481,7 +481,7 @@ class BookingService {
       {
         id: 1,
         appointment_type: 'follow-up',
-        type: 'Follow-up QEEG Session',
+        type: 'Follow-up P&ID Session',
         appointment_date: '2024-10-15',
         start_time: '10:00',
         end_time: '10:45',
@@ -518,7 +518,7 @@ class BookingService {
       {
         id: 1,
         appointment_type: 'initial-assessment',
-        type: 'Initial QEEG Assessment',
+        type: 'Initial P&ID Assessment',
         appointment_date: date,
         start_time: '10:00',
         end_time: '11:00',

@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 
 class StorageService {
   constructor() {
-    this.reportsBucket = 'patient-reports';
+    this.reportsBucket = 'supervisor-reports';
     this.avatarsBucket = 'profile_image'; // Changed to match your Supabase bucket name
     this.initialized = false;
     this.checkBucketAvailability();
@@ -47,7 +47,7 @@ class StorageService {
       // Validate file
       this.validateFile(file);
 
-      // Extract clinic and patient info from metadata
+      // Extract clinic and supervisor info from metadata
       const clinicId = metadata.clinicId || metadata.clinic_id || 'unknown-clinic';
       const patientId = metadata.patientId || metadata.patient_id || 'unknown-patient';
 
@@ -56,7 +56,7 @@ class StorageService {
       const uniqueFileName = `${timestamp}_${fileName}`;
       const filePath = `${clinicId}/${patientId}/${uniqueFileName}`;
 
-      // Determine content type for EEG/qEEG files
+      // Determine content type for EEG/P&ID files
       let contentType = file.type;
       if (!contentType || contentType === '') {
         // EDF/EEG/BDF files often don't have a MIME type, use generic binary
@@ -223,7 +223,7 @@ class StorageService {
       const folder = `${clinicId}/${patientId}`;
       return await this.listFiles(folder, options);
     } catch (error) {
-      console.error(`Error listing files for patient ${patientId}:`, error);
+      console.error(`Error listing files for supervisor ${patientId}:`, error);
       throw error;
     }
   }
@@ -232,7 +232,7 @@ class StorageService {
    * Validate file before upload
    */
   validateFile(file) {
-    const maxSize = 50 * 1024 * 1024; // 50MB for EEG/qEEG files
+    const maxSize = 50 * 1024 * 1024; // 50MB for EEG/P&ID files
     const allowedTypes = [
       'application/edf',
       'application/octet-stream', // EDF/EEG/BDF files often have this MIME type
@@ -251,7 +251,7 @@ class StorageService {
     // Validation: Check file extension for medical report formats
     const fileName = file.name.toLowerCase();
     const validExtensions = [
-      '.edf', '.eeg', '.bdf',          // EEG/qEEG formats
+      '.edf', '.eeg', '.bdf',          // EEG/P&ID formats
       '.pdf',                           // PDF documents
       '.jpg', '.jpeg', '.png',          // Images
       '.doc', '.docx',                  // Word documents

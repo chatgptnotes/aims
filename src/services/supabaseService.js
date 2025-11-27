@@ -17,11 +17,11 @@ if (hasValidSupabaseConfig) {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: 'neuro360-auth',
+      storageKey: 'aims-auth',
     },
     global: {
       headers: {
-        'x-application-name': 'neuro360-web',
+        'x-application-name': 'aims-web',
         'Authorization': `Bearer ${supabaseAnonKey}`,
       },
     },
@@ -470,8 +470,8 @@ class SupabaseService {
     };
   }
 
-  // Patient specific methods
-  async getPatientsByClinic(clinicId) {
+  // Supervisor specific methods
+  async getSupervisorsByClinic(clinicId) {
     return await this.findBy('patients', 'org_id', clinicId);
   }
 

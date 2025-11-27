@@ -125,7 +125,7 @@ export default function CoachingPage() {
               <div className="w-16 h-16 bg-wellness-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-wellness-600 text-2xl"></span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">qEEG Consultation</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">P&ID Consultation</h3>
               <p className="text-gray-700 dark:text-gray-200 text-base mb-4 font-medium leading-6">
                 Brain mapping analysis and neurofeedback treatment planning.
               </p>
@@ -135,7 +135,7 @@ export default function CoachingPage() {
                 variant="wellness"
                 className="w-full"
               >
-                Find qEEG Experts
+                Find P&ID Experts
               </Button>
             </Card>
           </div>

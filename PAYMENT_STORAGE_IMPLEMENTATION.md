@@ -1,7 +1,7 @@
 # Payment Storage Implementation Guide
 
 ## Overview
-This document explains the implementation of payment data storage for Razorpay transactions in the NeuroSense360 system. After a successful payment, all transaction details are now saved to the database for complete record-keeping and audit trails.
+This document explains the implementation of payment data storage for Razorpay transactions in the AIMS system. After a successful payment, all transaction details are now saved to the database for complete record-keeping and audit trails.
 
 ## What Was Implemented
 
@@ -147,7 +147,7 @@ AND column_name IN ('package_name', 'payment_method', 'reports_allowed');
 ```json
 {
   "payment_id": "pay_xxxxxxxxxxxxx",
-  "order_id": "neuro360_1699999999999_abc123",
+  "order_id": "aims_1699999999999_abc123",
   "clinic_id": "uuid-of-clinic",
   "amount": 1999.00,
   "currency": "INR",

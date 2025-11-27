@@ -18,10 +18,18 @@ import DatabaseService from '../../services/databaseService';
 
 const AdminDashboard = ({ analytics = {}, onRefresh }) => {
   const navigate = useNavigate();
-  const [realTimeData, setRealTimeData] = useState({});
-  const [allClinics, setAllClinics] = useState([]);
+  const [realTimeData, setRealTimeData] = useState({
+    totalProjectAreas: 0,
+    totalSupervisors: 0,
+    totalReports: 0,
+    monthlyRevenue: 0,
+    pendingActivations: 0
+  });
+  const [allProjectAreas, setAllProjectAreas] = useState([]);
   const [allReports, setAllReports] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadRealTimeData();
@@ -29,68 +37,134 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
 
   const loadRealTimeData = async () => {
     try {
+      setLoading(true);
+      setError(null);
       console.log('SUPERADMIN: SuperAdmin loading all system data...');
-      
+
       // Get all data from DatabaseService - SuperAdmin can see everything
-      const clinics = await DatabaseService.get('clinics');
-      const patients = await DatabaseService.get('patients');
-      const reports = await DatabaseService.get('reports');
-      const payments = await DatabaseService.get('payments');
-      const superAdmins = await DatabaseService.get('superAdmins');
+      // Use 'clinics' instead of 'project_areas' as that's the actual table name
+      let projectAreas = [];
+      let supervisors = [];
+      let reports = [];
+      let payments = [];
+      let superAdmins = [];
+
+      try {
+        projectAreas = await DatabaseService.get('clinics') || [];
+        console.log('SUCCESS: Loaded project areas (clinics):', projectAreas.length);
+      } catch (err) {
+        console.warn('WARNING: Failed to load project areas:', err.message);
+        projectAreas = [];
+      }
+
+      try {
+        // Try both 'patients' (old table) and 'supervisors' (new table)
+        supervisors = await DatabaseService.get('patients') || [];
+        console.log('SUCCESS: Loaded supervisors (patients):', supervisors.length);
+      } catch (err) {
+        console.warn('WARNING: Failed to load supervisors:', err.message);
+        supervisors = [];
+      }
+
+      try {
+        reports = await DatabaseService.get('reports') || [];
+        console.log('SUCCESS: Loaded reports:', reports.length);
+      } catch (err) {
+        console.warn('WARNING: Failed to load reports:', err.message);
+        reports = [];
+      }
+
+      try {
+        payments = await DatabaseService.get('payments') || [];
+        console.log('SUCCESS: Loaded payments:', payments.length);
+      } catch (err) {
+        console.warn('WARNING: Failed to load payments:', err.message);
+        payments = [];
+      }
+
+      try {
+        superAdmins = await DatabaseService.get('superAdmins') || [];
+        console.log('SUCCESS: Loaded super admins:', superAdmins.length);
+      } catch (err) {
+        console.warn('WARNING: Failed to load super admins:', err.message);
+        superAdmins = [];
+      }
 
       console.log('DATA: SuperAdmin system overview:', {
-        clinics: clinics.length,
-        patients: patients.length,
+        projectAreas: projectAreas.length,
+        supervisors: supervisors.length,
         reports: reports.length,
         payments: payments.length,
         superAdmins: superAdmins.length
       });
 
-      setAllClinics(clinics);
-      setAllReports(reports);
-      setAllPayments(payments);
+      setAllProjectAreas(Array.isArray(projectAreas) ? projectAreas : []);
+      setAllReports(Array.isArray(reports) ? reports : []);
+      setAllPayments(Array.isArray(payments) ? payments : []);
 
-      // Calculate real-time analytics
-      const activeClinicCount = clinics.filter(c => c.isActive).length;
-      const totalPatientsCount = patients.length;
-      const totalReportsCount = reports.length;
-      const totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      // Calculate real-time analytics with safe array operations
+      const activeProjectAreaCount = Array.isArray(projectAreas)
+        ? projectAreas.filter(pa => pa?.isActive !== false || pa?.is_active !== false).length
+        : 0;
+      const totalSupervisorsCount = Array.isArray(supervisors) ? supervisors.length : 0;
+      const totalReportsCount = Array.isArray(reports) ? reports.length : 0;
+      const totalRevenue = Array.isArray(payments)
+        ? payments.reduce((sum, payment) => sum + (payment?.amount || 0), 0)
+        : 0;
+      const pendingActivationCount = Array.isArray(superAdmins)
+        ? superAdmins.filter(sa => !sa?.isActivated && sa?.isActive !== false).length
+        : 0;
 
       setRealTimeData({
-        totalClinics: activeClinicCount,
-        totalPatients: totalPatientsCount,
+        totalProjectAreas: activeProjectAreaCount,
+        totalSupervisors: totalSupervisorsCount,
         totalReports: totalReportsCount,
         monthlyRevenue: totalRevenue,
-        pendingActivations: superAdmins.filter(sa => !sa.isActivated).length
+        pendingActivations: pendingActivationCount
       });
 
     } catch (error) {
-      console.error('Error loading real-time data:', error);
+      console.error('ERROR: Critical error loading dashboard data:', error);
+      setError('Failed to load dashboard data. Please check your database connection.');
+
+      // Set safe defaults to prevent crashes
+      setAllProjectAreas([]);
+      setAllReports([]);
+      setAllPayments([]);
+      setRealTimeData({
+        totalProjectAreas: 0,
+        totalSupervisors: 0,
+        totalReports: 0,
+        monthlyRevenue: 0,
+        pendingActivations: 0
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const stats = [
     {
-      name: 'Active Clinics',
-      value: realTimeData.totalClinics || 0,
+      name: 'Active Project Areas',
+      value: realTimeData?.totalProjectAreas || 0,
       change: '+4.75%',
       changeType: 'increase',
       icon: Building2,
       color: 'blue',
-      subtitle: `${allClinics.length} total registered`
+      subtitle: `${allProjectAreas?.length || 0} total registered`
     },
     {
-      name: 'Total Patients',
-      value: realTimeData.totalPatients || 0,
+      name: 'Total Supervisors',
+      value: realTimeData?.totalSupervisors || 0,
       change: '+54.02%',
       changeType: 'increase',
       icon: Users,
       color: 'green',
-      subtitle: 'Across all clinics'
+      subtitle: 'Across all project areas'
     },
     {
-      name: 'Reports Generated',
-      value: realTimeData.totalReports || 0,
+      name: 'P&ID Reports Generated',
+      value: realTimeData?.totalReports || 0,
       change: '+12.35%',
       changeType: 'increase',
       icon: FileText,
@@ -99,7 +173,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
     },
     {
       name: 'Total Revenue',
-      value: `₹${realTimeData.monthlyRevenue || 0}`,
+      value: `₹${realTimeData?.monthlyRevenue || 0}`,
       change: '+8.12%',
       changeType: 'increase',
       icon: DollarSign,
@@ -109,7 +183,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
   ];
 
   // Add pending activations if any
-  if (realTimeData.pendingActivations > 0) {
+  if (realTimeData?.pendingActivations > 0) {
     stats.unshift({
       name: 'Pending Activations',
       value: realTimeData.pendingActivations,
@@ -123,59 +197,94 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
 
   // Generate real-time activities from actual data
   const generateRecentActivities = () => {
-    const activities = [];
-    
-    // Recent clinics
-    const recentClinics = allClinics
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 3);
-    
-    recentClinics.forEach((clinic, index) => {
-      activities.push({
-        id: `clinic-${clinic.id}`,
-        type: 'clinic',
-        message: `New clinic "${clinic.name}" registered`,
-        time: `${index + 1} ${index === 0 ? 'hour' : 'hours'} ago`,
-        icon: Building2,
-        color: 'blue'
-      });
-    });
+    try {
+      const activities = [];
 
-    // Recent reports
-    const recentReports = allReports
-      .sort((a, b) => new Date(b.createdAt || b.uploadedAt) - new Date(a.createdAt || a.uploadedAt))
-      .slice(0, 2);
-    
-    recentReports.forEach((report, index) => {
-      const clinic = allClinics.find(c => c.id === report.clinicId);
-      activities.push({
-        id: `report-${report.id}`,
-        type: 'report',
-        message: `New report uploaded by ${clinic ? clinic.name : 'Unknown Clinic'}`,
-        time: `${index + 2} hours ago`,
-        icon: FileText,
-        color: 'green'
-      });
-    });
+      // Ensure all data is valid arrays
+      const safeProjectAreas = Array.isArray(allProjectAreas) ? allProjectAreas : [];
+      const safeReports = Array.isArray(allReports) ? allReports : [];
+      const safePayments = Array.isArray(allPayments) ? allPayments : [];
 
-    // Recent payments
-    const recentPayments = allPayments
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 2);
-    
-    recentPayments.forEach((payment, index) => {
-      const clinic = allClinics.find(c => c.id === payment.clinicId);
-      activities.push({
-        id: `payment-${payment.id}`,
-        type: 'payment',
-        message: `Payment of ₹${payment.amount} received from ${clinic ? clinic.name : 'Unknown Clinic'}`,
-        time: `${index + 3} hours ago`,
-        icon: DollarSign,
-        color: 'purple'
-      });
-    });
+      // Recent project areas
+      const recentProjectAreas = safeProjectAreas
+        .filter(pa => pa && (pa.createdAt || pa.created_at))
+        .sort((a, b) => {
+          const dateA = new Date(a?.createdAt || a?.created_at || 0);
+          const dateB = new Date(b?.createdAt || b?.created_at || 0);
+          return dateB - dateA;
+        })
+        .slice(0, 3);
 
-    return activities.slice(0, 6); // Show only last 6 activities
+      recentProjectAreas.forEach((projectArea, index) => {
+        if (projectArea && projectArea.id) {
+          activities.push({
+            id: `projectArea-${projectArea.id}`,
+            type: 'projectArea',
+            message: `New project area "${projectArea.name || 'Unknown'}" registered`,
+            time: `${index + 1} ${index === 0 ? 'hour' : 'hours'} ago`,
+            icon: Building2,
+            color: 'blue'
+          });
+        }
+      });
+
+      // Recent reports
+      const recentReports = safeReports
+        .filter(r => r && (r.createdAt || r.created_at || r.uploadedAt))
+        .sort((a, b) => {
+          const dateA = new Date(a?.createdAt || a?.created_at || a?.uploadedAt || 0);
+          const dateB = new Date(b?.createdAt || b?.created_at || b?.uploadedAt || 0);
+          return dateB - dateA;
+        })
+        .slice(0, 2);
+
+      recentReports.forEach((report, index) => {
+        if (report && report.id) {
+          const projectArea = safeProjectAreas.find(
+            pa => pa && (pa.id === report.projectAreaId || pa.id === report.clinicId || pa.id === report.clinic_id)
+          );
+          activities.push({
+            id: `report-${report.id}`,
+            type: 'report',
+            message: `New P&ID report uploaded by ${projectArea?.name || 'Unknown Project Area'}`,
+            time: `${index + 2} hours ago`,
+            icon: FileText,
+            color: 'green'
+          });
+        }
+      });
+
+      // Recent payments
+      const recentPayments = safePayments
+        .filter(p => p && (p.createdAt || p.created_at))
+        .sort((a, b) => {
+          const dateA = new Date(a?.createdAt || a?.created_at || 0);
+          const dateB = new Date(b?.createdAt || b?.created_at || 0);
+          return dateB - dateA;
+        })
+        .slice(0, 2);
+
+      recentPayments.forEach((payment, index) => {
+        if (payment && payment.id) {
+          const projectArea = safeProjectAreas.find(
+            pa => pa && (pa.id === payment.projectAreaId || pa.id === payment.clinicId || pa.id === payment.clinic_id)
+          );
+          activities.push({
+            id: `payment-${payment.id}`,
+            type: 'payment',
+            message: `Payment of ₹${payment.amount || 0} received from ${projectArea?.name || 'Unknown Project Area'}`,
+            time: `${index + 3} hours ago`,
+            icon: DollarSign,
+            color: 'purple'
+          });
+        }
+      });
+
+      return activities.slice(0, 6); // Show only last 6 activities
+    } catch (err) {
+      console.error('ERROR: Failed to generate recent activities:', err);
+      return [];
+    }
   };
 
   const recentActivities = generateRecentActivities();
@@ -191,6 +300,37 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
     return colors[color] || 'bg-gray-500';
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <div className="flex items-center space-x-3">
+          <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+          <div>
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">Error Loading Dashboard</h3>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
+            <button
+              onClick={loadRealTimeData}
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Section - Clean Design */}
@@ -201,7 +341,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
               Dashboard Overview
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Healthcare Management Platform
+              Industrial Asset Information Management System
             </p>
           </div>
 
@@ -328,31 +468,41 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activities</h3>
             </div>
-            <button
-              onClick={onRefresh}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-            >
-              View All
-            </button>
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
+                View All
+              </button>
+            )}
           </div>
           <div className="space-y-3">
-            {recentActivities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                  <div className={`p-2 rounded-lg ${getIconColor(activity.color)}`}>
-                    <Icon className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{activity.message}</p>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+            {recentActivities && recentActivities.length > 0 ? (
+              recentActivities.map((activity) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <div className={`p-2 rounded-lg ${getIconColor(activity.color)}`}>
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{activity.message}</p>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No recent activities to display</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Activity will appear here once you start using the system</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -368,7 +518,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-3">
               <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Add Clinic</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Manage Project Areas</span>
           </button>
 
           <button
@@ -378,7 +528,7 @@ const AdminDashboard = ({ analytics = {}, onRefresh }) => {
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-3">
               <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">Upload Report</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white text-center">View P&ID Reports</span>
           </button>
 
           <button

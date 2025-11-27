@@ -106,7 +106,7 @@ const EnquiryForm = ({ isOpen, onClose, initialLocation = '' }) => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Request a Clinic</h2>
-              <p className="text-blue-100 text-sm">We'll notify the NeuroSense team</p>
+              <p className="text-blue-100 text-sm">We'll notify the AIMS team</p>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-# Neuro360 Landing Page - Implementation Guide
+# AIMS Landing Page - Implementation Guide
 
 ## Overview
 Your new Myndlift-inspired landing page is now live and fully functional!
@@ -472,7 +472,7 @@ Update text and links (example at line ~135):
 - Lucide React (icons)
 
 **Design inspired by:** Myndlift.com
-**Created for:** Neuro360 (Health & Wellness Platform)
+**Created for:** AIMS (Health & Wellness Platform)
 
 ---
 

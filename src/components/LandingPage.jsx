@@ -627,7 +627,7 @@ const LandingPage = () => {
               What Our Members Say
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Real stories from real people who transformed their lives with Neuro360
+              Real stories from real people who transformed their lives with AIMS
             </p>
           </div>
 
@@ -693,7 +693,7 @@ const LandingPage = () => {
               </div>
             </div>
             <h3 className="text-2xl font-bold mb-2">Watch More Success Stories</h3>
-            <p className="text-blue-100">See how Neuro360 has transformed lives across the globe</p>
+            <p className="text-blue-100">See how AIMS has transformed lives across the globe</p>
           </div>
         </div>
       </section>
@@ -1274,7 +1274,7 @@ const LandingPage = () => {
 
               <ul className="space-y-4 mb-8">
                 {[
-                  'Unlimited patient accounts',
+                  'Unlimited supervisor accounts',
                   'Multi-practitioner access',
                   'White-label options',
                   'Dedicated account manager',

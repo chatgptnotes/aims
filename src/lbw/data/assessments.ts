@@ -859,14 +859,14 @@ function generateRecommendations(assessmentType: string, category: string): stri
       ],
       moderate: [
         'Work with a brain wellness coach for personalized strategies',
-        'Consider QEEG brain mapping for detailed insights',
+        'Consider P&ID brain mapping for detailed insights',
         'Implement structured daily routines and organization systems',
         'Cognitive training exercises may be beneficial',
         'Consult with a healthcare provider about treatment options'
       ],
       severe: [
         'Professional evaluation by a qualified healthcare provider is recommended',
-        'Consider comprehensive QEEG brain mapping',
+        'Consider comprehensive P&ID brain mapping',
         'Work with specialized ADHD coaches and therapists',
         'Medication evaluation may be appropriate',
         'Implement comprehensive life management strategies'

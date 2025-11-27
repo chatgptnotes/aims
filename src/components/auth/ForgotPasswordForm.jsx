@@ -26,20 +26,51 @@ const ForgotPasswordForm = () => {
 
       console.log('AUTH: Password reset request:', { email: data.email });
 
-      // Step 1: Find clinic by email
-      const clinics = await DatabaseService.get('clinics') || [];
-      const clinic = clinics.find(c => c.email === data.email.trim().toLowerCase());
+      const emailLower = data.email.trim().toLowerCase();
 
-      if (!clinic) {
+      // Step 1: Find user by email - check all user tables
+      let userRecord = null;
+      let userTable = null;
+
+      // Check project area engineers (clinics table)
+      const clinics = await DatabaseService.get('clinics') || [];
+      const clinic = clinics.find(c => c.email === emailLower);
+
+      if (clinic) {
+        userRecord = clinic;
+        userTable = 'clinics';
+      }
+
+      // Check supervisors (patients table)
+      if (!userRecord) {
+        const patients = await DatabaseService.get('patients') || [];
+        const patient = patients.find(p => p.email === emailLower);
+        if (patient) {
+          userRecord = patient;
+          userTable = 'patients';
+        }
+      }
+
+      // Check super admins
+      if (!userRecord) {
+        const superAdmins = await DatabaseService.get('superAdmins') || [];
+        const superAdmin = superAdmins.find(sa => sa.email === emailLower);
+        if (superAdmin) {
+          userRecord = superAdmin;
+          userTable = 'superAdmins';
+        }
+      }
+
+      if (!userRecord) {
         setError('root', { message: 'No account found with this email address' });
         setIsLoading(false);
         return;
       }
 
-      console.log('SUCCESS: Clinic found:', { email: clinic.email, hasPassword: !!clinic.password });
+      console.log('SUCCESS: User found:', { email: userRecord.email, table: userTable, hasPassword: !!userRecord.password });
 
       // Step 2: Verify current password
-      if (clinic.password && data.currentPassword !== clinic.password) {
+      if (userRecord.password && data.currentPassword !== userRecord.password) {
         setError('root', { message: 'Current password is incorrect' });
         setIsLoading(false);
         return;
@@ -72,7 +103,7 @@ const ForgotPasswordForm = () => {
 
           // First login with current credentials to get session
           const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-            email: data.email.trim().toLowerCase(),
+            email: emailLower,
             password: data.currentPassword
           });
 
@@ -99,9 +130,9 @@ const ForgotPasswordForm = () => {
         }
       }
 
-      // Step 5: Update password in clinics table
-      console.log('AUTH: Updating password in clinics table...');
-      await DatabaseService.update('clinics', clinic.id, { password: data.newPassword });
+      // Step 5: Update password in appropriate table
+      console.log(`AUTH: Updating password in ${userTable} table...`);
+      await DatabaseService.update(userTable, userRecord.id, { password: data.newPassword });
       console.log('SUCCESS: Password updated in database successfully');
 
       setEmailSent(true);

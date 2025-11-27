@@ -19,7 +19,7 @@ const DevelopmentModeHelper = () => {
 
   const predefinedUsers = [
     {
-      email: 'superadmin@neurosense360.com',
+      email: 'superadmin@aims.com',
       label: 'Super Admin',
       icon: Shield,
       description: 'Full system access'
@@ -37,7 +37,7 @@ const DevelopmentModeHelper = () => {
       description: 'Clinical access'
     },
     {
-      email: 'patient@neurosense.com',
+      email: 'patient@aims.com',
       label: 'Patient',
       icon: Heart,
       description: 'Brain health portal'

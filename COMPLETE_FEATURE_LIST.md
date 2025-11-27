@@ -1,4 +1,4 @@
-# 🏆 Neuro360 - Complete Landing Page Feature List
+# 🏆 AIMS - Complete Landing Page Feature List
 
 ## The Ultimate Myndlift-Inspired Health & Wellness Landing Page
 
@@ -714,7 +714,7 @@ You now have a **world-class, enterprise-grade landing page** that:
 
 **Built with:** React, Vite, Tailwind CSS, Lucide Icons
 **Inspired by:** Myndlift.com
-**Created for:** Neuro360 Health & Wellness Platform
+**Created for:** AIMS Health & Wellness Platform
 
 ---
 

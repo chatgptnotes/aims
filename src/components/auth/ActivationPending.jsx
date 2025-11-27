@@ -90,8 +90,8 @@ const ActivationPending = () => {
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500">
             Need help? Contact support at{' '}
-            <a href="mailto:support@neurosense360.com" className="text-[#323956] hover:text-[#232D3C]">
-              support@neurosense360.com
+            <a href="mailto:support@aims.com" className="text-[#323956] hover:text-[#232D3C]">
+              support@aims.com
             </a>
           </p>
         </div>

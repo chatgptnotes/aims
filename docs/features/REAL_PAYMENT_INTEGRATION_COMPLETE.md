@@ -105,14 +105,14 @@ VITE_RAZORPAY_KEY_SECRET=YOUR_SECRET
 ### **Dashboard Payments:**
 ```
 💳 DASHBOARD: Starting real Razorpay payment
-✅ DASHBOARD: Razorpay order created: neuro360_...
+✅ DASHBOARD: Razorpay order created: aims_...
 ✅ DASHBOARD: Payment successful: {...}
 ```
 
 ### **Popup Payments:**
 ```
 🚀 POPUP: Starting real Razorpay payment for: Standard Package
-✅ POPUP: Razorpay order created: neuro360_...
+✅ POPUP: Razorpay order created: aims_...
 ✅ POPUP: Payment successful: {...}
 ```
 

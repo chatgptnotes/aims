@@ -47,13 +47,14 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   };
 
   // Define navigation items based on user role
+  // Note: Database roles remain unchanged, UI labels updated to use Project Area terminology
   const getNavigationItems = () => {
     if (user?.role === 'super_admin') {
       return [
         { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/admin' },
-        { id: 'clinics', label: 'Clinic Management', icon: Building2, path: '/admin/clinics' },
-        { id: 'reports', label: 'Patient Reports', icon: FileSpreadsheet, path: '/admin/reports' },
-        { id: 'algorithm-processor', label: 'Algorithm Processor', icon: Cpu, path: '/admin/algorithm-processor' },
+        { id: 'clinics', label: 'Project Area Management', icon: Building2, path: '/admin/clinics' },
+        { id: 'reports', label: 'P&ID Documents', icon: FileSpreadsheet, path: '/admin/reports' },
+        { id: 'algorithm-processor', label: 'Tag Processor', icon: Cpu, path: '/admin/algorithm-processor' },
         { id: 'payments', label: 'Payment History', icon: CreditCard, path: '/admin/payments' },
         { id: 'analytics', label: 'Analytics', icon: PieChart, path: '/admin/analytics' },
         { id: 'alerts', label: 'Alerts & Monitoring', icon: Monitor, path: '/admin/alerts' },
@@ -62,8 +63,8 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
     } else if (user?.role === 'clinic_admin') {
       return [
         { id: 'overview', label: 'Dashboard', icon: Home, path: '/clinic' },
-        { id: 'patients', label: 'Patient Management', icon: UserCheck, path: '/clinic/patients' },
-        { id: 'reports', label: 'Reports & Files', icon: FileSpreadsheet, path: '/clinic/reports' },
+        { id: 'supervisors', label: 'Supervisor Management', icon: UserCheck, path: '/clinic/patients' },
+        { id: 'reports', label: 'P&ID Documents', icon: FileSpreadsheet, path: '/clinic/reports' },
         { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/clinic/subscription' },
         { id: 'usage', label: 'Usage Tracking', icon: TrendingUp, path: '/clinic/usage' },
         // { id: 'settings', label: 'Settings', icon: Cog, path: '/clinic/settings' }
@@ -72,7 +73,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
       return [
         { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
         { id: 'profile', label: 'Profile', icon: UserCheck, path: '/dashboard/profile' },
-        { id: 'activity', label: 'Activity', icon: Activity, path: '/dashboard/activity' },
+        { id: 'activity', label: 'My Documents', icon: Activity, path: '/dashboard/activity' },
         { id: 'notifications', label: 'Notifications', icon: Bell, path: '/dashboard/notifications' },
         { id: 'settings', label: 'Settings', icon: Cog, path: '/dashboard/settings' }
       ];
@@ -99,24 +100,32 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   };
 
   const getRoleLabel = () => {
+    // Project Area role labels (database roles remain unchanged)
     switch (user?.role) {
-      case 'super_admin': return 'Super Admin';
-      case 'clinic_admin': return 'Clinic Admin';
+      case 'super_admin': return 'SME';
+      case 'sme': return 'SME';
+      case 'superadmin1': return 'SME';
+      case 'superadmin2': return 'Developer';
+      case 'clinic_admin': return 'Project Area Engineer';
+      case 'clinic': return 'Project Area Engineer';
+      case 'engineer': return 'Project Area Engineer';
+      case 'patient': return 'Supervisor';
+      case 'supervisor': return 'Supervisor';
       default: return 'User';
     }
   };
 
   const getDisplayName = () => {
     try {
-      // For super admin with clinic name, show clinic name
+      // For super admin with project area name, show project area name
       if (user?.role === 'super_admin' && user?.clinicName) {
         return user.clinicName;
       }
-      // For clinic admin, show clinic name
+      // For project area admin, show project area name
       if (user?.role === 'clinic_admin' && user?.clinicName) {
         return user.clinicName;
       }
-      // For super admin, show name (which might be clinic name)
+      // For super admin, show name (which might be project area name)
       if (user?.role === 'super_admin' && user?.name) {
         return user.name;
       }
@@ -130,15 +139,15 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
 
   const getProfileInitial = () => {
     try {
-      // For super admin with clinic name, show clinic name initial
+      // For super admin with project area name, show project area name initial
       if (user?.role === 'super_admin' && user?.clinicName) {
         return user.clinicName.charAt(0).toUpperCase();
       }
-      // For clinic admin, show clinic name initial
+      // For project area admin, show project area name initial
       if (user?.role === 'clinic_admin' && user?.clinicName) {
         return user.clinicName.charAt(0).toUpperCase();
       }
-      // For super admin, show name initial (which might be clinic name)
+      // For super admin, show name initial (which might be project area name)
       if (user?.role === 'super_admin' && user?.name) {
         return user.name.charAt(0).toUpperCase();
       }
@@ -213,7 +222,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
               <div className="flex items-center justify-center w-full">
                 <img
                   src={isDarkMode ? "/assets/branding/dark background.png" : "/assets/branding/white background.png"}
-                  alt="NeuroSense360 Logo"
+                  alt="AIMS Logo"
                   className="h-10 w-auto object-contain"
                   onError={(e) => {
                     // Fallback to text if image fails to load
@@ -227,7 +236,7 @@ const Sidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
                   </div>
-                  <span className="text-white font-bold text-base">NeuroSense360</span>
+                  <span className="text-white font-bold text-base">AIMS</span>
                 </div>
               </div>
             )}

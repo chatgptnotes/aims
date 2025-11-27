@@ -101,7 +101,7 @@ class RazorpayService {
       }
       
       // Generate unique order ID
-      const orderId = 'neuro360_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const orderId = 'aims_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       
       // PRODUCTION: Create real Razorpay order directly
       console.log(' PRODUCTION: Creating real Razorpay order...');
@@ -205,7 +205,7 @@ class RazorpayService {
         key: this.keyId, // Your real Razorpay key
         amount: order.amount,
         currency: order.currency || 'INR',
-        name: 'NeuroSense360',
+        name: 'AIMS',
         description: `${order.notes?.packageName || 'EEG Report Package'} - ${order.notes?.reports || '0'} Reports`,
         image: '/favicon.ico',
         // Note: No order_id for direct payment mode

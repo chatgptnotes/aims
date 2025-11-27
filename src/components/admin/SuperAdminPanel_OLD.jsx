@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import DatabaseService from '../../services/databaseService';
 import ClinicManagement from './ClinicManagement';
-import PatientReports from './PatientReports';
+import SupervisorReports from './SupervisorReports';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import AlertDashboard from './AlertDashboard';
 import DashboardLayout from '../layout/DashboardLayout';
@@ -66,7 +66,7 @@ const SuperAdminPanel = () => {
       case 'clinics':
         return <ClinicManagement onUpdate={loadAnalytics} />;
       case 'reports':
-        return <PatientReports onUpdate={loadAnalytics} />;
+        return <SupervisorReports onUpdate={loadAnalytics} />;
       case 'alerts':
         return <AlertDashboard />;
       case 'analytics':
@@ -94,7 +94,7 @@ const SuperAdminPanel = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">NeuroSense360</h1>
+              <h1 className="text-2xl font-bold text-gray-900">AIMS</h1>
               <span className="ml-3 px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
                 Super Admin
               </span>

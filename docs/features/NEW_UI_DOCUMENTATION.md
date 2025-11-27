@@ -1,4 +1,4 @@
-# 🎨 NeuroSense360 - Professional UI with Sidebar Navigation
+# 🎨 AIMS - Professional UI with Sidebar Navigation
 
 ## 🌟 **NEW UI FEATURES IMPLEMENTED**
 
@@ -140,7 +140,7 @@ All existing components updated with new layouts
 5. **Mobile Users** tap hamburger menu for navigation
 
 ### **Testing the New UI:**
-1. **Super Admin**: `admin@neurosense360.com` / `admin123`
+1. **Super Admin**: `admin@aims.com` / `admin123`
 2. **Clinic Admin**: `clinic@demo.com` / `clinic123`
 3. **Regular User**: `user@demo.com` / `user123`
 
@@ -161,7 +161,7 @@ Each role shows completely different navigation and features!
 ✅ **Navigation**: Smooth sidebar navigation working  
 ✅ **Professional UI**: Clean, modern interface  
 
-**Your NeuroSense360 now has a professional sidebar-based UI! 🎨**
+**Your AIMS now has a professional sidebar-based UI! 🎨**
 
 The interface is now production-ready with:
 - Professional sidebar navigation

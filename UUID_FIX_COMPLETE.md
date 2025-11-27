@@ -93,7 +93,7 @@ const immediateReport = {
   status: 'processing',
   report_data: {
     title: edfFile.name,
-    type: 'EEG/qEEG Analysis',
+    type: 'EEG/P&ID Analysis',
     progress: 20,
     // ...
   },
@@ -189,7 +189,7 @@ Reports Table:
 status: processing
 report_data: {
   "title": "sample",
-  "type": "EEG/qEEG Analysis",
+  "type": "EEG/P&ID Analysis",
   "progress": 20,
   "processing_step": "File uploaded - Analysis in progress"
 }

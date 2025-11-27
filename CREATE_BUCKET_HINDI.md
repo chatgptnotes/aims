@@ -28,7 +28,7 @@
 - "Sign in" पर click करें
 
 #### 1.3 Project Select करें
-- **Neuro360** project पर click करें
+- **AIMS** project पर click करें
 - Dashboard open होगा
 
 ---
@@ -91,7 +91,7 @@ Storage page पर आपको दिखेगा:
 │                                         │
 │  Description (optional)                 │
 │  ┌───────────────────────────────────┐ │
-│  │ Patient EEG/qEEG Reports Storage  │ │
+│  │ Patient EEG/P&ID Reports Storage  │ │
 │  └───────────────────────────────────┘ │
 │                                         │
 │  ☐ Public bucket                       │ ← NO! Checkbox UNCHECK
@@ -268,7 +268,7 @@ USING (bucket_id = 'patient-reports');
 
 #### 6.1 Code में Already Connected है
 
-File: `D:\Neuro360\src\services\storageService.js`
+File: `D:\AIMS\src\services\storageService.js`
 
 ```javascript
 class StorageService {
@@ -287,7 +287,7 @@ Same file में (line 218):
 
 ```javascript
 validateFile(file) {
-  // Only allow EEG/qEEG formats
+  // Only allow EEG/P&ID formats
   const validExtensions = ['.edf', '.eeg', '.bdf'];  ← formats
   const hasValidExtension = validExtensions.some(ext =>
     fileName.endsWith(ext)

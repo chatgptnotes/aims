@@ -47,7 +47,7 @@
 ### Step 1: Create Bucket
 ```
 1. https://supabase.com → Login
-2. Neuro360 project खोलें
+2. AIMS project खोलें
 3. Storage → Create bucket
 4. Name: patient-reports
 5. Private: ✓, Size: 52428800
@@ -437,7 +437,7 @@ Setup successful अगर:
 **Setup Complete!** 🚀
 
 अब आप:
-- ✅ 50MB तक की EEG/qEEG files upload कर सकते हैं
+- ✅ 50MB तक की EEG/P&ID files upload कर सकते हैं
 - ✅ Secure private storage use कर रहे हैं
 - ✅ Automatic file organization है
 - ✅ Clinic-wise data isolation है

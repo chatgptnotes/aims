@@ -4,7 +4,7 @@
 
 **सिर्फ 1 bucket बनाना है:** `patient-reports`
 
-- **Purpose:** Patient की EEG/qEEG reports (.edf, .eeg, .bdf files)
+- **Purpose:** Patient की EEG/P&ID reports (.edf, .eeg, .bdf files)
 - **File Size:** 50MB तक
 - **Privacy:** Private (secure)
 
@@ -27,7 +27,7 @@ https://supabase.com
 ```
 
 - **Login करें**
-- **Neuro360 project** select करें
+- **AIMS project** select करें
 
 ### 1.2 Storage Page पर जाएं
 
@@ -40,7 +40,7 @@ https://supabase.com
 Name: patient-reports
 (exactly यही नाम, कोई capital letter या space नहीं!)
 
-Description: Patient EEG/qEEG Reports
+Description: Patient EEG/P&ID Reports
 (optional - आप खाली भी छोड़ सकते हैं)
 
 Public bucket: ❌ NO
@@ -328,7 +328,7 @@ Setup complete? ये सब check करें:
 ✅ **Single bucket setup complete!**
 
 अब आप:
-- ✅ 50MB तक की EEG/qEEG files upload कर सकते हैं
+- ✅ 50MB तक की EEG/P&ID files upload कर सकते हैं
 - ✅ Files automatically organize होंगी (clinic → patient)
 - ✅ Secure storage (private bucket)
 - ✅ No AWS needed!

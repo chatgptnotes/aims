@@ -11,7 +11,7 @@ This was a security issue where role-based content was visible to all users.
 
 ### 🔧 Fixed: Dashboard.jsx (src/components/Dashboard.jsx)
 
-#### 1. NeuroSense360 Portals Section (Lines 238-294)
+#### 1. AIMS Portals Section (Lines 238-294)
 **Before**: Showed to all users
 ```jsx
 // Old: Always visible
@@ -57,7 +57,7 @@ This was a security issue where role-based content was visible to all users.
 
 ## 🎯 Results by User Role
 
-### 🔴 Super Admin (`admin@neurosense360.com`)
+### 🔴 Super Admin (`admin@aims.com`)
 - ✅ Sees: Super Admin Panel + Analytics link
 - ❌ Hidden: Clinic Portal, Reports, Billing
 

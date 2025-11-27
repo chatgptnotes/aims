@@ -432,7 +432,7 @@ const calculateAlphaAsymmetry = (eegData, electrodes) => {
  * Calculate Overall Wellness Score
  * Combines all parameter scores with appropriate weights
  * @param {Object} eegData - Complete EEG data
- * @param {Number} patientAge - Patient age (for learning score inclusion)
+ * @param {Number} patientAge - Supervisor age (for learning score inclusion)
  * @returns {Object} - Complete wellness assessment
  */
 export const calculateOverallWellnessScore = (eegData, patientAge = null) => {
@@ -454,7 +454,7 @@ export const calculateOverallWellnessScore = (eegData, patientAge = null) => {
     creativity
   };
 
-  // Include learning score if patient is under 18
+  // Include learning score if supervisor is under 18
   if (patientAge && patientAge < 18) {
     scores.learning = calculateLearningScore(eegData);
   }
@@ -499,7 +499,7 @@ const generateWellnessSummary = (scores, overallScore) => {
  * Process EEG Data for Wellness Assessment
  * Main entry point - integrates with existing EEG analysis pipeline
  * @param {Object} eegAnalysisResult - Result from aiAnalysisService
- * @param {Object} patientInfo - Patient information including age
+ * @param {Object} patientInfo - Supervisor information including age
  * @returns {Object} - Complete wellness assessment
  */
 export const processEEGForWellness = async (eegAnalysisResult, patientInfo = {}) => {

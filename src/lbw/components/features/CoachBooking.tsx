@@ -59,7 +59,7 @@ export default function CoachBooking({ coach, onBookingComplete, onCancel }: Coa
         coachId: coach.id,
         datetime: selectedSlot.datetime,
         duration: selectedSlot.duration,
-        type: selectedSessionType.toLowerCase().includes('qeeg') ? 'qeeg_consultation' :
+        type: selectedSessionType.toLowerCase().includes('pid') ? 'pid_consultation' :
               selectedSessionType.toLowerCase().includes('nervous') ? 'nervous_system' : 'brain_coaching',
         status: 'scheduled',
         notes: notes || undefined

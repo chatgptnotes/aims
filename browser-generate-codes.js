@@ -4,7 +4,7 @@
  * ========================================
  *
  * How to use:
- * 1. Open your Neuro360 app in browser (localhost:3000)
+ * 1. Open your AIMS app in browser (localhost:3000)
  * 2. Open browser console (F12 or Ctrl+Shift+I)
  * 3. Copy-paste this ENTIRE script
  * 4. Press Enter
@@ -21,7 +21,7 @@
     // Check if supabase is available
     if (typeof supabase === 'undefined') {
       console.error('❌ Error: Supabase client not found!');
-      console.log('💡 Make sure you are on the Neuro360 app page (localhost:3000)');
+      console.log('💡 Make sure you are on the AIMS app page (localhost:3000)');
       return;
     }
 

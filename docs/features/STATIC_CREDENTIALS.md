@@ -1,9 +1,9 @@
-# 🔐 Static Login Credentials for Neuro360
+# 🔐 Static Login Credentials for AIMS
 
 ## Super Admin Accounts
 
 ### 1. Primary Super Admin
-- **Email**: `superadmin@neuro360.com`
+- **Email**: `superadmin@aims.com`
 - **Password**: `admin123`
 - **Role**: Super Admin
 - **Access**: Full system access
@@ -71,7 +71,7 @@
 
 ### Test Super Admin Access:
 ```
-Email: superadmin@neuro360.com
+Email: superadmin@aims.com
 Password: admin123
 Expected: Full system access, clinic management, analytics
 ```
@@ -91,7 +91,7 @@ Expected: Patient management, reports, limited settings
 
 🔄 **Persistence**: Static credentials work immediately without database setup.
 
-🚀 **Quick Start**: Use `superadmin@neuro360.com` / `admin123` for fastest testing.
+🚀 **Quick Start**: Use `superadmin@aims.com` / `admin123` for fastest testing.
 
 📝 **Location**: Static credentials defined in:
 - File: `apps/web/src/services/authService.js`

@@ -1,7 +1,7 @@
 # Clinic Management System - Multi-Authentication Implementation
 
 ## Overview
-Complete implementation of a multi-tenant clinic management system with super admin approval workflow for the Neuro360 SaaS application.
+Complete implementation of a multi-tenant clinic management system with super admin approval workflow for the AIMS SaaS application.
 
 ## Features Implemented
 

@@ -116,7 +116,7 @@ try {
 
 ### 1. Static Credentials (Hardcoded)
 ```javascript
-if (email === 'superadmin@neuro360.com' && password === 'admin123') {
+if (email === 'superadmin@aims.com' && password === 'admin123') {
   return { success: true, ... };
 }
 ```
@@ -180,7 +180,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
 ### Test 3: Super Admin Login ✅
 
 **Test:**
-1. Login with: `superadmin@neuro360.com` / `admin123`
+1. Login with: `superadmin@aims.com` / `admin123`
    - **Expected**: ✅ Login successful (static credentials matched first)
 
 ---

@@ -2,7 +2,7 @@
 
 ## Migration Status: COMPLETE ✅
 
-All AWS connections have been successfully removed from your Neuro360 project and replaced with Supabase.
+All AWS connections have been successfully removed from your AIMS project and replaced with Supabase.
 
 ---
 

@@ -1,9 +1,9 @@
-// Branding Service - Enforces "Powered by NeuroSense" requirement
+// Branding Service - Enforces "Powered by AIMS" requirement
 // This service ensures all reports and interfaces display required attribution
 
 class BrandingService {
   constructor() {
-    this.requiredAttribution = 'Powered by NeuroSense360';
+    this.requiredAttribution = 'Powered by AIMS';
     this.defaultPosition = 'footer-right';
     this.attributionStyles = {
       fontSize: '12px',
@@ -98,7 +98,7 @@ class BrandingService {
       .join('; ');
 
     return `
-      <div class="neurosense-attribution" style="${styles}">
+      <div class="aims-attribution" style="${styles}">
         <span>${config.poweredByText}</span>
       </div>
     `;
@@ -112,7 +112,7 @@ class BrandingService {
 
     return {
       component: 'div',
-      className: 'neurosense-attribution',
+      className: 'aims-attribution',
       style: config.attributionStyles,
       children: config.poweredByText
     };
@@ -157,14 +157,14 @@ class BrandingService {
    */
   validateAttribution(content) {
     const hasAttribution = content.includes(this.requiredAttribution) ||
-                          content.includes('NeuroSense360') ||
-                          content.includes('neurosense-attribution');
+                          content.includes('AIMS') ||
+                          content.includes('aims-attribution');
 
     return {
       isValid: hasAttribution,
       message: hasAttribution
         ? 'Attribution is present'
-        : 'Required "Powered by NeuroSense360" attribution is missing'
+        : 'Required "Powered by AIMS" attribution is missing'
     };
   }
 
@@ -210,7 +210,7 @@ class BrandingService {
     const config = branding || this.getDefaultBranding();
 
     return `
-      .neurosense-attribution {
+      .aims-attribution {
         font-size: ${config.attributionStyles.fontSize};
         color: ${config.attributionStyles.color};
         font-family: ${config.attributionStyles.fontFamily};
@@ -224,7 +224,7 @@ class BrandingService {
         box-sizing: border-box;
       }
 
-      .neurosense-attribution::before {
+      .aims-attribution::before {
         content: '';
         display: inline-block;
         width: 16px;
@@ -235,7 +235,7 @@ class BrandingService {
       }
 
       @media print {
-        .neurosense-attribution {
+        .aims-attribution {
           display: block !important;
           visibility: visible !important;
         }

@@ -15,7 +15,7 @@ export default function Navigation() {
     { path: '/assessment', label: 'Assessments', icon: 'NOTE:' },
     { path: '/content', label: 'Content', icon: '' },
     { path: '/coaching', label: 'Coaching', icon: '' },
-    { path: '/qeeg', label: 'qEEG', icon: '' },
+    { path: '/pid', label: 'P&ID', icon: '' },
     { path: '/progress', label: 'Progress', icon: 'DATA:' },
   ]
 

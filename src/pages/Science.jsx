@@ -12,7 +12,7 @@ const Science = () => {
       <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-[#00897B] text-white pt-32 pb-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-            The Science Behind NeuroSense
+            The Science Behind AIMS
           </h1>
           <p className="text-xl sm:text-2xl text-gray-200 max-w-3xl mx-auto mb-8">
             Evidence-based neurofeedback technology validated by decades of peer-reviewed research
@@ -74,7 +74,7 @@ const Science = () => {
                       <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <p className="text-lg text-gray-700 leading-relaxed">
-                      To achieve the same placement flexibility and accuracy in interpreting the signals, NeuroSense adds an external gold-cup electrode to the Muse headset
+                      To achieve the same placement flexibility and accuracy in interpreting the signals, AIMS adds an external gold-cup electrode to the Muse headset
                     </p>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ const Science = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">Assessment</h3>
-                    <p>A comprehensive qEEG brain map identifies specific patterns of dysregulation and areas for optimization.</p>
+                    <p>A comprehensive P&ID brain map identifies specific patterns of dysregulation and areas for optimization.</p>
                   </div>
                 </div>
 

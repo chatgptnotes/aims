@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SuperAdminPanel from './admin/SuperAdminPanel';
-import ClinicDashboard from './clinic/ClinicDashboard';
-import PatientDashboard from './patient/PatientDashboard';
+import EngineerDashboard from './engineer/EngineerDashboard';
+import SupervisorDashboard from './supervisor/SupervisorDashboard';
 
 const DashboardRouter = () => {
   const { user, loading } = useAuth();
@@ -23,16 +23,23 @@ const DashboardRouter = () => {
   }
 
   // Route based on user role
+  // Note: Database roles remain unchanged (patient, clinic_admin, super_admin)
+  // UI components now use AIMS terminology (Supervisor, Engineer, SME)
   switch (user.role) {
     case 'super_admin':
+    case 'sme':
+    case 'superadmin1':
+    case 'superadmin2':
       return <SuperAdminPanel />;
 
     case 'clinic_admin':
     case 'clinic':
-      return <ClinicDashboard />;
+    case 'engineer':
+      return <EngineerDashboard />;
 
     case 'patient':
-      return <PatientDashboard />;
+    case 'supervisor':
+      return <SupervisorDashboard />;
 
     default:
       // For unknown roles, show error and redirect to login

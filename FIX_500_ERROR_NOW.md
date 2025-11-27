@@ -30,7 +30,7 @@ Looking at your console screenshot, I see:
 
 **Run this file NOW:**
 ```
-D:\Neuro360\RESTART_WITH_NEW_CREDENTIALS.bat
+D:\AIMS\RESTART_WITH_NEW_CREDENTIALS.bat
 ```
 
 **This will automatically:**
@@ -183,7 +183,7 @@ Once console shows correct key:
 
 ### Check 1: Verify .env File
 ```bash
-# Open: D:\Neuro360\.env
+# Open: D:\AIMS\.env
 # Check these lines exist EXACTLY:
 VITE_RAZORPAY_KEY_ID=rzp_live_RbfFXYnAzSNWYh
 VITE_RAZORPAY_SECRET=FaV0K9r7IEgA8PcJxLUOa95A

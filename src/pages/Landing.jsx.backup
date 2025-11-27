@@ -1,595 +1,1225 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Brain,
-  Activity,
-  Award,
-  Users,
-  ChevronRight,
-  Star,
-  Shield,
-  Zap,
-  Heart,
-  LineChart,
-  Calendar,
-  CheckCircle
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Factory, ShieldCheck, Users, FileText, ArrowDown, Menu, X, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin, Upload, CheckCircle, Download, Settings } from 'lucide-react';
 
 const Landing = () => {
+  const navigate = useNavigate();
+  const [showOptions, setShowOptions] = useState(false);
+  const [selectedType, setSelectedType] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sectionsVisible, setSectionsVisible] = useState({});
+  const sectionRefs = useRef({});
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const carouselRef = useRef(null);
+
+  useEffect(() => {
+    setIsVisible(true);
+
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setSectionsVisible((prev) => ({
+              ...prev,
+              [entry.target.dataset.section]: true,
+            }));
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    Object.values(sectionRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // 3D circular carousel rotation for Measure section
+  useEffect(() => {
+    let rotation = 0;
+    const rotationInterval = setInterval(() => {
+      rotation += 120; // Rotate 120 degrees (360/3 cards)
+      if (carouselRef.current) {
+        carouselRef.current.style.transform = `rotateY(${rotation}deg)`;
+      }
+      setCurrentCardIndex((prev) => (prev + 1) % 3);
+    }, 3500); // Rotate every 3.5 seconds
+
+    return () => clearInterval(rotationInterval);
+  }, []);
+
+  const handlePersonalSignup = () => {
+    // Navigate directly to login page with supervisor user type
+    navigate('/login', {
+      state: {
+        userType: 'patient',
+        fromLanding: true
+      }
+    });
+  };
+
+  const handleClinicSignup = () => {
+    // Navigate directly to login page with clinic user type
+    navigate('/login', {
+      state: {
+        userType: 'clinic',
+        fromLanding: true
+      }
+    });
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleRegister = (userType = 'clinic') => {
+    // Navigate to register page with state to pre-select user type
+    navigate('/register', {
+      state: {
+        userType: userType,
+        fromLanding: true
+      }
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+    <div className="w-full min-h-screen bg-white m-0 p-0">
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          {/* Center Navigation Pill with Logo, Links and Buttons ALL INSIDE */}
+          <div className="hidden lg:flex items-center bg-white/95 backdrop-blur-lg rounded-full shadow-lg px-6 py-2.5 gap-6 border border-gray-100">
+            {/* Logo INSIDE Pill */}
+            <div className="flex items-center pr-4 border-r border-gray-200">
+              <Factory className="h-8 w-8 text-[#1e3a5f]" />
+              <span className="ml-2 text-xl font-bold text-gray-900">AIMS</span>
+            </div>
+
+            {/* Navigation Links */}
+            <a href="#features" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+              Features
+            </a>
+            <a href="#how-it-works" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+              How it works
+            </a>
+            <a href="#pricing" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+              Pricing
+            </a>
+
+            {/* Action Buttons Inside Same Pill */}
+            <button
+              onClick={handlePersonalSignup}
+              className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
+            >
+              Start Free Trial
+            </button>
+            <button
+              onClick={handleClinicSignup}
+              className="bg-gray-900 hover:bg-black text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
+            >
+              Request Demo
+            </button>
+          </div>
+
+          {/* Mobile - Logo and Menu Button */}
+          <div className="lg:hidden flex items-center justify-between w-full">
             <div className="flex items-center">
-              <Brain className="h-8 w-8 text-[#1F2B5F]" />
-              <span className="ml-2 text-2xl font-bold text-[#1F2B5F]">NeuroSense360</span>
-              <span className="ml-2 text-sm text-[#FFD700] font-medium">by Limitless Brain Lab</span>
+              <Factory className="h-8 w-8 text-[#1e3a5f]" />
+              <span className="ml-2 text-xl font-bold text-gray-900">AIMS</span>
             </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#how-it-works" className="text-gray-700 hover:text-[#1F2B5F] transition">How It Works</a>
-              <a href="#features" className="text-gray-700 hover:text-[#1F2B5F] transition">Features</a>
-              <a href="#testimonials" className="text-gray-700 hover:text-[#1F2B5F] transition">Success Stories</a>
-              <a href="#pricing" className="text-gray-700 hover:text-[#1F2B5F] transition">Pricing</a>
-              <Link to="/login" className="px-4 py-2 text-[#1F2B5F] hover:text-[#FFD700] transition">Sign In</Link>
-              <Link to="/register" className="px-6 py-2 bg-[#1F2B5F] text-white rounded-full hover:bg-[#FFD700] hover:text-[#1F2B5F] transition">
-                Get Started
-              </Link>
-            </div>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-gray-800 transition-transform duration-300"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center px-3 py-1 bg-[#FFD700]/20 rounded-full mb-6">
-                <Zap className="h-4 w-4 text-[#FFD700] mr-2" />
-                <span className="text-sm font-medium text-[#1F2B5F]">Therapist-Guided Brain Training</span>
+      {/* Mobile Sidebar Menu Overlay */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Sidebar */}
+          <div className="fixed top-0 left-0 h-full w-80 bg-white z-50 lg:hidden shadow-2xl transform transition-transform duration-300">
+            <div className="p-6">
+              {/* Logo */}
+              <div className="flex items-center mb-12 mt-2">
+                <Factory className="h-10 w-10 text-[#1e3a5f]" />
+                <span className="ml-2 text-2xl font-bold text-gray-900">AIMS</span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-[#1F2B5F] mb-6 leading-tight">
-                Unlock Your Brain's Full Potential
-              </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                Experience the fusion of ancient wisdom and cutting-edge neuroscience.
-                Train your brain at home with professional guidance from Dr. Sweta Adatia and team.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Link to="/register" className="px-8 py-4 bg-[#1F2B5F] text-white rounded-full hover:bg-[#FFD700] hover:text-[#1F2B5F] transition text-center font-medium">
-                  Start Your Journey
-                  <ChevronRight className="inline-block ml-2 h-5 w-5" />
-                </Link>
-                <Link to="/demo" className="px-8 py-4 border-2 border-[#1F2B5F] text-[#1F2B5F] rounded-full hover:bg-[#1F2B5F] hover:text-white transition text-center font-medium">
-                  Book Free Consultation
-                </Link>
+
+              {/* Navigation Links */}
+              <div className="flex flex-col space-y-6 mb-12">
+                <a href="#features" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  Features
+                </a>
+                <a href="#how-it-works" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  How it works
+                </a>
+                <a href="#pricing" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  Pricing
+                </a>
               </div>
-              <div className="flex items-center gap-6 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  FDA Cleared Technology
-                </div>
-                <div className="flex items-center">
-                  <Shield className="h-5 w-5 text-blue-500 mr-2" />
-                  HIPAA Compliant
-                </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={handlePersonalSignup}
+                  className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
+                >
+                  Start Free Trial
+                </button>
+                <button
+                  onClick={handleClinicSignup}
+                  className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
+                >
+                  Request Demo
+                </button>
               </div>
             </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1F2B5F]/10 to-[#FFD700]/10 rounded-3xl blur-3xl"></div>
-              <img
-                src="/assets/hero-brain-training.jpg"
-                alt="Brain Training Visualization"
-                className="relative rounded-3xl shadow-2xl"
-              />
-              <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur rounded-2xl p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Average Improvement</p>
-                    <p className="text-2xl font-bold text-[#1F2B5F]">87% Better Focus</p>
+          </div>
+        </>
+      )}
+
+      {/* Hero Section - Myndlift Style */}
+      <section
+        id="start"
+        className="relative w-full bg-white pt-2 sm:pt-3 pb-4 sm:pb-6 px-1 sm:px-2 md:px-3 lg:px-4"
+        style={{ opacity: 1, transform: 'none' }}
+      >
+        {/* Hero Container with Rounded Corners */}
+        <div className="w-[99.5%] mx-auto relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] lg:rounded-[3rem]"
+          style={{
+            minHeight: 'clamp(400px, 60vh, 650px)'
+          }}>
+
+          {/* Video Background */}
+          <div className="absolute inset-0">
+            <video
+              src="/hero_section.mp4"
+              loop
+              preload="auto"
+              muted
+              playsInline
+              autoPlay
+              style={{
+                cursor: 'auto',
+                width: '100%',
+                height: '100%',
+                borderRadius: '0px',
+                display: 'block',
+                objectFit: 'cover',
+                backgroundColor: 'rgb(133, 119, 95)',
+                objectPosition: '50% 50%'
+              }}
+            />
+          </div>
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
+
+          {/* Content Section */}
+          <section
+            className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 md:px-14 lg:px-20 py-16 sm:py-20 md:py-24"
+            style={{ opacity: 1, transform: 'none' }}
+          >
+            <div className="max-w-2xl lg:max-w-3xl">
+              {/* Text Container */}
+              <div className="mb-8">
+                {/* Main Heading */}
+                <div className="framer-37bogi" style={{ justifyContent: 'center', transform: 'none' }}>
+                  <h1
+                    className="framer-text framer-styles-preset-1r94ks7"
+                    style={{
+                      '--framer-text-alignment': 'left',
+                      '--framer-text-color': 'rgb(255, 255, 255)',
+                      fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+                      fontWeight: '700',
+                      lineHeight: '1.1',
+                      letterSpacing: '-0.02em',
+                      marginBottom: '1.5rem',
+                      color: '#ffffff',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    AIMS - Asset Information Management System
+                  </h1>
+                </div>
+
+                {/* Subtitle */}
+                <div className="framer-fun1vz" style={{ justifyContent: 'center', transform: 'none' }}>
+                  <h5
+                    className="framer-text framer-styles-preset-1v4ddqz"
+                    style={{
+                      '--framer-text-alignment': 'left',
+                      '--framer-text-color': 'rgb(255, 255, 255)',
+                      fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
+                      fontWeight: '600',
+                      lineHeight: '1.4',
+                      letterSpacing: '0.05em',
+                      maxWidth: '42rem',
+                      color: '#ffffff',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    Industrial P&ID Processing and Tag Management Platform
+                  </h5>
+                </div>
+
+                {/* Description Text */}
+                <div className="mt-6">
+                  <p
+                    className="framer-text"
+                    style={{
+                      fontSize: 'clamp(1rem, 1.5vw, 1.125rem)',
+                      fontWeight: '400',
+                      lineHeight: '1.6',
+                      maxWidth: '42rem',
+                      color: '#ffffff',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    Transform your P&ID workflows with AI-powered tag extraction, ISA 5.1 compliance, and automated ADNOC tag sheet generation. Achieve 90% faster processing with zero manual errors.
+                  </p>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  onClick={handlePersonalSignup}
+                  className="inline-block cursor-pointer"
+                  style={{ transform: 'none' }}
+                >
+                  <div style={{ transform: 'none' }}>
+                    <p
+                      className="framer-text bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      style={{
+                        textAlign: 'center',
+                        color: 'rgb(255, 255, 255)'
+                      }}
+                    >
+                      Start Free Trial
+                    </p>
                   </div>
-                  <LineChart className="h-12 w-12 text-[#FFD700]" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+                </a>
 
-      {/* Trust Indicators */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[#1F2B5F]">10,000+</p>
-              <p className="text-gray-600 mt-1">Happy Clients</p>
+                <a
+                  onClick={handleClinicSignup}
+                  className="inline-block cursor-pointer"
+                  style={{ transform: 'none' }}
+                >
+                  <div style={{ transform: 'none' }}>
+                    <p
+                      className="framer-text bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      style={{
+                        textAlign: 'center',
+                        color: 'rgb(255, 255, 255)'
+                      }}
+                    >
+                      Request Demo
+                    </p>
+                  </div>
+                </a>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[#1F2B5F]">500+</p>
-              <p className="text-gray-600 mt-1">Licensed Therapists</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[#1F2B5F]">95%</p>
-              <p className="text-gray-600 mt-1">Success Rate</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[#1F2B5F]">4.9/5</p>
-              <p className="text-gray-600 mt-1">Client Rating</p>
-            </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1F2B5F] mb-4">
-              Your Journey to Brain Wellness
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Three simple steps to transform your cognitive health with personalized neurofeedback
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#FFD700]/20 rounded-full flex items-center justify-center mb-6">
-                  <Brain className="h-8 w-8 text-[#FFD700]" />
-                </div>
-                <h3 className="text-2xl font-bold text-[#1F2B5F] mb-4">1. Brain Assessment</h3>
-                <p className="text-gray-600">
-                  Complete a comprehensive EEG assessment to map your unique brain patterns and identify areas for improvement.
-                </p>
-              </div>
-              <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                <ChevronRight className="h-8 w-8 text-[#FFD700]" />
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#FFD700]/20 rounded-full flex items-center justify-center mb-6">
-                  <Calendar className="h-8 w-8 text-[#FFD700]" />
-                </div>
-                <h3 className="text-2xl font-bold text-[#1F2B5F] mb-4">2. Personalized Plan</h3>
-                <p className="text-gray-600">
-                  Receive a customized training program designed by Dr. Adatia's team based on your goals and brain profile.
-                </p>
-              </div>
-              <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                <ChevronRight className="h-8 w-8 text-[#FFD700]" />
-              </div>
-            </div>
-            <div className="relative">
-              <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-                <div className="w-16 h-16 bg-[#FFD700]/20 rounded-full flex items-center justify-center mb-6">
-                  <Activity className="h-8 w-8 text-[#FFD700]" />
-                </div>
-                <h3 className="text-2xl font-bold text-[#1F2B5F] mb-4">3. Train & Transform</h3>
-                <p className="text-gray-600">
-                  Train at home with our app and device while receiving ongoing support from your dedicated therapist.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1F2B5F] mb-4">
-              Science-Backed Brain Training
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Combining ancient wisdom with modern neuroscience for optimal results
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <Activity className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Real-Time Neurofeedback</h3>
-              <p className="text-gray-600">
-                Monitor your brain activity in real-time and learn to optimize your mental states for peak performance.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <Users className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Expert Guidance</h3>
-              <p className="text-gray-600">
-                Work directly with certified neurofeedback therapists trained by Dr. Sweta Adatia.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <Heart className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Holistic Approach</h3>
-              <p className="text-gray-600">
-                Integrate meditation, breathing exercises, and lifestyle recommendations for complete wellness.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <Shield className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Safe & Non-Invasive</h3>
-              <p className="text-gray-600">
-                FDA-cleared technology that's completely safe, drug-free, and suitable for all ages.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <LineChart className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Track Progress</h3>
-              <p className="text-gray-600">
-                Detailed analytics and progress reports to visualize your brain's improvement journey.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-              <Award className="h-12 w-12 text-[#FFD700] mb-4" />
-              <h3 className="text-xl font-bold text-[#1F2B5F] mb-3">Proven Results</h3>
-              <p className="text-gray-600">
-                Evidence-based protocols with published research showing significant improvements.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Conditions Treated */}
-      <section className="py-20 bg-white px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1F2B5F] mb-4">
-              Conditions We Help With
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Our neurofeedback therapy has shown remarkable results for various conditions
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              'ADHD & Focus Issues',
-              'Anxiety & Stress',
-              'Depression',
-              'Sleep Disorders',
-              'Memory Problems',
-              'Peak Performance',
-              'Autism Spectrum',
-              'Traumatic Brain Injury'
-            ].map((condition) => (
-              <div key={condition} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-[#FFD700]/10 transition">
-                <p className="font-medium text-[#1F2B5F]">{condition}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 bg-gradient-to-r from-[#1F2B5F] to-[#2a3a6e] px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Success Stories
-            </h2>
-            <p className="text-xl text-white/80 max-w-3xl mx-auto">
-              Join thousands who have transformed their lives with NeuroSense360
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-[#FFD700] fill-current" />
-                ))}
-              </div>
-              <p className="text-white mb-4">
-                "After just 3 months, my focus improved dramatically. I can finally complete tasks without getting distracted. This program changed my life!"
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-[#FFD700] rounded-full mr-3"></div>
-                <div>
-                  <p className="text-white font-medium">Sarah M.</p>
-                  <p className="text-white/60 text-sm">Software Engineer</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-[#FFD700] fill-current" />
-                ))}
-              </div>
-              <p className="text-white mb-4">
-                "My anxiety levels have decreased by 70%. The combination of neurofeedback and Dr. Adatia's holistic approach is truly powerful."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-[#FFD700] rounded-full mr-3"></div>
-                <div>
-                  <p className="text-white font-medium">Michael R.</p>
-                  <p className="text-white/60 text-sm">Business Owner</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6">
-              <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-[#FFD700] fill-current" />
-                ))}
-              </div>
-              <p className="text-white mb-4">
-                "My son's ADHD symptoms improved significantly. He's more focused in school and happier overall. We're so grateful for this program!"
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-[#FFD700] rounded-full mr-3"></div>
-                <div>
-                  <p className="text-white font-medium">Jennifer L.</p>
-                  <p className="text-white/60 text-sm">Parent</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Meet Dr. Adatia */}
-      <section className="py-20 bg-white px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold text-[#1F2B5F] mb-6">
-                Meet Dr. Sweta Adatia
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Founder of Limitless Brain Lab and pioneer in integrative neuroscience,
-                Dr. Adatia brings over 15 years of experience in brain health optimization.
-              </p>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#FFD700] mt-1 mr-3 flex-shrink-0" />
-                  <p className="text-gray-600">PhD in Neuroscience from Stanford University</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#FFD700] mt-1 mr-3 flex-shrink-0" />
-                  <p className="text-gray-600">Certified in Advanced Neurofeedback Protocols</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#FFD700] mt-1 mr-3 flex-shrink-0" />
-                  <p className="text-gray-600">Published researcher with 50+ peer-reviewed papers</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#FFD700] mt-1 mr-3 flex-shrink-0" />
-                  <p className="text-gray-600">TEDx speaker on brain optimization</p>
-                </div>
-              </div>
-              <blockquote className="border-l-4 border-[#FFD700] pl-6 italic text-gray-600">
-                "My mission is to make brain optimization accessible to everyone.
-                By combining ancient wisdom with modern technology, we can unlock
-                the limitless potential within each of us."
-              </blockquote>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1F2B5F]/10 to-[#FFD700]/10 rounded-3xl blur-3xl"></div>
-              <img
-                src="/assets/dr-adatia.jpg"
-                alt="Dr. Sweta Adatia"
-                className="relative rounded-3xl shadow-2xl"
+          {/* Scroll Indicator - Arrow Down */}
+          <div
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 hidden sm:block"
+            style={{ borderRadius: 'inherit' }}
+          >
+            <div className="flex flex-col items-center">
+              <ArrowDown
+                className="h-6 w-6 text-white/70"
+                style={{
+                  animation: 'bounce-smooth 2s ease-in-out infinite'
+                }}
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1F2B5F] mb-4">
-              Investment in Your Brain Health
+      {/* Options Modal - Fixed Position Overlay */}
+      {showOptions && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm"
+            onClick={() => setShowOptions(false)}
+            style={{
+              animation: 'fadeIn 0.3s ease-out'
+            }}
+          />
+
+          {/* Modal Content */}
+          <div
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[101] w-[90%] sm:w-auto"
+            style={{
+              animation: 'slideUp 0.4s ease-out'
+            }}
+          >
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md mx-auto shadow-2xl">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 text-center">
+                {selectedType === 'personal' ? "Personal Account" : "Clinic Account"}
+              </h3>
+              <p className="text-gray-600 mb-6 text-sm sm:text-base text-center">
+                {selectedType === 'personal'
+                  ? "Get started with your personal neurofeedback journey"
+                  : "Register your clinic for professional neurofeedback services"
+                }
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => handleRegister(selectedType === 'personal' ? 'patient' : 'clinic')}
+                  className="bg-[#323956] hover:bg-[#2a3048] text-white px-6 py-3.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  Create New Account
+                </button>
+                <button
+                  onClick={handleLogin}
+                  className="bg-gray-900 hover:bg-black text-white px-6 py-3.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                  I Already Have an Account
+                </button>
+                <button
+                  onClick={() => setShowOptions(false)}
+                  className="text-sm text-gray-600 hover:text-gray-900 underline mt-2 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <style jsx>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes bounce-smooth {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        @keyframes brainwave {
+          0%, 100% {
+            transform: scaleX(1) scaleY(1);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scaleX(1.05) scaleY(0.95);
+            opacity: 1;
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 137, 123, 0.4);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px 10px rgba(0, 137, 123, 0);
+          }
+        }
+
+        @keyframes neuronPulse {
+          0%, 100% {
+            opacity: 0.6;
+            transform: scale(0.98);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.02);
+          }
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 10px rgba(0, 137, 123, 0.2);
+          }
+          50% {
+            box-shadow: 0 0 25px rgba(0, 137, 123, 0.6);
+          }
+        }
+
+        .animate-brainwave {
+          animation: brainwave 3s ease-in-out infinite;
+        }
+
+        .animate-pulse-card {
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-neuron {
+          animation: neuronPulse 2.5s ease-in-out infinite;
+        }
+
+        .animate-fade-in-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+        .delay-600 { animation-delay: 0.6s; }
+
+        @keyframes dashFlow {
+          0% {
+            background-position: 0 0;
+          }
+          100% {
+            background-position: 0 40px;
+          }
+        }
+
+        @keyframes dotPulse {
+          0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 137, 123, 0.7);
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 0 10px rgba(0, 137, 123, 0);
+          }
+        }
+
+        @keyframes lineGrow {
+          from {
+            height: 0;
+            opacity: 0;
+          }
+          to {
+            height: 100%;
+            opacity: 1;
+          }
+        }
+      `}</style>
+
+      {/* Features Section */}
+      <section
+        id="features"
+        ref={(el) => (sectionRefs.current.features = el)}
+        data-section="features"
+        className={`py-12 sm:py-16 md:py-20 bg-white transition-all duration-1000 relative ${
+          sectionsVisible.features ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Powerful Features for Industrial Asset Management
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose the plan that fits your needs and start your transformation today
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Everything you need to process P&ID documents, extract tags, and generate compliant tag sheets
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gray-100 p-6">
-                <h3 className="text-2xl font-bold text-[#1F2B5F]">Starter</h3>
-                <p className="text-gray-600 mt-2">Perfect for trying neurofeedback</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-[#1F2B5F]">$199</span>
-                  <span className="text-gray-600">/month</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Initial brain assessment</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">10 training sessions/month</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Basic progress tracking</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Email support</span>
-                  </li>
-                </ul>
-                <button className="w-full mt-8 px-6 py-3 bg-gray-200 text-[#1F2B5F] rounded-full hover:bg-gray-300 transition font-medium">
-                  Get Started
-                </button>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-[#FFD700] relative">
-              <div className="absolute top-0 right-0 bg-[#FFD700] text-[#1F2B5F] px-3 py-1 rounded-bl-lg text-sm font-medium">
-                Most Popular
-              </div>
-              <div className="bg-[#1F2B5F] p-6">
-                <h3 className="text-2xl font-bold text-white">Professional</h3>
-                <p className="text-white/80 mt-2">Complete brain optimization</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">$399</span>
-                  <span className="text-white/80">/month</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Comprehensive brain mapping</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Unlimited training sessions</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Weekly therapist sessions</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Advanced analytics</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Priority support</span>
-                  </li>
-                </ul>
-                <button className="w-full mt-8 px-6 py-3 bg-[#FFD700] text-[#1F2B5F] rounded-full hover:bg-[#FFD700]/90 transition font-medium">
-                  Get Started
-                </button>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gray-100 p-6">
-                <h3 className="text-2xl font-bold text-[#1F2B5F]">Elite</h3>
-                <p className="text-gray-600 mt-2">Premium personalized care</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-[#1F2B5F]">$799</span>
-                  <span className="text-gray-600">/month</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Everything in Professional</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">1-on-1 with Dr. Adatia</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Custom protocols</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">Home device included</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <span className="text-gray-600">24/7 concierge support</span>
-                  </li>
-                </ul>
-                <button className="w-full mt-8 px-6 py-3 bg-gray-200 text-[#1F2B5F] rounded-full hover:bg-gray-300 transition font-medium">
-                  Contact Us
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-[#1F2B5F] to-[#2a3a6e] px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Brain?
-          </h2>
-          <p className="text-xl text-white/80 mb-8">
-            Join thousands who have unlocked their brain's potential.
-            Start your journey to better focus, calm, and cognitive health today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register" className="px-8 py-4 bg-[#FFD700] text-[#1F2B5F] rounded-full hover:bg-white transition font-medium">
-              Start Free Trial
-            </Link>
-            <Link to="/consultation" className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-full hover:bg-white hover:text-[#1F2B5F] transition font-medium">
-              Schedule Consultation
-            </Link>
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+                <Upload className="w-8 h-8 text-[#1e3a5f]" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">P&ID Document Processing</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Upload and parse technical drawings in PDF format. Our AI engine automatically identifies and extracts instrumentation symbols and tags.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-6">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">ISA 5.1 Compliant Tag Extraction</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Automatically extract tags following ISA 5.1 instrumentation standards. Ensure complete compliance with industry requirements.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+                <FileText className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">ADNOC Tag Creation Sheet Generation</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Generate standardized ADNOC tag creation sheets automatically. Export to Excel/CSV formats with one click.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6">
+                <Settings className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Multi-Project Area Management</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Organize and manage multiple project areas simultaneously. Track progress across different facilities and zones.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-teal-100 rounded-xl flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-teal-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Real-time Collaboration</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Engineers and supervisors work together seamlessly. Review, approve, and annotate tag sheets in real-time.
+              </p>
+            </div>
+
+            {/* Feature 6 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Compliance and Audit Trail</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Complete audit trail for all changes. Maintain compliance with IEC 61511, API 14C, and ASME B31.3 standards.
+              </p>
+            </div>
           </div>
-          <p className="text-white/60 mt-8 text-sm">
-            No credit card required • 30-day money-back guarantee
-          </p>
+
+          {/* How It Works Section */}
+          <div id="how-it-works" className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-300 relative z-10">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                How It Works
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Five simple steps to transform your P&ID processing workflow
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-5 gap-6">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  1
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Upload P&ID</h3>
+                <p className="text-sm text-gray-600">Upload your technical drawings in PDF format</p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  2
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">AI Extraction</h3>
+                <p className="text-sm text-gray-600">Automatic tag extraction using AI intelligence</p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  3
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Generate Sheets</h3>
+                <p className="text-sm text-gray-600">Create standardized ADNOC tag sheets</p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  4
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Review & Approve</h3>
+                <p className="text-sm text-gray-600">Team collaboration for verification</p>
+              </div>
+
+              {/* Step 5 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  5
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Export Data</h3>
+                <p className="text-sm text-gray-600">Download Excel/CSV formatted files</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Industry Standards Box */}
+          <div className="bg-gradient-to-br from-blue-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-blue-200 animate-fade-in-up delay-500 relative z-10">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Industry Standards Compliance
+              </h2>
+              <p className="text-lg text-gray-600">
+                AIMS ensures full compliance with all major industrial instrumentation and safety standards
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl border-2 border-blue-200 text-center">
+                <div className="text-3xl font-bold text-[#1e3a5f] mb-2">ISA 5.1</div>
+                <p className="text-sm text-gray-600">Instrumentation Symbols and Identification</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-green-200 text-center">
+                <div className="text-3xl font-bold text-green-600 mb-2">ASME B31.3</div>
+                <p className="text-sm text-gray-600">Process Piping Standards</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-orange-200 text-center">
+                <div className="text-3xl font-bold text-orange-600 mb-2">API 14C</div>
+                <p className="text-sm text-gray-600">Safety Systems Requirements</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-purple-200 text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-2">IEC 61511</div>
+                <p className="text-sm text-gray-600">Functional Safety Standards</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 3 CTAs with 3D Animation */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4" style={{ perspective: '1500px' }}>
+            {/* Card 1: Neuropsychiatry */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/60 to-[#00796B]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-[#00897B] to-[#00796B] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.6)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neuropsychiatry</h3>
+                  <p className="text-sm sm:text-base opacity-90">Comprehensive mental health assessment</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Executive Cognitive Check */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/60 to-gray-800/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite 0.5s',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Executive Cognitive Check</h3>
+                  <p className="text-sm sm:text-base opacity-90">Evaluate cognitive performance</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Neurodivergence */}
+            <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#323956]/60 to-[#2a3048]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-30px)' }}></div>
+                <div className="bg-gradient-to-br from-[#323956] to-[#2a3048] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(50,57,86,0.6)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite 1s',
+                       transform: 'translateZ(20px)'
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
+                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neurodivergence</h3>
+                  <p className="text-sm sm:text-base opacity-90">Specialized neurodivergent support</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Connect Section */}
+          <div className="text-center mb-16 animate-fade-in-up delay-600 relative z-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900 mb-4 bg-white">
+              Connect
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto mb-12 bg-white">
+              Find us at a clinic near you to start your journey with neurosense. Or if you don't find, book a discovery call.
+            </p>
+
+            {/* Video Call Mockup with 3D Animation */}
+            <div className="flex justify-center" style={{ perspective: '1200px' }}>
+              <div className="relative w-80 sm:w-96 group" style={{ transformStyle: 'preserve-3d' }}>
+                {/* Glow Effect Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/40 to-[#00796B]/40 rounded-[2.5rem] blur-3xl group-hover:blur-[60px] opacity-50 transition-all duration-700"
+                     style={{ transform: 'translateZ(-50px)' }}></div>
+
+                {/* Screen Content with White Border */}
+                <div className="bg-white rounded-[2.5rem] overflow-hidden relative aspect-[9/16] shadow-2xl p-3 transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,137,123,0.5)]"
+                     style={{
+                       transformStyle: 'preserve-3d',
+                       animation: 'float 3s ease-in-out infinite',
+                       transform: 'translateZ(30px)'
+                     }}>
+                  {/* Inner Screen with Image */}
+                  <div className="bg-black rounded-[2rem] overflow-hidden relative h-full transition-transform duration-700 group-hover:scale-105"
+                       style={{ transform: 'translateZ(20px)' }}>
+                    {/* Video Call Background - Using Actual Image */}
+                    <div className="absolute inset-0">
+                      <img
+                        src="/connect-person.jpg"
+                        alt="Video call with EEG headband"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Clinic near you Button */}
+                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-8/12" style={{ transform: 'translate(-50%, 0) translateZ(30px)' }}>
+                      <button className="w-full bg-[#00897B] hover:bg-[#00796B] text-white px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-2xl">
+                        Clinic near you
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Measure Section */}
+          <div className="text-center mb-16 animate-fade-in-up relative z-10">
+            <div className="relative">
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900 mb-4 bg-white relative z-20">
+                Measure
+              </h2>
+              <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto mb-12 bg-white relative z-20">
+                Receive your detailed neurofeedback brain scan. This will help in customizing your experience.
+              </p>
+
+              {/* Devices and Person Image Mockup - 3D CIRCULAR CAROUSEL */}
+              <div className="relative w-full mx-auto mb-16 py-8 h-[350px] flex items-center justify-center" style={{ perspective: '1200px' }}>
+                <div
+                  ref={carouselRef}
+                  className="relative"
+                  style={{
+                    width: '250px',
+                    height: '250px',
+                    transformStyle: 'preserve-3d',
+                    transition: 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'rotateY(0deg)'
+                  }}
+                >
+                  {/* Sustained Focus Image - 3D CARD 1 (0 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(0deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/30 to-[#00796B]/30 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-2xl" style={{ transform: 'translateZ(30px)' }}>
+                          <img
+                            src="/sustainedfocus.png"
+                            alt="Sustained focus"
+                            className="w-24 h-24 object-contain relative z-10 drop-shadow-2xl"
+                            style={{ transform: 'translateZ(20px)' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Phone with Circular Progress - 3D CARD 2 (120 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(120deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite 0.5s',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-[#00897B]/40 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-[1.5rem] p-2 shadow-2xl border-2 border-gray-300 relative z-10 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.5)] transition-all"
+                             style={{ transform: 'translateZ(40px)' }}>
+                          <div className="bg-white rounded-[1.2rem] overflow-hidden w-28 h-40 flex flex-col items-center justify-center">
+                            {/* Circular Progress with animation */}
+                            <div className="relative w-16 h-16 mb-2">
+                              <svg className="transform -rotate-90 w-16 h-16">
+                                <circle cx="32" cy="32" r="28" stroke="#e5e7eb" strokeWidth="5" fill="none" />
+                                <circle cx="32" cy="32" r="28" stroke="#00897B" strokeWidth="5" fill="none"
+                                        strokeDasharray="176" strokeDashoffset="123" strokeLinecap="round"
+                                        className="transition-all duration-1000 group-hover:stroke-dashoffset-105" />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-xl font-bold text-gray-900 transition-all group-hover:scale-125 group-hover:text-[#00897B]">30%</span>
+                              </div>
+                            </div>
+                            <button className="bg-[#00897B] text-white px-4 py-1.5 rounded-full text-xs font-semibold uppercase hover:bg-[#00796B] hover:scale-110 transition-all duration-300 hover:shadow-xl"
+                                    style={{ transform: 'translateZ(10px)' }}>
+                              JOIN
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Person with EEG Headband - 3D CARD 3 (240 degrees) */}
+                  <div className="absolute top-1/2 left-1/2" style={{
+                    transform: 'translate(-50%, -50%) rotateY(240deg) translateZ(280px)',
+                    transformStyle: 'preserve-3d'
+                  }}>
+                    <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                      <div className="relative transition-all duration-700 ease-out transform group-hover:scale-110"
+                           style={{
+                             transformStyle: 'preserve-3d',
+                             animation: 'float 3s ease-in-out infinite 1s',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                           }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/40 to-[#00796B]/40 rounded-2xl blur-xl group-hover:blur-2xl transition-all"
+                             style={{ transform: 'translateZ(-50px)' }}></div>
+                        <div className="w-32 h-40 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-2xl overflow-hidden border-2 border-[#00897B]/30 relative z-10 group-hover:border-[#00897B]/60 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.5)] transition-all"
+                             style={{ transform: 'translateZ(25px)' }}>
+                          <img
+                            src="/eeg scan.png"
+                            alt="EEG Scan"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Text */}
+              <div className="max-w-3xl mx-auto bg-white relative z-20">
+                <p className="text-base sm:text-lg text-gray-900 leading-relaxed">
+                  Measure your mind. Get your brain scanned in just <span className="font-semibold text-[#00897B]">15 minutes</span>, receive your detailed <span className="font-semibold text-[#00897B]">BMW (Brain and Mental Wellness) report</span> with over <span className="font-semibold text-[#00897B]">13 parameters</span> within 24 hours, and begin your journey toward a healthier and sharper brain.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Care Section */}
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
+            <div className="relative">
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-white relative z-20">
+                Care
+              </h2>
+
+              {/* Content Box with 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite',
+                         transform: 'translateZ(20px)'
+                       }}>
+                    <p className="text-base sm:text-lg text-gray-900 leading-relaxed">
+                      <span className="font-bold">Build a personalized brain optimization plan tailored to your needs.</span> Leverage our lab tested brainwave frequencies, special sounds and music (mantras), ANS (Autonomic Nervous System) reset protocols, guided meditations, and targeted light and sound therapies. Track your progress, refine your plan, and sustain your gains with ongoing expert support. Available for both <span className="font-semibold text-[#00897B]">home and clinic based care</span>, depending on your requirements.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Ask Ashok Interactive (AI) Section */}
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
+            <div className="relative">
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#00897B] mb-4 bg-white relative z-20">
+                Ask Dr Sweta Interactive (AI)
+              </h2>
+
+              {/* Content Box with 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite 0.5s',
+                         transform: 'translateZ(20px)'
+                       }}>
+                <p className="text-base sm:text-lg text-gray-900 leading-relaxed mb-6">
+                  Ask AI trained about your condition and how NeuroSense can help, in any language.
+                </p>
+
+                <p className="text-sm text-gray-600 leading-relaxed mb-8">
+                  This would be reworded for dr sweta the Ai, "AI generated content may contain errors or inaccuracies, and is not a substitute for professional advice, treatment or therapy. Please check with your Doctor or Therapist before following any advice given. By using this Ai, you agree to the terms and conditions on the website, are over 18, and agree that you are solely responsible. All conversations are anonymous and never shared."
+                </p>
+
+                {/* AI Avatar and Name */}
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center overflow-hidden">
+                    <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Dr Sweta Adatia - Free Version 🤖</h3>
+                  <p className="text-sm text-gray-600">Neurologist with a specialization in stroke and migraine - Premium Version</p>
+
+                  {/* Social Buttons */}
+                  <div className="flex gap-3 mt-4">
+                    <button className="bg-[#1DA1F2] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#1a8cd8] transition-colors">
+                      Tweet
+                    </button>
+                    <button className="bg-[#25D366] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#20BA5A] transition-colors">
+                      Call
+                    </button>
+                    <button className="bg-[#0866FF] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#0658e3] transition-colors">
+                      Share
+                    </button>
+                  </div>
+                </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How Does NeuroSense's Frequency Modulation Work Section */}
+          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
+            <div className="relative">
+
+              {/* Content Box with Brain Image and Text - 3D Animation */}
+              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                       style={{ transform: 'translateZ(-30px)' }}></div>
+                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-5xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
+                       style={{
+                         transformStyle: 'preserve-3d',
+                         animation: 'float 4s ease-in-out infinite 1s',
+                         transform: 'translateZ(20px)'
+                       }}>
+                    <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                      {/* Frequency Modulation Video */}
+                      <div className="flex-shrink-0 group/video" style={{ transformStyle: 'preserve-3d' }}>
+                        <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transition-transform duration-700"
+                             style={{ transform: 'translateZ(30px)' }}>
+                          <video
+                            src="/frequency_modulation_work.mp4"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-contain drop-shadow-lg transition-transform duration-700 group-hover/video:scale-110"
+                          />
+                        </div>
+                      </div>
+
+                  {/* Text Content */}
+                  <div className="flex-1 text-left space-y-4">
+                    <h2 className="text-3xl sm:text-4xl font-normal text-gray-900 leading-tight">
+                      How does Neurosense's Frequency Modulation Work?
+                    </h2>
+                    <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
+                      NeuroSense uses frequency modulated audio, subtle rhythms and tones your brain naturally syncs to, to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
+                    </p>
+                  </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <Brain className="h-8 w-8 text-[#1F2B5F]" />
-                <span className="ml-2 text-xl font-bold text-[#1F2B5F]">NeuroSense360</span>
+      <footer className="bg-black text-white py-12 sm:py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
+            {/* Left Column - Brand & Newsletter */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Logo */}
+              <div className="flex items-center">
+                <img
+                  src="/footer logo.png"
+                  alt="NeuroSense Logo"
+                  className="h-12 w-auto object-contain"
+                />
               </div>
-              <p className="text-gray-600 mb-4">
-                A Limitless Brain Lab Company
+
+              {/* Tagline */}
+              <p className="text-base">
+                Brain fitness score - <span className="text-[#00897B]">try it now buy it now</span>
               </p>
-              <p className="text-sm text-gray-500">
-                Fusing cutting-edge neuroscience with innovative techniques for optimal brain health.
-              </p>
+
+              {/* Newsletter */}
+              <div className="space-y-3">
+                <p className="text-sm text-gray-400">
+                  Develop a healthier brain with our science backed tips straight to your inbox.
+                </p>
+                <div className="space-y-2">
+                  <input
+                    type="email"
+                    placeholder="Your email address"
+                    className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00897B]"
+                  />
+                  <button className="w-full px-6 py-2.5 bg-[#00897B] hover:bg-[#00796B] text-white rounded-lg text-sm font-medium transition-colors">
+                    Subscribe
+                  </button>
+                </div>
+              </div>
+
+              {/* Social Icons */}
+              <div className="flex gap-3">
+                <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                  <Linkedin className="h-4 w-4" />
+                </a>
+                <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                  <Facebook className="h-4 w-4" />
+                </a>
+                <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                  <Youtube className="h-4 w-4" />
+                </a>
+                <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
+                  <Twitter className="h-4 w-4" />
+                </a>
+              </div>
+
+              {/* Find a Clinic CTA */}
+              <div className="p-4 bg-[#00897B]/20 rounded-lg border border-[#00897B]/30">
+                <p className="text-sm font-medium mb-1">Ready to start?</p>
+                <a href="/register" className="text-sm text-[#00897B] hover:underline">Find a clinic near you →</a>
+              </div>
+
+              {/* Address */}
+              <div className="flex items-start gap-2 text-xs text-gray-400">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-white">NeuroSense Inc.</p>
+                  <p>175 Varick Street</p>
+                  <p>New York, NY 10014, US</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-[#1F2B5F] mb-4">Product</h3>
-              <ul className="space-y-2">
-                <li><a href="/features" className="text-gray-600 hover:text-[#1F2B5F]">Features</a></li>
-                <li><a href="/science" className="text-gray-600 hover:text-[#1F2B5F]">The Science</a></li>
-                <li><a href="/pricing" className="text-gray-600 hover:text-[#1F2B5F]">Pricing</a></li>
-                <li><a href="/devices" className="text-gray-600 hover:text-[#1F2B5F]">Devices</a></li>
+
+            {/* For Clinics Column */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For clinics</h3>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold text-[#1F2B5F] mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><a href="/about" className="text-gray-600 hover:text-[#1F2B5F]">About Us</a></li>
-                <li><a href="/team" className="text-gray-600 hover:text-[#1F2B5F]">Our Team</a></li>
-                <li><a href="/research" className="text-gray-600 hover:text-[#1F2B5F]">Research</a></li>
-                <li><a href="/contact" className="text-gray-600 hover:text-[#1F2B5F]">Contact</a></li>
+
+            {/* Resources Column */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
+              <ul className="space-y-3">
+                <li><Link to="/lbw-updates" className="text-base hover:text-[#00897B] transition-colors">How It Works</Link></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Guide to Brainwaves</a></li>
+                <li><Link to="/science" className="text-base hover:text-[#00897B] transition-colors">Science</Link></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Reviews</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Blog</a></li>
+                <li><Link to="/faq" className="text-base hover:text-[#00897B] transition-colors">FAQs</Link></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">FSA/HSA Eligible</a></li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold text-[#1F2B5F] mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><a href="/help" className="text-gray-600 hover:text-[#1F2B5F]">Help Center</a></li>
-                <li><a href="/faq" className="text-gray-600 hover:text-[#1F2B5F]">FAQ</a></li>
-                <li><a href="/privacy" className="text-gray-600 hover:text-[#1F2B5F]">Privacy Policy</a></li>
-                <li><a href="/terms" className="text-gray-600 hover:text-[#1F2B5F]">Terms of Service</a></li>
+
+            {/* For Consumers Column */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For consumers</h3>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Start now</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Peak Performance</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense vs. Others</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Providers Library</a></li>
+              </ul>
+            </div>
+
+            {/* Company Column */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Company</h3>
+              <ul className="space-y-3">
+                <li><Link to="/about-us" className="text-base hover:text-[#00897B] transition-colors">About Us</Link></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Careers →</a></li>
+                <li><Link to="/privacy-policy" className="text-base hover:text-[#00897B] transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms-and-conditions" className="text-base hover:text-[#00897B] transition-colors">Terms & Conditions</Link></li>
+                <li><a href="tel:+18553217800" className="text-base hover:text-[#00897B] transition-colors">+1 (855) 321-7800</a></li>
               </ul>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-sm text-gray-500">
-                © 2024 Limitless Brain Lab. All rights reserved.
-              </p>
-              <div className="flex space-x-6 mt-4 md:mt-0">
-                <a href="https://linkedin.com/company/limitlessbrainlab" className="text-gray-400 hover:text-[#1F2B5F]">
-                  LinkedIn
-                </a>
-                <a href="https://instagram.com/limitlessbrainlab" className="text-gray-400 hover:text-[#1F2B5F]">
-                  Instagram
-                </a>
-                <a href="https://facebook.com/limitlessbrainlab" className="text-gray-400 hover:text-[#1F2B5F]">
-                  Facebook
-                </a>
-              </div>
+
+          {/* Bottom Copyright */}
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <div className="text-center">
+              <p className="text-sm text-gray-400">&copy; 2024 NeuroSense Inc. All rights reserved.</p>
             </div>
           </div>
         </div>

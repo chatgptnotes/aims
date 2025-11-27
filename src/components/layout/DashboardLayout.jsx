@@ -3,6 +3,7 @@ import { Bell, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from './Sidebar';
 import ProfileModal from './ProfileModal';
+import VersionFooter from '../common/VersionFooter';
 
 const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -43,7 +44,7 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search clinics, patients, reports..."
+                  placeholder="Search project areas, supervisors, reports..."
                   className="block w-72 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-gray-50 dark:bg-gray-700"
                 />
               </div>
@@ -70,9 +71,11 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
                     ) : (
                       (() => {
                         try {
+                          // For super admin with project area name, show project area name initial
                           if (user?.role === 'super_admin' && user?.clinicName) {
                             return user.clinicName.charAt(0).toUpperCase();
                           }
+                          // For project area admin, show project area name initial
                           if (user?.role === 'clinic_admin' && user?.clinicName) {
                             return user.clinicName.charAt(0).toUpperCase();
                           }
@@ -101,11 +104,14 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+        <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 pb-12">
           <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
             {children}
           </div>
         </main>
+
+        {/* Version Footer */}
+        <VersionFooter />
       </div>
 
       {/* Profile Modal */}

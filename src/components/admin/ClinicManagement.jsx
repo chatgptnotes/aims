@@ -490,15 +490,15 @@ const ClinicManagement = ({ onUpdate }) => {
       
       const createdClinic = await DatabaseService.add('clinics', clinicData);
 
-      toast.success(`Clinic "${data.name}" created and activated successfully with ${data.subscriptionPlan || 'trial'} plan! They can now login.`);
+      toast.success(`Project Area "${data.name}" created and activated successfully with ${data.subscriptionPlan || 'trial'} plan! They can now login.`);
       loadClinics();
       setShowModal(false);
       reset();
       onUpdate?.();
 
     } catch (error) {
-      toast.error('Error creating clinic');
-      console.error(error);
+      toast.error('Error creating project area: ' + (error.message || 'Unknown error'));
+      console.error('Error creating project area:', error);
     }
   };
 
@@ -509,15 +509,15 @@ const ClinicManagement = ({ onUpdate }) => {
         return;
       }
       await DatabaseService.update('clinics', selectedClinic.id, data);
-      toast.success('Clinic updated successfully');
+      toast.success('Project Area updated successfully');
       loadClinics();
       setShowModal(false);
       setSelectedClinic(null);
       reset();
       onUpdate?.();
     } catch (error) {
-      toast.error('Error updating clinic');
-      console.error(error);
+      toast.error('Error updating project area: ' + (error.message || 'Unknown error'));
+      console.error('Error updating project area:', error);
     }
   };
 
@@ -527,7 +527,7 @@ const ClinicManagement = ({ onUpdate }) => {
       const newStatus = !clinic.isActive;
       const action = newStatus ? 'activate' : 'deactivate';
 
-      if (window.confirm(`Are you sure you want to ${action} "${clinic.name}"?\n\n${newStatus ? 'Clinic will be able to login and use the system.' : 'Clinic will be unable to login or access the system.'}`)) {
+      if (window.confirm(`Are you sure you want to ${action} "${clinic.name}"?\n\n${newStatus ? 'Project Area will be able to login and use the system.' : 'Project Area will be unable to login or access the system.'}`)) {
 
         // Prepare update data
         const updateData = {
@@ -552,8 +552,8 @@ const ClinicManagement = ({ onUpdate }) => {
         await DatabaseService.update('clinics', clinicId, updateData);
 
         const successMessage = newStatus
-          ? `Clinic "${clinic.name}" activated successfully! They can now login with their credentials.`
-          : `Clinic "${clinic.name}" deactivated successfully.`;
+          ? `Project Area "${clinic.name}" activated successfully! They can now login with their credentials.`
+          : `Project Area "${clinic.name}" deactivated successfully.`;
 
         toast.success(successMessage, {
           duration: 4000
@@ -562,7 +562,7 @@ const ClinicManagement = ({ onUpdate }) => {
         onUpdate?.();
       }
     } catch (error) {
-      toast.error('Error updating clinic status');
+      toast.error('Error updating project area status: ' + (error.message || 'Unknown error'));
       console.error('Error in handleDeactivateClinic:', error);
     }
   };
@@ -648,7 +648,7 @@ const ClinicManagement = ({ onUpdate }) => {
           }
         }
 
-        toast.success(`Clinic "${clinic.name}" activated successfully! They can now login to their portal.`);
+        toast.success(`Project Area "${clinic.name}" activated successfully! They can now login to their portal.`);
         loadClinics();
         onUpdate?.();
 
@@ -660,8 +660,8 @@ const ClinicManagement = ({ onUpdate }) => {
         }, 1000);
 
       } catch (error) {
-        toast.error('Error activating clinic');
-        console.error(error);
+        toast.error('Error activating project area: ' + (error.message || 'Unknown error'));
+        console.error('Error activating project area:', error);
       }
     }
   };
@@ -684,7 +684,7 @@ const ClinicManagement = ({ onUpdate }) => {
           updated_at: new Date().toISOString()
         });
 
-        toast.success(`Clinic "${clinic.name}" approved and activated! They now have 10 trial reports and can login.`, {
+        toast.success(`Project Area "${clinic.name}" approved and activated! They now have 10 trial reports and can login.`, {
           duration: 4000
         });
 
@@ -693,8 +693,8 @@ const ClinicManagement = ({ onUpdate }) => {
         onUpdate?.();
 
       } catch (error) {
-        toast.error('Error approving clinic registration');
-        console.error('Clinic approval error:', error);
+        toast.error('Error approving project area registration: ' + (error.message || 'Unknown error'));
+        console.error('Project area approval error:', error);
       }
     }
   };
@@ -716,8 +716,8 @@ const ClinicManagement = ({ onUpdate }) => {
       };
 
       // Save to localStorage for session persistence
-      localStorage.setItem('neuro360_user', JSON.stringify(clinicUser));
-      localStorage.setItem('neuro360_token', clinicUser.token);
+      localStorage.setItem('aims_user', JSON.stringify(clinicUser));
+      localStorage.setItem('aims_token', clinicUser.token);
 
       // Show success message
       toast.success(`COMPLETE: Auto-login successful! Redirecting to ${clinic.name} clinic dashboard...`, {
@@ -948,7 +948,7 @@ Please manually share these credentials with the clinic.`;
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 font-medium">Loading Clinic Management...</p>
+            <p className="mt-4 text-gray-600 font-medium">Loading Engineer Management...</p>
           </div>
         </div>
       </div>
@@ -959,7 +959,7 @@ Please manually share these credentials with the clinic.`;
     return (
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto mt-20">
-          <h3 className="text-red-800 font-semibold">Error Loading Clinic Management</h3>
+          <h3 className="text-red-800 font-semibold">Error Loading Engineer Management</h3>
           <p className="text-red-600 mt-2 text-sm">{error}</p>
           <div className="flex space-x-3 mt-4">
             <button
@@ -1004,10 +1004,10 @@ Please manually share these credentials with the clinic.`;
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Clinic Management
+                    Engineer Management
                   </h1>
                   <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
-                    Manage your registered clinics with modern precision FEATURE:
+                    Manage your registered project areas and engineers
                   </p>
                 </div>
               </div>
@@ -1065,14 +1065,14 @@ Please manually share these credentials with the clinic.`;
                 className="flex items-center justify-center space-x-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors flex-1 lg:flex-initial"
               >
                 <Plus className="h-4 w-4" />
-                <span>Add Clinic</span>
+                <span>Add Project Area</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* All Clinics Section */}
+      {/* All Project Areas Section */}
       <div className="relative">
         <div className="text-center mb-4">
           <div className="inline-flex items-center space-x-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -1083,10 +1083,10 @@ Please manually share these credentials with the clinic.`;
               {loading ? (
                 <div className="flex items-center space-x-1.5">
                   <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-500 border-t-transparent"></div>
-                  <span>Loading Clinics...</span>
+                  <span>Loading Project Areas...</span>
                 </div>
               ) : (
-                `All Clinics (${clinics.length})`
+                `All Project Areas (${clinics.length})`
               )}
             </h2>
           </div>
@@ -1413,8 +1413,8 @@ Please manually share these credentials with the clinic.`;
               <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
                 <Users className="h-16 w-16 text-slate-400" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-4">No clinics registered yet</h3>
-              <p className="text-slate-500 text-lg mb-8">Start by adding your first clinic to the platform</p>
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">No Project Areas Registered Yet</h3>
+              <p className="text-slate-500 text-lg mb-8">Start by adding your first project area to the platform</p>
               <button
                 onClick={() => openModal()}
                 className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -1422,7 +1422,7 @@ Please manually share these credentials with the clinic.`;
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 <div className="relative flex items-center space-x-3">
                   <Plus className="h-6 w-6" />
-                  <span>Add Your First Clinic</span>
+                  <span>Add Your First Project Area</span>
                 </div>
               </button>
             </div>
@@ -1485,7 +1485,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
       <div className="relative top-10 mx-auto p-5 border max-w-md w-full shadow-lg rounded-md bg-white">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-gray-900">
-            {clinic ? 'Edit Clinic' : 'Add New Clinic'}
+            {clinic ? 'Edit Project Area' : 'Add New Project Area'}
           </h3>
           <button
             onClick={onClose}
@@ -1528,11 +1528,11 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Clinic Name *
+              Project Area Name *
             </label>
             <input
               type="text"
-              {...register('name', { required: 'Clinic name is required' })}
+              {...register('name', { required: 'Project area name is required' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
@@ -1558,7 +1558,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contact Person
+              Site Manager / Contact Person
             </label>
             <input
               type="text"
@@ -1569,7 +1569,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone
+              Contact Phone
             </label>
             <input
               type="tel"
@@ -1580,11 +1580,12 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address
+              Site Address / Location
             </label>
             <textarea
               {...register('address')}
               rows="3"
+              placeholder="Physical location of the project area or facility"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
@@ -1702,7 +1703,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Reports Limit
+                  P&ID Reports Limit
                   {selectedPlan === 'enterprise' && (
                     <span className="text-xs text-gray-500 ml-1">(Unlimited)</span>
                   )}
@@ -1734,7 +1735,7 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
               type="submit"
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 border border-transparent rounded-lg text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              {clinic ? 'Update Clinic' : 'Create Clinic'}
+              {clinic ? 'Update Project Area' : 'Create Project Area'}
             </button>
           </div>
         </form>
@@ -1745,17 +1746,17 @@ const ClinicModal = ({ clinic, onSubmit, onClose, register, handleSubmit, errors
 
 // Clinic Details Component
 const ClinicDetails = ({ clinic, onBack }) => {
-  const [patients, setPatients] = useState([]);
+  const [supervisors, setPatients] = useState([]);
   const [reports, setReports] = useState([]);
   const [usage, setUsage] = useState({});
 
   useEffect(() => {
     if (clinic) {
-      const clinicPatients = DatabaseService.getPatientsByClinic(clinic.id);
+      const clinicSupervisors = DatabaseService.getSupervisorsByClinic(clinic.id);
       const clinicReports = DatabaseService.getReportsByClinic(clinic.id);
       const clinicUsage = DatabaseService.getClinicUsage(clinic.id);
       
-      setPatients(clinicPatients);
+      setPatients(clinicSupervisors);
       setReports(clinicReports);
       setUsage(clinicUsage);
     }
@@ -1853,7 +1854,7 @@ const ClinicDetails = ({ clinic, onBack }) => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Patients:</span>
-                <span className="font-semibold">{patients.length}</span>
+                <span className="font-semibold">{supervisors.length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Reports:</span>

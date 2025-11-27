@@ -27,7 +27,7 @@
 1. Open browser
 2. Go to: https://supabase.com/dashboard
 3. Login with your Supabase account
-4. Select your project: **Neuro360** (or whatever name)
+4. Select your project: **AIMS** (or whatever name)
 
 ### Step 2: Navigate to Users
 

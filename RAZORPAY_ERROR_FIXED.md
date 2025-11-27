@@ -41,7 +41,7 @@ The key in your error URL showed: `rzp_liv_B9B1209...` (corrupted/wrong key)
 
 **Double-click this file:**
 ```
-D:\Neuro360\FINAL_FIX_CORRECT_CREDENTIALS.bat
+D:\AIMS\FINAL_FIX_CORRECT_CREDENTIALS.bat
 ```
 
 **This will automatically:**
@@ -106,7 +106,7 @@ If you STILL see errors after running the script:
 
 ### Option A: Manually verify .env file
 
-1. Open `D:\Neuro360\.env` in Notepad
+1. Open `D:\AIMS\.env` in Notepad
 2. Find these lines:
    ```
    VITE_RAZORPAY_KEY_ID=rzp_live_xhAJH2vAW4eXzu

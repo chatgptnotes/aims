@@ -113,7 +113,7 @@ class ProgressTrackingService {
           startDate.setMonth(endDate.getMonth() - 6);
       }
 
-      // Get all analyses for the patient in timeframe
+      // Get all analyses for the supervisor in timeframe
       const { data: analyses, error } = await this.supabase
         .from('cloud_analyses')
         .select('*')
@@ -218,7 +218,7 @@ class ProgressTrackingService {
       // Extract current metrics
       const currentMetrics = this.extractProgressMetrics(latestAnalysis.analysis_data);
 
-      // Get patient goals
+      // Get supervisor goals
       const goals = await this.getPatientGoals(patientId);
 
       // Calculate progress towards goals

@@ -58,10 +58,10 @@ const LoginForm = () => {
               break;
             case 'clinic_admin':
             case 'clinic':
-              redirectPath = '/clinic';
+              redirectPath = '/clinic'; // Routes to project area dashboard
               break;
             case 'patient':
-              redirectPath = '/patient-dashboard';
+              redirectPath = '/patient-dashboard'; // Routes to supervisor dashboard
               break;
             default:
               redirectPath = '/dashboard'; // Fallback to dashboard
@@ -100,8 +100,8 @@ const LoginForm = () => {
         <div className="text-center mb-6 sm:mb-8 animate-slide-up">
           <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2 sm:mb-3">Welcome Back</h2>
           <p className="text-gray-600 font-medium text-sm sm:text-base">
-            {userTypeFromState === 'patient' ? 'Patient Login' :
-             userTypeFromState === 'clinic' ? 'Clinic Login' :
+            {userTypeFromState === 'patient' ? 'Supervisor Login' :
+             userTypeFromState === 'clinic' ? 'Engineer Login' :
              'Sign in to your account'}
           </p>
         </div>
@@ -211,7 +211,7 @@ const LoginForm = () => {
           </button>
         </form>
 
-        {/* Sign Up Link - Only show for clinic users */}
+        {/* Sign Up Link - Only show for project area users */}
         {userTypeFromState === 'clinic' && (
           <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
             <p className="text-sm text-gray-600">

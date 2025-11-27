@@ -11,7 +11,7 @@ import DashboardPage from './pages/DashboardPage'
 import AssessmentPage from './pages/AssessmentPage'
 import CoachingPage from './pages/CoachingPage'
 import ProgressPage from './pages/ProgressPage'
-import QEEGPage from './pages/QEEGPage'
+import PIDPage from './pages/PIDPage'
 import ContentPage from './pages/ContentPage'
 import ProfilePage from './pages/ProfilePage'
 
@@ -91,7 +91,7 @@ function AnimatedRoutes() {
           <Route path="/assessments/:type" element={<AssessmentPage />} />
           <Route path="/coaching" element={<CoachingPage />} />
           <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/qeeg" element={<QEEGPage />} />
+          <Route path="/pid" element={<PIDPage />} />
           <Route path="/content" element={<ContentPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           

@@ -100,7 +100,7 @@ npm run dev
 
 ## 🎯 Expected Behavior:
 
-✅ **Test Page (`/test`):** Green page with "NeuroSense360 Test Page"  
+✅ **Test Page (`/test`):** Green page with "AIMS Test Page"  
 ✅ **Login Page (`/login`):** Blue login form  
 ✅ **Root (`/`):** Should redirect to `/login`  
 ✅ **Console:** No red errors  

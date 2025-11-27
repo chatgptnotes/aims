@@ -2,7 +2,7 @@
 
 ## Removal Status: COMPLETE ✅
 
-All AWS-related files have been successfully removed from the Neuro360 project.
+All AWS-related files have been successfully removed from the AIMS project.
 
 ---
 

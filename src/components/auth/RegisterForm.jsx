@@ -135,8 +135,8 @@ const RegisterForm = () => {
                 })}
                 onChange={(e) => setUserType(e.target.value)}
               >
-                <option value="patient">️ Personal Patient</option>
-                <option value="clinic">CLINIC: Clinic Administrator</option>
+                <option value="patient">Supervisor</option>
+                <option value="clinic">Project Area Engineer</option>
               </select>
             </div>
             {errors.userType && (
@@ -146,17 +146,17 @@ const RegisterForm = () => {
               {watchUserType === 'super_admin' ? (
                 <span className="flex items-center gap-1">
                   <Shield className="w-3 h-3 text-[#323956]" />
-                  Super Admin has full system access and manages all clinics
+                  Super Admin has full system access and manages all project areas
                 </span>
               ) : watchUserType === 'patient' ? (
                 <span className="flex items-center gap-1">
                   <Heart className="w-3 h-3 text-[#323956]" />
-                  Personal account for individual neurofeedback training
+                  Supervisor account for managing and viewing project data
                 </span>
               ) : (
                 <span className="flex items-center gap-1">
                   <Building2 className="w-3 h-3 text-[#323956]" />
-                  Clinic Admin manages patients, reports and clinic data
+                  Engineer manages project areas, workflows, and supervisors
                 </span>
               )}
             </div>
@@ -166,7 +166,7 @@ const RegisterForm = () => {
           <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <label htmlFor="name" className="field-label">
               {watchUserType === 'super_admin' ? 'Administrator Name' :
-               watchUserType === 'clinic' ? 'Clinic Name / Contact Person' :
+               watchUserType === 'clinic' ? 'Engineer Name' :
                'Full Name'}
             </label>
             <div className="relative">
@@ -176,7 +176,7 @@ const RegisterForm = () => {
                 type="text"
                 className={`auth-input pl-11 ${errors.name ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                 placeholder={watchUserType === 'super_admin' ? 'Enter administrator name' :
-                            watchUserType === 'clinic' ? 'Enter clinic name or contact person' :
+                            watchUserType === 'clinic' ? 'Enter engineer name' :
                             'Enter your full name'}
                 {...register('name', {
                   required: 'Name is required',
@@ -295,7 +295,7 @@ const RegisterForm = () => {
             )}
           </div>
 
-          {/* Additional Patient Fields */}
+          {/* Additional Supervisor Fields */}
           {watchUserType === 'patient' && (
             <>
               {/* Date of Birth */}
@@ -314,7 +314,7 @@ const RegisterForm = () => {
                     data-form-type="other"
                     autoComplete="bday"
                     {...register('dateOfBirth', {
-                      required: 'Date of birth is required for patients',
+                      required: 'Date of birth is required for supervisors',
                       validate: (value) => {
                         const today = new Date();
                         const birthDate = new Date(value);
@@ -342,7 +342,7 @@ const RegisterForm = () => {
                     id="gender"
                     className={`auth-input ${errors.gender ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
                     {...register('gender', {
-                      required: 'Gender is required for patients',
+                      required: 'Gender is required for supervisors',
                     })}
                   >
                     <option value="">Select gender</option>
@@ -356,10 +356,10 @@ const RegisterForm = () => {
                 )}
               </div>
 
-              {/* Registered Clinic Name */}
+              {/* Registered Project Area Name */}
               <div className="field-wrapper animate-slide-up" style={{ animationDelay: '0.5s' }}>
                 <label htmlFor="clinicName" className="field-label">
-                  Registered Clinic Name
+                  Registered Project Area Name
                 </label>
                 <div className="relative">
                   <Building2 className={`input-icon ${errors.clinicName ? 'text-red-400' : ''}`} />
@@ -367,15 +367,15 @@ const RegisterForm = () => {
                     id="clinicName"
                     type="text"
                     className={`auth-input pl-11 ${errors.clinicName ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : ''}`}
-                    placeholder="Enter your registered clinic name"
+                    placeholder="Enter your registered project area name"
                     data-lpignore="true"
                     data-form-type="other"
                     autoComplete="off"
                     {...register('clinicName', {
-                      required: 'Clinic name is required for patients',
+                      required: 'Project area name is required for supervisors',
                       minLength: {
                         value: 2,
-                        message: 'Clinic name must be at least 2 characters',
+                        message: 'Project area name must be at least 2 characters',
                       },
                     })}
                   />
@@ -384,7 +384,7 @@ const RegisterForm = () => {
                   <p className="error-message">{errors.clinicName.message}</p>
                 )}
                 <p className="mt-2 text-xs text-gray-500">
-                  Enter the exact name of the clinic where you are registered
+                  Enter the exact name of the project area where you are registered
                 </p>
               </div>
 

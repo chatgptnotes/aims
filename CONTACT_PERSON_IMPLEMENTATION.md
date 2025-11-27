@@ -93,7 +93,7 @@ CREATE TABLE clinics (
 ### Step 1: Remove contact_name Column in Supabase
 
 1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project: `Neuro360`
+2. Select your project: `AIMS`
 3. Click on **SQL Editor** in the left sidebar
 4. Click **New Query**
 5. Copy and paste this SQL:

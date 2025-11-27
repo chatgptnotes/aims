@@ -629,7 +629,7 @@ All that's left is to:
 
 **Built with:** React, Vite, Tailwind CSS, Lucide Icons
 **Inspired by:** Myndlift.com
-**Created for:** Neuro360 Health & Wellness Platform
+**Created for:** AIMS Health & Wellness Platform
 
 **Last Updated:** November 2025
 **Version:** 2.0 Enhanced

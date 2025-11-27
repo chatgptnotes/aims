@@ -8,9 +8,9 @@
 
 ### **Required Flow:**
 1. **Patient arrives** → Clinic creates profile (unique ID)
-2. **EEG/qEEG test conducted** → .EDF uploaded
-3. **Raw data processed** via qEEG Pro (maps, Laplacian, LORETA, EO/EC)
-4. **Processed data uploaded** (encrypted) to NeuroSense Cloud
+2. **EEG/P&ID test conducted** → .EDF uploaded
+3. **Raw data processed** via P&ID Pro (maps, Laplacian, LORETA, EO/EC)
+4. **Processed data uploaded** (encrypted) to AIMS Cloud
 5. **Algorithm 1 runs** → generates Standardized Report
 6. **Algorithm 2 runs** → generates Personalized Care Plan
 7. **Reports & notifications delivered** to Super Admin, Clinic Admin, Patient
@@ -43,11 +43,11 @@ const loadPatients = useCallback(async () => {
 
 ---
 
-### **2. EEG/qEEG Test & .EDF Upload ✅ COMPLETE**
+### **2. EEG/P&ID Test & .EDF Upload ✅ COMPLETE**
 
 **Implementation Status:** 🟢 **FULLY IMPLEMENTED**
 
-**Location:** `QEEGUpload.jsx`
+**Location:** `PIDUpload.jsx`
 - ✅ **EDF file validation** (.edf, .eeg, .bdf formats)
 - ✅ **File size validation** (max 50MB)
 - ✅ **Real-time upload** to cloud storage
@@ -56,7 +56,7 @@ const loadPatients = useCallback(async () => {
 
 **Code Evidence:**
 ```javascript
-const uploadResult = await neuroSenseCloudService.uploadEDFFile(
+const uploadResult = await aimsCloudService.uploadEDFFile(
   file,
   patientId || user?.id || 'unknown',
   sessionId,
@@ -72,12 +72,12 @@ const uploadResult = await neuroSenseCloudService.uploadEDFFile(
 
 ---
 
-### **3. qEEG Pro Processing (Maps, Laplacian, LORETA) ✅ COMPLETE**
+### **3. P&ID Pro Processing (Maps, Laplacian, LORETA) ✅ COMPLETE**
 
 **Implementation Status:** 🟢 **FULLY IMPLEMENTED**
 
-**Location:** `qeegProService.js`
-- ✅ **qEEG Pro API integration** ready for production
+**Location:** `pidProService.js`
+- ✅ **P&ID Pro API integration** ready for production
 - ✅ **Multiple analysis types** supported:
   - ✅ **Brain mapping**
   - ✅ **Laplacian referencing**
@@ -88,9 +88,9 @@ const uploadResult = await neuroSenseCloudService.uploadEDFFile(
 
 **Code Evidence:**
 ```javascript
-class QEEGProService {
+class PIDProService {
   async uploadForProcessing(edfFile, patientInfo) {
-    // Real qEEG Pro API integration
+    // Real P&ID Pro API integration
     const response = await fetch(`${this.baseURL}/upload`, {
       method: 'POST',
       headers: {
@@ -107,11 +107,11 @@ class QEEGProService {
 
 ---
 
-### **4. NeuroSense Cloud Processing ✅ COMPLETE**
+### **4. AIMS Cloud Processing ✅ COMPLETE**
 
 **Implementation Status:** 🟢 **FULLY IMPLEMENTED**
 
-**Location:** `neuroSenseCloudService.js`
+**Location:** `aimsCloudService.js`
 - ✅ **Encrypted cloud upload** with secure transmission
 - ✅ **Distributed processing** architecture
 - ✅ **Real-time job monitoring**
@@ -310,8 +310,8 @@ async startEDFProcessingWorkflow(edfFile, patientInfo, clinicId) {
 
   // Execute all steps sequentially
   await this.executeFileUpload(workflowId, edfFile, patientInfo, clinicId);
-  await this.executeQEEGProcessing(workflowId, edfFile, patientInfo);
-  await this.executeNeuroSenseAnalysis(workflowId, patientInfo);
+  await this.executePIDProcessing(workflowId, edfFile, patientInfo);
+  await this.executeAIMSAnalysis(workflowId, patientInfo);
   await this.executeCarePlanGeneration(workflowId, patientInfo);
   await this.executeFinalReportGeneration(workflowId);
 }
@@ -325,8 +325,8 @@ async startEDFProcessingWorkflow(edfFile, patientInfo, clinicId) {
 |-----------|--------|----------------|-----------|-------|
 | **1. Patient Profile Creation** | ✅ | Complete | ✅ Yes | Unique ID generation |
 | **2. EDF File Upload** | ✅ | Complete | ✅ Yes | Cloud storage integration |
-| **3. qEEG Pro Processing** | ✅ | Complete | ✅ Yes | Maps, Laplacian, LORETA |
-| **4. NeuroSense Cloud** | ✅ | Complete | ✅ Yes | Encrypted processing |
+| **3. P&ID Pro Processing** | ✅ | Complete | ✅ Yes | Maps, Laplacian, LORETA |
+| **4. AIMS Cloud** | ✅ | Complete | ✅ Yes | Encrypted processing |
 | **5. Algorithm 1 (Reports)** | ✅ | Complete | ✅ Yes | AI-powered analysis |
 | **6. Algorithm 2 (Care Plans)** | ✅ | Complete | ✅ Yes | Personalized recommendations |
 | **7. Multi-Role Delivery** | ✅ | Complete | ✅ Yes | Super Admin, Clinic, Patient |
@@ -343,7 +343,7 @@ async startEDFProcessingWorkflow(edfFile, patientInfo, clinicId) {
 ### **Key Achievements:**
 - ✅ **Complete patient lifecycle** management
 - ✅ **Real EEG processing** with professional algorithms
-- ✅ **Multi-tier analysis** (qEEG Pro + NeuroSense)
+- ✅ **Multi-tier analysis** (P&ID Pro + AIMS)
 - ✅ **Dual algorithm system** (Reports + Care Plans)
 - ✅ **Multi-role notification** system
 - ✅ **Continuous re-testing** capability

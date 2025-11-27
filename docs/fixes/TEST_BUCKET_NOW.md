@@ -19,7 +19,7 @@ Perfect! अब बस यह करें:
 Terminal में यह command run करें:
 
 ```bash
-cd C:\Users\poona\Neuro360
+cd C:\Users\poona\AIMS
 node test-supabase-storage.js
 ```
 

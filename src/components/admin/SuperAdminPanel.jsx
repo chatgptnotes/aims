@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import DatabaseService from '../../services/databaseService';
 import ClinicManagement from './ClinicManagement';
-import PatientReports from './PatientReports';
+import SupervisorReports from './SupervisorReports';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import AlertDashboard from './AlertDashboard';
 import DashboardLayout from '../layout/DashboardLayout';
@@ -89,25 +89,65 @@ const SuperAdminPanel = () => {
   const loadAnalytics = async () => {
     try {
       // SuperAdmin gets all system analytics
-      const clinics = await DatabaseService.get('clinics');
-      const patients = await DatabaseService.get('patients');
-      const reports = await DatabaseService.get('reports');
-      const payments = await DatabaseService.get('payments');
-      
+      // Wrap each call in try-catch to handle missing tables gracefully
+      let clinics = [];
+      let supervisors = [];
+      let reports = [];
+      let payments = [];
+
+      try {
+        clinics = await DatabaseService.get('clinics') || [];
+      } catch (err) {
+        console.warn('WARNING: Failed to load clinics:', err.message);
+        clinics = [];
+      }
+
+      try {
+        // Use 'patients' table which maps to supervisors
+        supervisors = await DatabaseService.get('patients') || [];
+      } catch (err) {
+        console.warn('WARNING: Failed to load supervisors:', err.message);
+        supervisors = [];
+      }
+
+      try {
+        reports = await DatabaseService.get('reports') || [];
+      } catch (err) {
+        console.warn('WARNING: Failed to load reports:', err.message);
+        reports = [];
+      }
+
+      try {
+        payments = await DatabaseService.get('payments') || [];
+      } catch (err) {
+        console.warn('WARNING: Failed to load payments:', err.message);
+        payments = [];
+      }
+
       const data = {
-        activeClinics: clinics.filter(c => c.isActive).length,
-        totalClinics: clinics.length,
-        totalPatients: patients.length,
-        totalReports: reports.length,
-        monthlyRevenue: payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+        activeClinics: Array.isArray(clinics) ? clinics.filter(c => c?.isActive || c?.is_active).length : 0,
+        totalClinics: Array.isArray(clinics) ? clinics.length : 0,
+        totalSupervisors: Array.isArray(supervisors) ? supervisors.length : 0,
+        totalReports: Array.isArray(reports) ? reports.length : 0,
+        monthlyRevenue: Array.isArray(payments) ? payments.reduce((sum, payment) => sum + (payment?.amount || 0), 0) : 0
       };
-      
+
       // Only update state if component is still mounted
       if (isMounted) {
         setAnalytics(data);
       }
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      console.error('ERROR: Critical error loading analytics:', error);
+      // Set safe defaults
+      if (isMounted) {
+        setAnalytics({
+          activeClinics: 0,
+          totalClinics: 0,
+          totalSupervisors: 0,
+          totalReports: 0,
+          monthlyRevenue: 0
+        });
+      }
     } finally {
       if (isMounted) {
         setLoading(false);
@@ -130,7 +170,7 @@ const SuperAdminPanel = () => {
         case 'clinics':
           return <ClinicManagement onUpdate={loadAnalytics} />;
         case 'reports':
-          return <PatientReports onUpdate={loadAnalytics} selectedClinic={selectedClinic} />;
+          return <SupervisorReports onUpdate={loadAnalytics} selectedClinic={selectedClinic} />;
         case 'payments':
           return <PaymentHistory selectedClinic={selectedClinic} />;
         case 'alerts':
@@ -191,9 +231,9 @@ const SuperAdminPanel = () => {
   const getPageTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Super Admin Dashboard';
-      case 'clinics': return 'Clinic Management';
-      case 'reports': return selectedClinic ? `Patient Reports - ${clinics.find(c => c.id === selectedClinic)?.name || 'Selected Clinic'}` : 'Patient Reports';
-      case 'payments': return selectedClinic ? `Payment History - ${clinics.find(c => c.id === selectedClinic)?.name || 'Selected Clinic'}` : 'Payment History';
+      case 'clinics': return 'Engineer Management';
+      case 'reports': return selectedClinic ? `P&ID Reports - ${clinics.find(c => c.id === selectedClinic)?.name || 'Selected Project Area'}` : 'P&ID Reports';
+      case 'payments': return selectedClinic ? `Payment History - ${clinics.find(c => c.id === selectedClinic)?.name || 'Selected Project Area'}` : 'Payment History';
       case 'alerts': return 'Alerts & Monitoring';
       case 'analytics': return 'Analytics & Reports';
       case 'advanced-analytics': return 'Advanced Analytics & Tracking';
@@ -223,18 +263,18 @@ const SuperAdminPanel = () => {
   return (
     <DashboardLayout title={getPageTitle()}>
       <div className="space-y-6">
-        {/* Clinic Selection for Reports and Payments tabs */}
+        {/* Project Area Selection for Reports and Payments tabs */}
         {(activeTab === 'reports' || activeTab === 'payments') && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  {activeTab === 'reports' ? 'Select Clinic for Patient Reports' : 'Select Clinic for Payment History'}
+                  {activeTab === 'reports' ? 'Select Project Area for P&ID Reports' : 'Select Project Area for Payment History'}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {selectedClinic
                     ? `Viewing data for: ${clinics.find(c => c.id === selectedClinic)?.name}`
-                    : 'Select a clinic to view their specific data'
+                    : 'Select a project area to view their specific data'
                   }
                 </p>
               </div>
@@ -244,7 +284,7 @@ const SuperAdminPanel = () => {
                   onChange={(e) => setSelectedClinic(e.target.value)}
                   className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
-                  <option value="">All Clinics</option>
+                  <option value="">All Project Areas</option>
                   {clinics.map(clinic => (
                     <option key={clinic.id} value={clinic.id}>
                       {clinic.name} ({clinic.email})

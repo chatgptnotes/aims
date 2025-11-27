@@ -55,7 +55,7 @@ const immediateReport = {
   workflow_id: workflowId,
   // Report details
   title: edfFile.name.replace(/\.(edf|eeg|bdf)$/i, ''),
-  type: 'EEG/qEEG Analysis',
+  type: 'EEG/P&ID Analysis',
   file_name: edfFile.name,
   file_path: uploadResult.path,
   // Status tracking
@@ -99,16 +99,16 @@ await DatabaseService.add('reports', immediateReport);
 | Step | Progress | Status | User Sees |
 |------|----------|--------|-----------|
 | **Upload** | 20% | `uploaded` | "File uploaded - Analysis in progress" |
-| **qEEG Start** | 40% | `qeeg_processing` | "qEEG Pro analysis in progress" |
-| **qEEG Done** | 60% | `qeeg_completed` | "qEEG analysis completed" |
-| **NeuroSense Start** | 70% | `neurosense_analyzing` | "NeuroSense AI analysis in progress" |
-| **NeuroSense Done** | 85% | `neurosense_completed` | "NeuroSense analysis completed" |
+| **P&ID Start** | 40% | `pid_processing` | "P&ID Pro analysis in progress" |
+| **P&ID Done** | 60% | `pid_completed` | "P&ID analysis completed" |
+| **AIMS Start** | 70% | `aims_analyzing` | "AIMS AI analysis in progress" |
+| **AIMS Done** | 85% | `aims_completed` | "AIMS analysis completed" |
 | **Care Plan** | 90% | `careplan_generating` | "Generating personalized care plan" |
 | **Complete** | 100% | `completed` | "Analysis completed successfully" |
 
 **Files Modified:**
-- `executeQEEGProcessing()` - Lines 200-240
-- `executeNeuroSenseAnalysis()` - Lines 262-303
+- `executePIDProcessing()` - Lines 200-240
+- `executeAIMSAnalysis()` - Lines 262-303
 - `executeCarePlanGeneration()` - Lines 325-335
 
 ---
@@ -153,13 +153,13 @@ if (reportId) {
 [2s] ✅ REPORT APPEARS IN UI immediately!
       Status: "File uploaded - Analysis in progress" (20%)
   ↓
-[30s] Progress update: "qEEG Pro analysis in progress" (40%)
+[30s] Progress update: "P&ID Pro analysis in progress" (40%)
   ↓
-[2m] Progress update: "qEEG analysis completed" (60%)
+[2m] Progress update: "P&ID analysis completed" (60%)
   ↓
-[4m] Progress update: "NeuroSense AI analysis in progress" (70%)
+[4m] Progress update: "AIMS AI analysis in progress" (70%)
   ↓
-[6m] Progress update: "NeuroSense analysis completed" (85%)
+[6m] Progress update: "AIMS analysis completed" (85%)
   ↓
 [7m] Progress update: "Generating personalized care plan" (90%)
   ↓
@@ -307,8 +307,8 @@ CREATE TABLE reports (
   uploaded_at TIMESTAMP,
   updated_at TIMESTAMP,
   completed_at TIMESTAMP,
-  qeeg_report JSONB,
-  neurosense_analysis JSONB,
+  pid_report JSONB,
+  aims_analysis JSONB,
   care_plan JSONB,
   original_file JSONB,
   processing_workflow JSONB
@@ -390,8 +390,8 @@ AND column_name LIKE '%_id%';
 |------|---------|-------|
 | `reportWorkflowService.js` | Immediate report creation | 136-174 |
 | `reportWorkflowService.js` | Field naming (snake_case) | All methods |
-| `reportWorkflowService.js` | Progress updates (qEEG) | 200-240 |
-| `reportWorkflowService.js` | Progress updates (NeuroSense) | 262-303 |
+| `reportWorkflowService.js` | Progress updates (P&ID) | 200-240 |
+| `reportWorkflowService.js` | Progress updates (AIMS) | 262-303 |
 | `reportWorkflowService.js` | Progress updates (Care Plan) | 325-335 |
 | `reportWorkflowService.js` | Update instead of create | 365-378 |
 

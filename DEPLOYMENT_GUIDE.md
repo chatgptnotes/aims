@@ -1,4 +1,4 @@
-# 🚀 Neuro360 Landing Page - Deployment & Optimization Guide
+# 🚀 AIMS Landing Page - Deployment & Optimization Guide
 
 ## Production Deployment Checklist
 
@@ -207,31 +207,31 @@ fbq('track', 'PageView');
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Primary Meta Tags -->
-  <title>Neuro360 - Neurofeedback Brain Training for Focus, Anxiety & Sleep</title>
-  <meta name="title" content="Neuro360 - Neurofeedback Brain Training for Focus, Anxiety & Sleep">
+  <title>AIMS - Neurofeedback Brain Training for Focus, Anxiety & Sleep</title>
+  <meta name="title" content="AIMS - Neurofeedback Brain Training for Focus, Anxiety & Sleep">
   <meta name="description" content="Transform your mental wellness with personalized neurofeedback training. Trusted by 25,000+ members worldwide. Drug-free, science-backed approach to improve focus, reduce anxiety, and optimize sleep. Start your free trial today.">
   <meta name="keywords" content="neurofeedback, brain training, anxiety relief, focus improvement, sleep quality, mental wellness, ADHD support, cognitive health">
-  <meta name="author" content="Neuro360">
+  <meta name="author" content="AIMS">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://neuro360.com/">
-  <meta property="og:title" content="Neuro360 - Neurofeedback Brain Training">
+  <meta property="og:url" content="https://aims.com/">
+  <meta property="og:title" content="AIMS - Neurofeedback Brain Training">
   <meta property="og:description" content="Transform your mental wellness with personalized neurofeedback training. Trusted by 25,000+ members worldwide.">
-  <meta property="og:image" content="https://neuro360.com/og-image.jpg">
+  <meta property="og:image" content="https://aims.com/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://neuro360.com/">
-  <meta property="twitter:title" content="Neuro360 - Neurofeedback Brain Training">
+  <meta property="twitter:url" content="https://aims.com/">
+  <meta property="twitter:title" content="AIMS - Neurofeedback Brain Training">
   <meta property="twitter:description" content="Transform your mental wellness with personalized neurofeedback training. Trusted by 25,000+ members worldwide.">
-  <meta property="twitter:image" content="https://neuro360.com/twitter-image.jpg">
+  <meta property="twitter:image" content="https://aims.com/twitter-image.jpg">
 
   <!-- Canonical URL -->
-  <link rel="canonical" href="https://neuro360.com/" />
+  <link rel="canonical" href="https://aims.com/" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
@@ -253,9 +253,9 @@ Add to `index.html` before `</body>`:
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Neuro360",
-  "url": "https://neuro360.com",
-  "logo": "https://neuro360.com/logo.png",
+  "name": "AIMS",
+  "url": "https://aims.com",
+  "logo": "https://aims.com/logo.png",
   "description": "Personalized neurofeedback training for mental wellness",
   "address": {
     "@type": "PostalAddress",
@@ -269,15 +269,15 @@ Add to `index.html` before `</body>`:
     "@type": "ContactPoint",
     "telephone": "+91-XXX-XXX-XXXX",
     "contactType": "customer service",
-    "email": "support@neuro360.com",
+    "email": "support@aims.com",
     "areaServed": "IN",
     "availableLanguage": ["English", "Hindi"]
   },
   "sameAs": [
-    "https://facebook.com/neuro360",
-    "https://twitter.com/neuro360",
-    "https://linkedin.com/company/neuro360",
-    "https://instagram.com/neuro360"
+    "https://facebook.com/aims",
+    "https://twitter.com/aims",
+    "https://linkedin.com/company/aims",
+    "https://instagram.com/aims"
   ]
 }
 </script>
@@ -286,15 +286,15 @@ Add to `index.html` before `</body>`:
 {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "Neuro360 Neurofeedback Training",
+  "name": "AIMS Neurofeedback Training",
   "description": "Personalized neurofeedback brain training program",
   "brand": {
     "@type": "Brand",
-    "name": "Neuro360"
+    "name": "AIMS"
   },
   "offers": {
     "@type": "Offer",
-    "url": "https://neuro360.com/#pricing",
+    "url": "https://aims.com/#pricing",
     "priceCurrency": "INR",
     "price": "4999",
     "priceValidUntil": "2025-12-31",
@@ -321,7 +321,7 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://neuro360.com/sitemap.xml
+Sitemap: https://aims.com/sitemap.xml
 ```
 
 ### sitemap.xml
@@ -332,13 +332,13 @@ Create `public/sitemap.xml`:
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://neuro360.com/</loc>
+    <loc>https://aims.com/</loc>
     <lastmod>2025-01-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://neuro360.com/register</loc>
+    <loc>https://aims.com/register</loc>
     <lastmod>2025-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -384,7 +384,7 @@ Run Lighthouse audit:
 
 ```bash
 npm install -g lighthouse
-lighthouse https://neuro360.com --view
+lighthouse https://aims.com --view
 ```
 
 **Target Scores:**
@@ -668,7 +668,7 @@ Set up in Google Analytics:
 npm install -g axe-cli
 
 # Run accessibility audit
-axe https://neuro360.com
+axe https://aims.com
 ```
 
 - [ ] Keyboard navigation works
@@ -866,7 +866,7 @@ const subscribeToNewsletter = async (email) => {
 
 ## 🏁 Conclusion
 
-Your Neuro360 landing page is **production-ready** with:
+Your AIMS landing page is **production-ready** with:
 
 ✅ **18 comprehensive sections**
 ✅ **130+ interactive components**
@@ -892,7 +892,7 @@ Your Neuro360 landing page is **production-ready** with:
 
 **Built with:** React, Vite, Tailwind CSS, Lucide Icons
 **Inspired by:** Myndlift.com
-**Created for:** Neuro360 Health & Wellness Platform
+**Created for:** AIMS Health & Wellness Platform
 **Estimated Value:** $30,000 - $60,000
 **Development Time:** ~6 hours
 **Total Lines of Code:** 1,640+

@@ -107,7 +107,7 @@ VITE_RAZORPAY_KEY_SECRET: FOUND
 ```
 💳 DASHBOARD: Starting real Razorpay payment
 🔄 DASHBOARD: Creating order with data: {...}
-✅ DASHBOARD: Razorpay order created: neuro360_...
+✅ DASHBOARD: Razorpay order created: aims_...
 ✅ DASHBOARD: Payment successful: {...}
 ```
 

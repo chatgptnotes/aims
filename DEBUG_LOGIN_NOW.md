@@ -6,7 +6,7 @@
 
 1. Open this file in your browser:
    ```
-   C:\Users\poona\Neuro360\debug-login-issue.html
+   C:\Users\poona\AIMS\debug-login-issue.html
    ```
 
 2. You should see a page titled "Debug Login Issue"

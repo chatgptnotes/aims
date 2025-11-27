@@ -433,23 +433,23 @@ ON CONFLICT (key) DO NOTHING;
 INSERT INTO product_catalog (sku, product_code, name, display_name, price, original_price, reports_count, description, short_description, features, package_type, is_popular, display_order, badge) VALUES
 
 ('TRIAL', 'PKG_TRIAL', 'Trial Package', 'Trial', 1, NULL, 5, '5 EEG reports - Perfect for trying our service', 'Try our service',
-'["5 EEG Reports", "Full qEEG Analysis", "NeuroSense AI Insights", "Basic Care Plan", "7 Days Validity"]'::JSONB,
+'["5 EEG Reports", "Full P&ID Analysis", "NeuroSense AI Insights", "Basic Care Plan", "7 Days Validity"]'::JSONB,
 'trial', FALSE, 1, NULL),
 
 ('BASIC', 'PKG_BASIC', 'Basic Package', 'Basic', 999, 1249, 10, '10 EEG reports - Great for small clinics', 'For small clinics',
-'["10 EEG Reports", "Full qEEG Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "90 Days Validity", "Email Support"]'::JSONB,
+'["10 EEG Reports", "Full P&ID Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "90 Days Validity", "Email Support"]'::JSONB,
 'basic', FALSE, 2, NULL),
 
 ('STANDARD', 'PKG_STANDARD', 'Standard Package', 'Standard', 1999, 2499, 25, '25 EEG reports - Most popular choice for growing practices', 'Most popular',
-'["25 EEG Reports", "Full qEEG Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "180 Days Validity", "Priority Support", "Co-branding Option"]'::JSONB,
+'["25 EEG Reports", "Full P&ID Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "180 Days Validity", "Priority Support", "Co-branding Option"]'::JSONB,
 'standard', TRUE, 3, 'Most Popular'),
 
 ('PROFESSIONAL', 'PKG_PROFESSIONAL', 'Professional Package', 'Professional', 3499, 4999, 50, '50 EEG reports - For growing practices', 'For growing practices',
-'["50 EEG Reports", "Full qEEG Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "Clinic Dashboard", "365 Days Validity", "Priority Support", "Co-branding Included", "API Access"]'::JSONB,
+'["50 EEG Reports", "Full P&ID Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "Clinic Dashboard", "365 Days Validity", "Priority Support", "Co-branding Included", "API Access"]'::JSONB,
 'professional', FALSE, 4, 'Best Value'),
 
 ('ENTERPRISE', 'PKG_ENTERPRISE', 'Enterprise Package', 'Enterprise', 5999, 9999, 100, '100 EEG reports - For large hospitals and chains', 'For large hospitals',
-'["100 EEG Reports", "Full qEEG Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "Clinic Dashboard", "Multi-location Support", "Unlimited Validity", "24/7 Priority Support", "Co-branding Included", "API Access", "Dedicated Account Manager", "Custom Integrations"]'::JSONB,
+'["100 EEG Reports", "Full P&ID Analysis", "NeuroSense AI Insights", "Personalized Care Plans", "Advanced Analytics", "Clinic Dashboard", "Multi-location Support", "Unlimited Validity", "24/7 Priority Support", "Co-branding Included", "API Access", "Dedicated Account Manager", "Custom Integrations"]'::JSONB,
 'enterprise', FALSE, 5, 'Enterprise')
 
 ON CONFLICT (sku) DO NOTHING;

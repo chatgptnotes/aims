@@ -19,7 +19,7 @@ VITE_RAZORPAY_KEY_SECRET=YOUR_LIVE_SECRET_KEY
 
 # Other required variables
 VITE_AWS_REGION=us-east-1
-VITE_AWS_BUCKET_NAME=neuro360-eeg-reports
+VITE_AWS_BUCKET_NAME=aims-eeg-reports
 VITE_AWS_ACCESS_KEY_ID=your_aws_access_key_id
 VITE_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 ```

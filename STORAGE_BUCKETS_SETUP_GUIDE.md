@@ -36,7 +36,7 @@ Error: 400 Bad Request
 
 1. Go to: https://supabase.com/dashboard
 2. Login
-3. Select your project: **Neuro360**
+3. Select your project: **AIMS**
 
 ### Step 2: Navigate to Storage
 

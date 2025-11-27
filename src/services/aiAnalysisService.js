@@ -1,5 +1,5 @@
 // AI Analysis Service for Real EEG Data Processing
-// Integrates with NeuroSense Cloud AI algorithms for genuine analysis
+// Integrates with AIMS Cloud AI algorithms for genuine analysis
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,7 +11,7 @@ class AIAnalysisService {
 
     if (supabaseUrl && supabaseAnonKey) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      console.log('SUCCESS: AI Analysis Service: Connected to NeuroSense Cloud');
+      console.log('SUCCESS: AI Analysis Service: Connected to AIMS Cloud');
     } else {
       console.warn('WARNING: AI Analysis Service: Using offline mode');
       this.supabase = null;
@@ -19,7 +19,7 @@ class AIAnalysisService {
 
     // AI Analysis endpoints
     this.endpoints = {
-      qeegAnalysis: '/api/ai/qeeg-analysis',
+      pidAnalysis: '/api/ai/pid-analysis',
       brainMapping: '/api/ai/brain-mapping',
       neurofeedback: '/api/ai/neurofeedback-protocol',
       progressAnalysis: '/api/ai/progress-analysis',
@@ -37,7 +37,7 @@ class AIAnalysisService {
   }
 
   /**
-   * Process real EDF file and generate comprehensive QEEG analysis
+   * Process real EDF file and generate comprehensive P&ID analysis
    */
   async processEDFFile(edfData, patientId, sessionId) {
     try {
@@ -570,7 +570,7 @@ class AIAnalysisService {
 
       return data || [];
     } catch (error) {
-      console.error('Failed to fetch patient history:', error);
+      console.error('Failed to fetch supervisor history:', error);
       return [];
     }
   }

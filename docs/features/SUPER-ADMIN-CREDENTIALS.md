@@ -3,15 +3,15 @@
 ## 👑 **SUPER ADMIN LOGIN**
 
 ### **Primary Super Admin Account:**
-- **📧 Email:** `superadmin@neurosense360.com`
+- **📧 Email:** `superadmin@aims.com`
 - **🔒 Password:** `SuperAdmin@2024`
 - **👤 Name:** System Administrator
 - **🛡️ Role:** super_admin
 
 ### **Backup Super Admin Account:**
-- **📧 Email:** `admin@neuro360.com`
+- **📧 Email:** `admin@aims.com`
 - **🔒 Password:** `Admin123456`
-- **👤 Name:** Neuro360 Admin
+- **👤 Name:** AIMS Admin
 - **🛡️ Role:** super_admin
 
 ## 🏥 **CLINIC ADMIN TEST ACCOUNTS:**
@@ -46,7 +46,7 @@
 
 ### **For Super Admin Dashboard:**
 1. Go to: `http://localhost:5178/login`
-2. Enter: `superadmin@neurosense360.com`
+2. Enter: `superadmin@aims.com`
 3. Password: `SuperAdmin@2024`
 4. Click Login
 5. You'll be redirected to: `http://localhost:5178/admin`

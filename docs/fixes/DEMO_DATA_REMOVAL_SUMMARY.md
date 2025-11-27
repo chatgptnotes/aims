@@ -1,7 +1,7 @@
 # Demo Data Removal Summary
 
 ## Overview
-All demo data, static credentials, and mock services have been removed from the Neuro360 project to make it production-ready.
+All demo data, static credentials, and mock services have been removed from the AIMS project to make it production-ready.
 
 ## What Was Removed
 
@@ -45,7 +45,7 @@ All demo data, static credentials, and mock services have been removed from the 
 ### AWS Configuration
 ```bash
 VITE_AWS_REGION=ap-south-1
-VITE_AWS_BUCKET_NAME=neuro360-reports-demo
+VITE_AWS_BUCKET_NAME=aims-reports-demo
 VITE_AWS_ACCESS_KEY_ID=your_aws_access_key_id
 VITE_AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 ```
@@ -69,7 +69,7 @@ VITE_EMAILJS_SECURE_TOKEN=your_emailjs_secure_token
 3. Never commit `.env` file to version control
 
 ### 2. AWS Setup
-1. Create S3 bucket: `neuro360-reports-demo`
+1. Create S3 bucket: `aims-reports-demo`
 2. Create DynamoDB tables with proper indexes
 3. Configure IAM user with appropriate permissions
 4. Set environment variables

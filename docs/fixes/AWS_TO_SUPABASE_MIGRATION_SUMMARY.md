@@ -1,7 +1,7 @@
 # AWS to Supabase Migration Summary
 
 ## Overview
-Successfully migrated the Neuro360 project from AWS services (S3 and DynamoDB) to Supabase (Storage and Database).
+Successfully migrated the AIMS project from AWS services (S3 and DynamoDB) to Supabase (Storage and Database).
 
 ## Changes Made
 

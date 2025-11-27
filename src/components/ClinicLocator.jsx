@@ -93,7 +93,7 @@ const ClinicLocator = ({ onNoClinicFound }) => {
             Find a Clinic Near You
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover authorized NeuroSense clinics in your city or region
+            Discover authorized AIMS clinics in your city or region
           </p>
         </div>
 
@@ -203,7 +203,7 @@ const ClinicLocator = ({ onNoClinicFound }) => {
                     {/* Contact Button */}
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                       <a
-                        href={`mailto:${clinic.email || 'info@neurosense.com'}`}
+                        href={`mailto:${clinic.email || 'info@aims.com'}`}
                         className="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors group"
                       >
                         Contact Clinic

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Brain, ShieldCheck, Users, Truck, ArrowDown, Menu, X, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin } from 'lucide-react';
+import { Factory, ShieldCheck, Users, FileText, ArrowDown, Menu, X, Linkedin, Facebook, Youtube, Instagram, Twitter, MapPin, Upload, CheckCircle, Download, Settings } from 'lucide-react';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ const Landing = () => {
   }, []);
 
   const handlePersonalSignup = () => {
-    // Navigate directly to login page with patient user type
+    // Navigate directly to login page with supervisor user type
     navigate('/login', {
       state: {
         userType: 'patient',
@@ -95,22 +95,19 @@ const Landing = () => {
           <div className="hidden lg:flex items-center bg-white/95 backdrop-blur-lg rounded-full shadow-lg px-6 py-2.5 gap-6 border border-gray-100">
             {/* Logo INSIDE Pill */}
             <div className="flex items-center pr-4 border-r border-gray-200">
-              <img
-                src="/header logo.png"
-                alt="NeuroSense Logo"
-                className="h-10 w-auto object-contain"
-              />
+              <Factory className="h-8 w-8 text-[#1e3a5f]" />
+              <span className="ml-2 text-xl font-bold text-gray-900">AIMS</span>
             </div>
 
             {/* Navigation Links */}
-            <a href="/lbw" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
-              For clinicians
+            <a href="#features" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+              Features
             </a>
-            <a href="/technicians" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
-              For technicians
-            </a>
-            <a href="/lbw-updates" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+            <a href="#how-it-works" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
               How it works
+            </a>
+            <a href="#pricing" className="text-gray-700 hover:text-gray-900 text-base font-semibold transition-colors whitespace-nowrap">
+              Pricing
             </a>
 
             {/* Action Buttons Inside Same Pill */}
@@ -118,24 +115,21 @@ const Landing = () => {
               onClick={handlePersonalSignup}
               className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
             >
-              Start
+              Start Free Trial
             </button>
             <button
               onClick={handleClinicSignup}
               className="bg-gray-900 hover:bg-black text-white px-5 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap shadow-sm"
             >
-              For clinics
+              Request Demo
             </button>
           </div>
 
           {/* Mobile - Logo and Menu Button */}
           <div className="lg:hidden flex items-center justify-between w-full">
             <div className="flex items-center">
-              <img
-                src="/header logo.png"
-                alt="NeuroSense Logo"
-                className="h-10 w-auto object-contain"
-              />
+              <Factory className="h-8 w-8 text-[#1e3a5f]" />
+              <span className="ml-2 text-xl font-bold text-gray-900">AIMS</span>
             </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -161,23 +155,20 @@ const Landing = () => {
             <div className="p-6">
               {/* Logo */}
               <div className="flex items-center mb-12 mt-2">
-                <img
-                  src="/header logo.png"
-                  alt="NeuroSense Logo"
-                  className="h-12 w-auto object-contain"
-                />
+                <Factory className="h-10 w-10 text-[#1e3a5f]" />
+                <span className="ml-2 text-2xl font-bold text-gray-900">AIMS</span>
               </div>
 
               {/* Navigation Links */}
               <div className="flex flex-col space-y-6 mb-12">
-                <a href="/lbw" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  For clinicians
+                <a href="#features" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  Features
                 </a>
-                <a href="/technicians" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
-                  For technicians
-                </a>
-                <a href="/lbw-updates" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                <a href="#how-it-works" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
                   How it works
+                </a>
+                <a href="#pricing" className="text-gray-900 hover:text-gray-600 text-lg font-normal transition-colors">
+                  Pricing
                 </a>
               </div>
 
@@ -185,15 +176,15 @@ const Landing = () => {
               <div className="flex flex-col space-y-3">
                 <button
                   onClick={handlePersonalSignup}
-                  className="bg-[#323956] hover:bg-[#232D3C] text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
+                  className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
                 >
-                  I want it for myself
+                  Start Free Trial
                 </button>
                 <button
                   onClick={handleClinicSignup}
                   className="bg-gray-900 hover:bg-black text-white px-6 py-3 rounded-full text-base font-medium transition-all w-full"
                 >
-                  I want it for my clinic
+                  Request Demo
                 </button>
               </div>
             </div>
@@ -254,7 +245,7 @@ const Landing = () => {
                       '--framer-text-alignment': 'left',
                       '--framer-text-color': 'rgb(255, 255, 255)',
                       fontSize: 'clamp(2.5rem, 6vw, 5rem)',
-                      fontWeight: '400',
+                      fontWeight: '700',
                       lineHeight: '1.1',
                       letterSpacing: '-0.02em',
                       marginBottom: '1.5rem',
@@ -262,7 +253,7 @@ const Landing = () => {
                       textShadow: '0 2px 8px rgba(0,0,0,0.5)'
                     }}
                   >
-                    The Future Of Personalized Brain Care Is Here
+                    AIMS - Asset Information Management System
                   </h1>
                 </div>
 
@@ -276,13 +267,13 @@ const Landing = () => {
                       fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
                       fontWeight: '600',
                       lineHeight: '1.4',
-                      letterSpacing: '0.1em',
+                      letterSpacing: '0.05em',
                       maxWidth: '42rem',
                       color: '#ffffff',
                       textShadow: '0 2px 4px rgba(0,0,0,0.5)'
                     }}
                   >
-                    UNLOCK YOUR BRAIN WITH NEUROSENSE
+                    Industrial P&ID Processing and Tag Management Platform
                   </h5>
                 </div>
 
@@ -299,7 +290,7 @@ const Landing = () => {
                       textShadow: '0 2px 4px rgba(0,0,0,0.5)'
                     }}
                   >
-                    Restore clarity, calm, and focus. Build customized daily habits. Individualized breathing(pranayama), meditation, music, exercise and mantra affirmations for your brain.
+                    Transform your P&ID workflows with AI-powered tag extraction, ISA 5.1 compliance, and automated ADNOC tag sheet generation. Achieve 90% faster processing with zero manual errors.
                   </p>
                 </div>
               </div>
@@ -315,11 +306,11 @@ const Landing = () => {
                     <p
                       className="framer-text bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
                       style={{
-                        textAlign: 'left',
+                        textAlign: 'center',
                         color: 'rgb(255, 255, 255)'
                       }}
                     >
-                      I want it for myself
+                      Start Free Trial
                     </p>
                   </div>
                 </a>
@@ -333,11 +324,11 @@ const Landing = () => {
                     <p
                       className="framer-text bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-full text-base font-medium transition-all duration-300 transform hover:scale-105 shadow-lg"
                       style={{
-                        textAlign: 'left',
+                        textAlign: 'center',
                         color: 'rgb(255, 255, 255)'
                       }}
                     >
-                      I want it for my clinic
+                      Request Demo
                     </p>
                   </div>
                 </a>
@@ -558,67 +549,202 @@ const Landing = () => {
         }
       `}</style>
 
-      {/* NeuroSense Information & Philosophy Section */}
+      {/* Features Section */}
       <section
-        ref={(el) => (sectionRefs.current.neurosenseInfo = el)}
-        data-section="neurosenseInfo"
+        id="features"
+        ref={(el) => (sectionRefs.current.features = el)}
+        data-section="features"
         className={`py-12 sm:py-16 md:py-20 bg-white transition-all duration-1000 relative ${
-          sectionsVisible.neurosenseInfo ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          sectionsVisible.features ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Introduction Text Box */}
-          <div className="bg-gray-50 rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-100 relative z-10">
-            <div className="space-y-6">
-              <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-                For the very first time, a clinical grade EEG combined with proprietary and globally validated brain assessment parameters to measure your true brain performance, trusted all over the world.
-              </p>
-
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-900 leading-relaxed font-semibold animate-brainwave">
-                Don't just track your bank balance, track your brain's balance.
-              </p>
-
-              <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-                Track memory, focus, mood, stress, and sleep with the <span className="font-bold text-[#00897B]">NeuroSense BMW Report(Brain & Mental Wellness)</span> actionable insights to guide your next steps.
-              </p>
-            </div>
-          </div>
-
-          {/* Our Core Philosophy Box */}
-          <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-300 relative z-10">
-
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 mb-6">
-                Our core philosophy
-              </h2>
-              <div className="flex items-center justify-center gap-4 text-3xl sm:text-4xl md:text-5xl font-light text-gray-900 mb-4">
-                <span className="font-semibold text-[#00897B] animate-neuron">3 M</span>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-xl sm:text-2xl md:text-3xl text-gray-900">
-                <span className="px-6 py-3 bg-gray-50 rounded-full font-medium hover:text-[#00897B] hover:bg-gray-100 transition-all duration-300 cursor-pointer">Measure</span>
-                <span className="hidden sm:inline text-gray-400">&</span>
-                <span className="px-6 py-3 bg-gray-50 rounded-full font-medium hover:text-[#00897B] hover:bg-gray-100 transition-all duration-300 cursor-pointer">Monitor</span>
-                <span className="hidden sm:inline text-gray-400">&</span>
-                <span className="px-6 py-3 bg-gray-50 rounded-full font-medium hover:text-[#00897B] hover:bg-gray-100 transition-all duration-300 cursor-pointer">Manage</span>
-              </div>
-            </div>
-          </div>
-
-          {/* MOVERS Protocol Box */}
-          <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-500 relative z-10">
-            <p className="text-base sm:text-lg md:text-xl text-gray-900 leading-relaxed font-normal">
-              We blend ancient truths with modern scientific proofs to create a personalized <span className="font-bold text-[#00897B]">MOVERS protocol</span> integrating <span className="font-semibold text-[#00897B]">M</span>editation, <span className="font-semibold text-[#00897B]">O</span>xygenation (breathwork), <span className="font-semibold text-[#00897B]">V</span>isualization or Theta techniques, <span className="font-semibold text-[#00897B]">E</span>xercises, Affirmations, targeted <span className="font-semibold text-[#00897B]">R</span>elaxation and Nutrition, and <span className="font-semibold text-[#00897B]">S</span>leep or Stress Relief through HRV(Heart rate variability) for complete brain care.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Powerful Features for Industrial Asset Management
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Everything you need to process P&ID documents, extract tags, and generate compliant tag sheets
             </p>
           </div>
 
-          {/* 3 CTAs with 3D Animation */}
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+                <Upload className="w-8 h-8 text-[#1e3a5f]" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">P&ID Document Processing</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Upload and parse technical drawings in PDF format. Our AI engine automatically identifies and extracts instrumentation symbols and tags.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-6">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">ISA 5.1 Compliant Tag Extraction</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Automatically extract tags following ISA 5.1 instrumentation standards. Ensure complete compliance with industry requirements.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+                <FileText className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">ADNOC Tag Creation Sheet Generation</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Generate standardized ADNOC tag creation sheets automatically. Export to Excel/CSV formats with one click.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6">
+                <Settings className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Multi-Project Area Management</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Organize and manage multiple project areas simultaneously. Track progress across different facilities and zones.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-teal-100 rounded-xl flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-teal-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Real-time Collaboration</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Engineers and supervisors work together seamlessly. Review, approve, and annotate tag sheets in real-time.
+              </p>
+            </div>
+
+            {/* Feature 6 */}
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all">
+              <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Compliance and Audit Trail</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Complete audit trail for all changes. Maintain compliance with IEC 61511, API 14C, and ASME B31.3 standards.
+              </p>
+            </div>
+          </div>
+
+          {/* How It Works Section */}
+          <div id="how-it-works" className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-gray-200 animate-fade-in-up delay-300 relative z-10">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                How It Works
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Five simple steps to transform your P&ID processing workflow
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-5 gap-6">
+              {/* Step 1 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  1
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Upload P&ID</h3>
+                <p className="text-sm text-gray-600">Upload your technical drawings in PDF format</p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  2
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">AI Extraction</h3>
+                <p className="text-sm text-gray-600">Automatic tag extraction using AI intelligence</p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  3
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Generate Sheets</h3>
+                <p className="text-sm text-gray-600">Create standardized ADNOC tag sheets</p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  4
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Review & Approve</h3>
+                <p className="text-sm text-gray-600">Team collaboration for verification</p>
+              </div>
+
+              {/* Step 5 */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
+                  5
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Export Data</h3>
+                <p className="text-sm text-gray-600">Download Excel/CSV formatted files</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Industry Standards Box */}
+          <div className="bg-gradient-to-br from-blue-50 to-white rounded-3xl p-8 sm:p-10 md:p-12 mb-12 shadow-lg border border-blue-200 animate-fade-in-up delay-500 relative z-10">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Industry Standards Compliance
+              </h2>
+              <p className="text-lg text-gray-600">
+                AIMS ensures full compliance with all major industrial instrumentation and safety standards
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl border-2 border-blue-200 text-center">
+                <div className="text-3xl font-bold text-[#1e3a5f] mb-2">ISA 5.1</div>
+                <p className="text-sm text-gray-600">Instrumentation Symbols and Identification</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-green-200 text-center">
+                <div className="text-3xl font-bold text-green-600 mb-2">ASME B31.3</div>
+                <p className="text-sm text-gray-600">Process Piping Standards</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-orange-200 text-center">
+                <div className="text-3xl font-bold text-orange-600 mb-2">API 14C</div>
+                <p className="text-sm text-gray-600">Safety Systems Requirements</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border-2 border-purple-200 text-center">
+                <div className="text-3xl font-bold text-purple-600 mb-2">IEC 61511</div>
+                <p className="text-sm text-gray-600">Functional Safety Standards</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefits Cards with 3D Animation */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Key Benefits
+            </h2>
+            <p className="text-lg text-gray-600">
+              Transform your engineering workflows and achieve unprecedented efficiency
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4" style={{ perspective: '1500px' }}>
-            {/* Card 1: Neuropsychiatry */}
+            {/* Benefit 1: Speed */}
             <div className="group" style={{ transformStyle: 'preserve-3d' }}>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/60 to-[#00796B]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/60 to-blue-700/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
                      style={{ transform: 'translateZ(-30px)' }}></div>
-                <div className="bg-gradient-to-br from-[#00897B] to-[#00796B] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.6)]"
+                <div className="bg-gradient-to-br from-[#1e3a5f] to-[#152d4a] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(30,58,95,0.6)]"
                      style={{
                        transformStyle: 'preserve-3d',
                        animation: 'float 3s ease-in-out infinite',
@@ -626,18 +752,19 @@ const Landing = () => {
                      }}
                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neuropsychiatry</h3>
-                  <p className="text-sm sm:text-base opacity-90">Comprehensive mental health assessment</p>
+                  <div className="text-5xl font-bold mb-3">90%</div>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Faster Tag Extraction</h3>
+                  <p className="text-sm sm:text-base opacity-90">Complete projects in days, not weeks</p>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Executive Cognitive Check */}
+            {/* Benefit 2: Accuracy */}
             <div className="group" style={{ transformStyle: 'preserve-3d' }}>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-700/60 to-gray-800/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/60 to-green-700/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
                      style={{ transform: 'translateZ(-30px)' }}></div>
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
+                <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(34,197,94,0.6)]"
                      style={{
                        transformStyle: 'preserve-3d',
                        animation: 'float 3s ease-in-out infinite 0.5s',
@@ -645,18 +772,19 @@ const Landing = () => {
                      }}
                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Executive Cognitive Check</h3>
-                  <p className="text-sm sm:text-base opacity-90">Evaluate cognitive performance</p>
+                  <div className="text-5xl font-bold mb-3">0</div>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Manual Errors</h3>
+                  <p className="text-sm sm:text-base opacity-90">AI-powered accuracy guarantee</p>
                 </div>
               </div>
             </div>
 
-            {/* Card 3: Neurodivergence */}
+            {/* Benefit 3: Compliance */}
             <div className="group" style={{ transformStyle: 'preserve-3d' }}>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#323956]/60 to-[#2a3048]/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/60 to-orange-700/60 rounded-2xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
                      style={{ transform: 'translateZ(-30px)' }}></div>
-                <div className="bg-gradient-to-br from-[#323956] to-[#2a3048] rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(50,57,86,0.6)]"
+                <div className="bg-gradient-to-br from-orange-600 to-orange-800 rounded-2xl p-6 sm:p-8 text-white text-center cursor-pointer transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(249,115,22,0.6)]"
                      style={{
                        transformStyle: 'preserve-3d',
                        animation: 'float 3s ease-in-out infinite 1s',
@@ -664,24 +792,25 @@ const Landing = () => {
                      }}
                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1.05) rotateY(5deg)'}
                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateZ(20px) scale(1) rotateY(0deg)'}>
-                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Neurodivergence</h3>
-                  <p className="text-sm sm:text-base opacity-90">Specialized neurodivergent support</p>
+                  <div className="text-5xl font-bold mb-3">100%</div>
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-3">Industry Compliance</h3>
+                  <p className="text-sm sm:text-base opacity-90">Full audit trail and standards adherence</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Connect Section */}
-          <div className="text-center mb-16 animate-fade-in-up delay-600 relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-light text-gray-900 mb-4 bg-white">
-              Connect
+          {/* Pricing Section */}
+          <div id="pricing" className="text-center mb-16 animate-fade-in-up delay-600 relative z-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-white">
+              Flexible Pricing Plans
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto mb-12 bg-white">
-              Find us at a clinic near you to start your journey with neurosense. Or if you don't find, book a discovery call.
+              Choose the plan that fits your facility size and project requirements
             </p>
 
-            {/* Video Call Mockup with 3D Animation */}
-            <div className="flex justify-center" style={{ perspective: '1200px' }}>
+            {/* Pricing Cards */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto" style={{ perspective: '1200px' }}>
               <div className="relative w-80 sm:w-96 group" style={{ transformStyle: 'preserve-3d' }}>
                 {/* Glow Effect Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/40 to-[#00796B]/40 rounded-[2.5rem] blur-3xl group-hover:blur-[60px] opacity-50 transition-all duration-700"
@@ -892,7 +1021,7 @@ const Landing = () => {
                          transform: 'translateZ(20px)'
                        }}>
                 <p className="text-base sm:text-lg text-gray-900 leading-relaxed mb-6">
-                  Ask AI trained about your condition and how NeuroSense can help, in any language.
+                  Ask AI trained about your condition and how AIMS can help, in any language.
                 </p>
 
                 <p className="text-sm text-gray-600 leading-relaxed mb-8">
@@ -928,7 +1057,7 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* How Does NeuroSense's Frequency Modulation Work Section */}
+          {/* How Does AIMS's Frequency Modulation Work Section */}
           <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
             <div className="relative">
 
@@ -962,10 +1091,10 @@ const Landing = () => {
                   {/* Text Content */}
                   <div className="flex-1 text-left space-y-4">
                     <h2 className="text-3xl sm:text-4xl font-normal text-gray-900 leading-tight">
-                      How does Neurosense's Frequency Modulation Work?
+                      How does AIMS's Frequency Modulation Work?
                     </h2>
                     <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light">
-                      NeuroSense uses frequency modulated audio, subtle rhythms and tones your brain naturally syncs to, to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
+                      AIMS uses frequency modulated audio, subtle rhythms and tones your brain naturally syncs to, to gently "retune" you into calm, focus, or deep rest, personalized to your latest results. Pop on headphones, press play, and let your brain follow.
                     </p>
                   </div>
                     </div>
@@ -985,22 +1114,19 @@ const Landing = () => {
             <div className="lg:col-span-1 space-y-6">
               {/* Logo */}
               <div className="flex items-center">
-                <img
-                  src="/footer logo.png"
-                  alt="NeuroSense Logo"
-                  className="h-12 w-auto object-contain"
-                />
+                <Factory className="h-10 w-10 text-white" />
+                <span className="ml-2 text-2xl font-bold text-white">AIMS</span>
               </div>
 
               {/* Tagline */}
               <p className="text-base">
-                Brain fitness score - <span className="text-[#00897B]">try it now buy it now</span>
+                Industrial Asset Management - <span className="text-[#1e3a5f]">Transforming P&ID workflows</span>
               </p>
 
               {/* Newsletter */}
               <div className="space-y-3">
                 <p className="text-sm text-gray-400">
-                  Develop a healthier brain with our science backed tips straight to your inbox.
+                  Get the latest updates on industrial automation and asset management delivered to your inbox.
                 </p>
                 <div className="space-y-2">
                   <input
@@ -1043,7 +1169,7 @@ const Landing = () => {
               <div className="flex items-start gap-2 text-xs text-gray-400">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">NeuroSense Inc.</p>
+                  <p className="font-medium text-white">AIMS Inc.</p>
                   <p>175 Varick Street</p>
                   <p>New York, NY 10014, US</p>
                 </div>
@@ -1055,9 +1181,9 @@ const Landing = () => {
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">For clinics</h3>
               <ul className="space-y-3">
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Book Demo</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Clinical Product</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">AIMS Clinical Product</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Clinician Stories</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Dashboard →</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">AIMS Dashboard →</a></li>
               </ul>
             </div>
 
@@ -1081,8 +1207,8 @@ const Landing = () => {
               <ul className="space-y-3">
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Start now</a></li>
                 <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">Peak Performance</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense vs. Others</a></li>
-                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">NeuroSense Providers Library</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">AIMS vs. Others</a></li>
+                <li><a href="#" className="text-base hover:text-[#00897B] transition-colors">AIMS Providers Library</a></li>
               </ul>
             </div>
 
@@ -1102,7 +1228,7 @@ const Landing = () => {
           {/* Bottom Copyright */}
           <div className="mt-12 pt-8 border-t border-gray-800">
             <div className="text-center">
-              <p className="text-sm text-gray-400">&copy; 2024 NeuroSense Inc. All rights reserved.</p>
+              <p className="text-sm text-gray-400">&copy; 2024 AIMS Inc. All rights reserved.</p>
             </div>
           </div>
         </div>

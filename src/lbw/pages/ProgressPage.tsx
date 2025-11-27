@@ -58,8 +58,8 @@ export default function ProgressPage() {
               
               <div className="text-center p-4 bg-gradient-to-br from-wellness-100 to-wellness-200 rounded-lg border-2 border-dashed border-wellness-300">
                 <div className="text-3xl mb-2 opacity-50"></div>
-                <div className="font-medium text-gray-500 text-sm">qEEG Expert</div>
-                <div className="text-xs text-gray-400">Upload and analyze qEEG data</div>
+                <div className="font-medium text-gray-500 text-sm">P&ID Expert</div>
+                <div className="text-xs text-gray-400">Upload and analyze P&ID data</div>
               </div>
               
               <div className="text-center p-4 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg border-2 border-dashed border-orange-300">

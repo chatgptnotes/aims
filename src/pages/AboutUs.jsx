@@ -150,7 +150,7 @@ const AboutUs = () => {
                   Unlock your brain's full potential with personalized wellness through cutting edge precision analysis.
                 </p>
                 <p className="text-lg text-gray-700">
-                  NeuroSense EEG Intelligence is a pioneering company at the forefront of neurotechnology, specializing in advanced brain mapping techniques using electroencephalography (EEG) and Quantitative analysis using the world's credible and reliable databases.
+                  AIMS EEG Intelligence is a pioneering company at the forefront of neurotechnology, specializing in advanced brain mapping techniques using electroencephalography (EEG) and Quantitative analysis using the world's credible and reliable databases.
                 </p>
               </div>
               <div className={`relative ${sectionsVisible.hero ? 'animate-slideInRight' : 'opacity-0'}`}>
@@ -263,10 +263,10 @@ const AboutUs = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                      Get a Detailed Neurosense Report
+                      Get a Detailed AIMS Report
                     </h3>
                     <p className="text-gray-700 leading-relaxed">
-                      Receive an in depth QEEG report that provides a comprehensive overview of your brain's electrical activity. Our reports include detailed maps, statistical analyses, and comparisons with normative databases, highlighting areas that may require attention. This detailed analysis supports accurate diagnosis and helps in crafting personalized treatment or wellness plans to optimize brain health and function.
+                      Receive an in depth P&ID report that provides a comprehensive overview of your brain's electrical activity. Our reports include detailed maps, statistical analyses, and comparisons with normative databases, highlighting areas that may require attention. This detailed analysis supports accurate diagnosis and helps in crafting personalized treatment or wellness plans to optimize brain health and function.
                     </p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@ const AboutUs = () => {
               Conditions Where Neuro Sense<br />is Indicated
             </h2>
             <p className={`text-center text-gray-700 max-w-4xl mx-auto mb-12 leading-relaxed ${sectionsVisible.conditions ? 'animate-fadeIn delay-200' : 'opacity-0'}`}>
-              We use a non invasive EEG analysis tool for brain wellness and neuropsychiatric practice. Our hardware is easy to use and point of care. Our software analyzes brainwave patterns to identify abnormalities and optimize brain function. We help monitor conditions like ADHD, depression, and anxiety by offering personalized insights into brain health, promoting overall mental well being. The findings from NeuroSense provide valuable support in adding integrative and Neuromodulation practices in your routine.
+              We use a non invasive EEG analysis tool for brain wellness and neuropsychiatric practice. Our hardware is easy to use and point of care. Our software analyzes brainwave patterns to identify abnormalities and optimize brain function. We help monitor conditions like ADHD, depression, and anxiety by offering personalized insights into brain health, promoting overall mental well being. The findings from AIMS provide valuable support in adding integrative and Neuromodulation practices in your routine.
             </p>
 
             <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -364,7 +364,7 @@ const AboutUs = () => {
                   <Brain className="w-24 h-24 text-[#4A90E2]" />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Only Data Processing (QEEG)</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Only Data Processing (P&ID)</h3>
                   <div className="mb-4">
                     <span className="text-gray-400 line-through text-lg">AED1,550.00</span>
                     <span className="text-3xl font-bold text-[#4A90E2] ml-2">AED1,050.00</span>
@@ -375,7 +375,7 @@ const AboutUs = () => {
                 </div>
               </div>
 
-              {/* Neurosense Full QEEG */}
+              {/* AIMS Full P&ID */}
               <div className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-transparent hover:border-[#4A90E2] transition-all duration-300 transform hover:-translate-y-2 relative ${sectionsVisible.booking ? 'animate-fadeInUp delay-400' : 'opacity-0'}`}>
                 <div className="absolute top-4 right-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-2 rounded-full text-sm font-semibold z-10 shadow-lg">
                   Now Available
@@ -384,7 +384,7 @@ const AboutUs = () => {
                   <Brain className="w-24 h-24 text-[#4A90E2]" />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Neurosense Full QEEG</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">AIMS Full P&ID</h3>
                   <div className="mb-4">
                     <span className="text-gray-400 line-through text-lg">AED3,000.00</span>
                     <span className="text-3xl font-bold text-[#4A90E2] ml-2">AED2,500.00</span>
@@ -447,7 +447,7 @@ const AboutUs = () => {
                   Personalized Recommendations<br />& Insights
                 </h3>
                 <p className="text-gray-700 leading-relaxed mb-6">
-                  Neurosense utilizes your brain information to provide tailored suggestions and analysis. Get personalized insights for supplements, medications, meditation, and a range of neuro modulation services to optimize your overall well being.
+                  AIMS utilizes your brain information to provide tailored suggestions and analysis. Get personalized insights for supplements, medications, meditation, and a range of neuro modulation services to optimize your overall well being.
                 </p>
                 <button
                   onClick={() => navigate('/register')}
@@ -470,13 +470,13 @@ const AboutUs = () => {
         >
           <div className="max-w-4xl mx-auto text-center">
             <h2 className={`text-4xl md:text-5xl font-bold text-[#4A90E2] mb-16 ${sectionsVisible.testimonials ? 'animate-fadeInUp' : 'opacity-0'}`}>
-              Neurosense EEG Testimonials
+              AIMS EEG Testimonials
             </h2>
             <div className={`bg-white rounded-2xl p-10 shadow-2xl border-t-4 border-[#4A90E2] ${sectionsVisible.testimonials ? 'animate-fadeInUp delay-200' : 'opacity-0'}`}>
               <p className="text-sm text-gray-500 mb-2 font-semibold">Mahadev TS</p>
               <div className="h-1 w-16 bg-yellow-400 mx-auto mb-6 rounded-full"></div>
               <p className="text-lg text-gray-800 italic leading-relaxed">
-                "NeuroSense has elevated my performance to new heights. The precision brain analysis and customized neuro modulation services have optimized my cognitive functions and mental resilience. Whether it's enhancing focus during high stakes projects or improving overall productivity, NeuroSense has been instrumental in achieving peak performance."
+                "AIMS has elevated my performance to new heights. The precision brain analysis and customized neuro modulation services have optimized my cognitive functions and mental resilience. Whether it's enhancing focus during high stakes projects or improving overall productivity, AIMS has been instrumental in achieving peak performance."
               </p>
               <div className="flex justify-center gap-2 mt-8">
                 <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
@@ -487,7 +487,7 @@ const AboutUs = () => {
           </div>
         </section>
 
-        {/* Neurosense Academy */}
+        {/* AIMS Academy */}
         <section
           ref={(el) => (sectionRefs.current.academy = el)}
           data-section="academy"
@@ -502,9 +502,9 @@ const AboutUs = () => {
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className={sectionsVisible.academy ? 'animate-slideInLeft' : 'opacity-0'}>
-                <h2 className="text-4xl font-bold mb-6">Neurosense Academy</h2>
+                <h2 className="text-4xl font-bold mb-6">AIMS Academy</h2>
                 <p className="text-lg leading-relaxed mb-8">
-                  NeuroSense Academy is a premier institution offering specialized courses in neuroscience, including QEEG and brain based interventions. Our programs provide students with a deep understanding of brain function, supported by experienced faculty and state of the art facilities. We are committed to delivering top tier education and preparing students for successful careers in this dynamic field. Join us to take the first step toward a rewarding journey in neuroscience.
+                  AIMS Academy is a premier institution offering specialized courses in neuroscience, including P&ID and brain based interventions. Our programs provide students with a deep understanding of brain function, supported by experienced faculty and state of the art facilities. We are committed to delivering top tier education and preparing students for successful careers in this dynamic field. Join us to take the first step toward a rewarding journey in neuroscience.
                 </p>
                 <button
                   onClick={() => navigate('/register')}

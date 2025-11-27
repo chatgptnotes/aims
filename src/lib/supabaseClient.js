@@ -21,7 +21,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'x-application': 'neuro360'
+      'x-application': 'aims'
     }
   }
 });

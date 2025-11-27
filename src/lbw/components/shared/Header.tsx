@@ -14,7 +14,7 @@ const Header: React.FC = () => {
     { path: '/coaching', label: 'Coaching', icon: '' },
     { path: '/content', label: 'Content', icon: '' },
     { path: '/progress', label: 'Progress', icon: 'GROWTH:' },
-    { path: '/qeeg', label: 'qEEG', icon: '' },
+    { path: '/pid', label: 'P&ID', icon: '' },
   ];
 
   const isActive = (path: string) => {

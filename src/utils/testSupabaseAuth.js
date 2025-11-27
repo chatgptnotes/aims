@@ -38,7 +38,7 @@ export const testSupabaseAuth = async () => {
     // Test 3: Try to create a test user (this will help identify auth issues)
     console.log(' Testing user creation flow...');
 
-    const testEmail = `test-${Date.now()}@neuro360test.com`;
+    const testEmail = `test-${Date.now()}@aimstest.com`;
     const testPassword = 'TestPassword123!';
 
     console.log('NOTE: Attempting to create test user:', testEmail);

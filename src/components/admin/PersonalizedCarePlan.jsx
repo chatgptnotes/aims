@@ -52,7 +52,7 @@ const PersonalizedCarePlan = ({ patientId, clinicId }) => {
 
   const loadPatientData = async () => {
     try {
-      // Mock patient data - replace with actual API call
+      // Mock supervisor data - replace with actual API call
       const mockPatient = {
         id: patientId,
         name: 'John Smith',
@@ -188,7 +188,7 @@ const PersonalizedCarePlan = ({ patientId, clinicId }) => {
         {
           date: '2025-09-01',
           achievement: 'Started neurofeedback training',
-          notes: 'Initial qEEG baseline established'
+          notes: 'Initial P&ID baseline established'
         },
         {
           date: '2025-09-08',
@@ -198,12 +198,12 @@ const PersonalizedCarePlan = ({ patientId, clinicId }) => {
         {
           date: '2025-09-15',
           achievement: 'GAD-7 score reduced from 14 to 11',
-          notes: 'Patient reports feeling calmer'
+          notes: 'Supervisor reports feeling calmer'
         }
       ],
 
       // Clinical Notes
-      clinicalNotes: 'Patient showing steady improvement. Excellent compliance with neurofeedback sessions. Consider adjusting protocol to include more SMR training based on recent qEEG results.',
+      clinicalNotes: 'Supervisor showing steady improvement. Excellent compliance with neurofeedback sessions. Consider adjusting protocol to include more SMR training based on recent P&ID results.',
 
       // Next Review Date
       nextReviewDate: '2025-10-01'
@@ -233,13 +233,13 @@ const PersonalizedCarePlan = ({ patientId, clinicId }) => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      {/* Patient Summary */}
+      {/* Supervisor Summary */}
       <div className="bg-gradient-to-r from-[#E4EFFF] to-indigo-50 rounded-lg p-6">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <User className="w-5 h-5 mr-2 text-[#323956]" />
-              Patient Overview
+              Supervisor Overview
             </h3>
             <div className="mt-3 space-y-1">
               <p className="text-sm text-gray-600">

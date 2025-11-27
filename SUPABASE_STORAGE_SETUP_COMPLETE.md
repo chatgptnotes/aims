@@ -2,7 +2,7 @@
 
 ## 🎉 क्या हो चुका है?
 
-आपका Neuro360 application **पहले से ही Supabase Storage use कर रहा है**! AWS S3 कभी integrate नहीं था।
+आपका AIMS application **पहले से ही Supabase Storage use कर रहा है**! AWS S3 कभी integrate नहीं था।
 
 ---
 
@@ -71,7 +71,7 @@
 
 1. **Browser में जाएं:** https://supabase.com
 2. **Login करें** अपने account से
-3. **Neuro360 project select करें**
+3. **AIMS project select करें**
 
 ### Step 2: Storage Buckets बनाएं
 
@@ -114,7 +114,7 @@ File size limit: 5242880 (5MB)
 2. **"New query" button पर click करें**
 3. **नीचे दी गई SQL file को copy करें और paste करें:**
 
-📄 File location: `D:\Neuro360\supabase\storage-policies.sql`
+📄 File location: `D:\AIMS\supabase\storage-policies.sql`
 
 4. **"Run" button पर click करें**
 
@@ -154,7 +154,7 @@ AND schemaname = 'storage';
 
 ### 1. **storageService.js Updated** ✅
 
-**Location:** `D:\Neuro360\src\services\storageService.js`
+**Location:** `D:\AIMS\src\services\storageService.js`
 
 **Changes:**
 - ✅ Files अब clinic और patient के according organize होती हैं
@@ -184,7 +184,7 @@ const files = await StorageService.listPatientFiles('clinic-123', 'patient-456')
 
 ### 2. **.env.example Cleaned** ✅
 
-**Location:** `D:\Neuro360\.env.example`
+**Location:** `D:\AIMS\.env.example`
 
 **Changes:**
 - ❌ AWS credentials references removed

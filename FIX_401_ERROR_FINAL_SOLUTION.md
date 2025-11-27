@@ -122,7 +122,7 @@ Network Tab:
 
 1. **Open this in browser:**
    ```
-   D:\Neuro360\verify-correct-key-loading.html
+   D:\AIMS\verify-correct-key-loading.html
    ```
 
 2. **यह automatically check करेगा:**

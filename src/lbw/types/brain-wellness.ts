@@ -212,7 +212,7 @@ export interface CoachingSession {
   userId: string
   datetime: string
   duration: number
-  type: 'brain_coaching' | 'nervous_system' | 'qeeg_consultation'
+  type: 'brain_coaching' | 'nervous_system' | 'pid_consultation'
   status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
   notes?: string
   sessionNotes?: string
@@ -253,8 +253,8 @@ export interface OnboardingData {
     relationships: string
   }
   assessmentResults: Record<string, AssessmentResult>
-  qeegCompleted: boolean
-  qeegUpload?: File
+  pidCompleted: boolean
+  pidUpload?: File
   coachingPreference: 'brain' | 'nervous_system' | 'both' | 'none'
 }
 

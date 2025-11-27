@@ -37,7 +37,7 @@ export const checkUploadRequirements = (clinicId, patient, user, file) => {
 
     // Validate file extension for medical report formats
     const validExtensions = [
-      '.edf', '.eeg', '.bdf',          // EEG/qEEG formats
+      '.edf', '.eeg', '.bdf',          // EEG/P&ID formats
       '.pdf',                           // PDF documents
       '.jpg', '.jpeg', '.png',          // Images
       '.doc', '.docx',                  // Word documents

@@ -41,7 +41,7 @@
 ### **Login Credentials:**
 
 **Super Admin:**
-- Email: `admin@neurosense360.com`
+- Email: `admin@aims.com`
 - Password: `admin123`
 
 **Clinic Admin:**
@@ -54,7 +54,7 @@
 
 1. **Open your browser**
 2. **Go to: `http://localhost:3000/test`**
-3. **You should see a green test page with "NeuroSense360 Test Page"**
+3. **You should see a green test page with "AIMS Test Page"**
 4. **If that works, try: `http://localhost:3000/login`**
 5. **Login with the credentials above**
 

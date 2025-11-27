@@ -28,7 +28,7 @@ https://supabase.com
 - "Sign in" पर click करें
 
 ### 1.3 Project खोलें
-- "Neuro360" project पर click करें
+- "AIMS" project पर click करें
 - Dashboard खुल जाएगा
 
 ---
@@ -132,7 +132,7 @@ Buckets
 
 1. अपने computer पर यह file खोलें:
    ```
-   D:\Neuro360\supabase\storage-policies.sql
+   D:\AIMS\supabase\storage-policies.sql
    ```
 
 2. **पूरी file को copy करें** (Ctrl+A, फिर Ctrl+C)

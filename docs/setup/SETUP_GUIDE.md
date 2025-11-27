@@ -1,4 +1,4 @@
-# 🚀 Neuro360 Multi-Auth Setup Guide
+# 🚀 AIMS Multi-Auth Setup Guide
 
 ## 🔧 Fix Supabase Connection Issues
 
@@ -45,7 +45,7 @@ yarn dev
 After restart, check the browser console. You should see:
 
 ```
-🚀 Neuro360 Multi-Auth System Starting...
+🚀 AIMS Multi-Auth System Starting...
 🔍 Testing Supabase connection...
 ✅ Supabase connection successful!
 ✅ Database connection successful!
@@ -94,7 +94,7 @@ After setup, you'll have:
 After running `sample_data_test.sql`, you can use:
 
 **Super Admin:**
-- Email: `admin@neuro360.com`
+- Email: `admin@aims.com`
 - Role: `super_admin`
 
 **Clinic Admin:**

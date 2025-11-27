@@ -121,12 +121,12 @@ const AdminAssignmentModal = ({ clinic, isOpen, onClose, onUpdate }) => {
   };
 
   const getPermissionOptions = () => [
-    { id: 'manage_patients', label: 'Manage Patients', description: 'Add, edit, and manage patient records' },
-    { id: 'view_reports', label: 'View Reports', description: 'Access patient reports and analytics' },
+    { id: 'manage_patients', label: 'Manage Patients', description: 'Add, edit, and manage supervisor records' },
+    { id: 'view_reports', label: 'View Reports', description: 'Access supervisor reports and analytics' },
     { id: 'manage_staff', label: 'Manage Staff', description: 'Add and manage clinic staff' },
     { id: 'billing', label: 'Billing Access', description: 'View and manage billing information' },
     { id: 'settings', label: 'Clinic Settings', description: 'Modify clinic settings and preferences' },
-    { id: 'export_data', label: 'Export Data', description: 'Export patient data and reports' }
+    { id: 'export_data', label: 'Export Data', description: 'Export supervisor data and reports' }
   ];
 
   const onSubmitAdmin = async (data) => {

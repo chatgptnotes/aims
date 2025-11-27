@@ -41,7 +41,7 @@ const LBWCoaching = () => {
       sessions: 320,
       price: 150,
       image: '‍',
-      bio: 'qEEG consultation and brain mapping specialist with advanced neurofeedback expertise.',
+      bio: 'P&ID consultation and brain mapping specialist with advanced neurofeedback expertise.',
       availability: 'Available this week'
     },
     {
@@ -88,8 +88,8 @@ const LBWCoaching = () => {
       color: 'green'
     },
     {
-      id: 'qeeg',
-      title: 'qEEG Consultation',
+      id: 'pid',
+      title: 'P&ID Consultation',
       icon: '',
       description: 'Brain mapping analysis and neurofeedback treatment planning.',
       price: 'Starting at $150/session',
