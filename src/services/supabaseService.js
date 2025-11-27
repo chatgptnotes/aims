@@ -472,7 +472,7 @@ class SupabaseService {
 
   // Supervisor specific methods
   async getSupervisorsByClinic(clinicId) {
-    return await this.findBy('patients', 'org_id', clinicId);
+    return await this.findBy('supervisors', 'project_area_id', clinicId);
   }
 
   // Reports specific methods

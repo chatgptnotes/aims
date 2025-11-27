@@ -2,9 +2,10 @@ import { supabase } from '../lib/supabaseClient';
 
 class StorageService {
   constructor() {
-    this.reportsBucket = 'supervisor-reports';
-    this.avatarsBucket = 'profile_image'; // Changed to match your Supabase bucket name
+    this.reportsBucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'pid-documents';
+    this.avatarsBucket = 'profile-images'; // Changed to match your Supabase bucket name
     this.initialized = false;
+    console.log(`STORAGE: Using bucket: ${this.reportsBucket}`);
     this.checkBucketAvailability();
   }
 

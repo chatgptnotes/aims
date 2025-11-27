@@ -13,8 +13,8 @@ class DatabaseService {
     try {
       console.log('CONFIG: Checking Supabase availability...');
 
-      // Test Supabase connection with clinics table (which we know exists)
-      const testResult = await this.supabaseService.get('clinics');
+      // Test Supabase connection with project_areas table (the new industrial table)
+      const testResult = await this.supabaseService.get('project_areas');
       if (testResult !== undefined) {
         this.useSupabase = true;
         console.log('START: Using Supabase for data storage');
@@ -30,10 +30,10 @@ class DatabaseService {
   // Map legacy table names to Supabase schema
   mapTableName(table) {
     const tableMapping = {
-      // Legacy table names - keep mapping to old tables for backward compatibility
-      // (both old and new tables exist in database)
-      'patients': 'patients',            // Old table still exists, used for backward compatibility
-      'clinics': 'clinics',              // Old table still exists, used for backward compatibility
+      // Map old names to new AIMS tables in Supabase
+      // Since the old medical tables were cleaned up, we map to new industrial tables
+      'patients': 'supervisors',          // Map patients to supervisors table
+      'clinics': 'project_areas',         // Map clinics to project_areas table
 
       // New table names (from recent migrations)
       'supervisors': 'supervisors',      // New table for industrial supervisors
@@ -42,7 +42,7 @@ class DatabaseService {
 
       // Other table mappings
       'superAdmins': 'profiles',
-      'reports': 'reports',              // Shared by both old and new schema
+      'reports': 'pid_reports',          // Map to P&ID reports table
       'subscriptions': 'subscriptions',
       'payments': 'payment_history',
       'algorithmResults': 'algorithm_results',  // P&ID algorithm processing results
@@ -72,34 +72,37 @@ class DatabaseService {
       }
 
       // Transform data based on table type
-      if (table === 'clinics' && actualTable === 'clinics') {
-        // Transform project areas data to camelCase format (table name 'clinics' retained for DB compatibility)
-        return data.map(clinic => ({
-          id: clinic.id,
-          name: clinic.name,
-          email: clinic.email,
-          password: clinic.password,  // SUCCESS: CRITICAL: Include password for login authentication
-          contactPerson: clinic.contact_person,
-          contact_person: clinic.contact_person,  // Keep snake_case for compatibility
-          clinicName: clinic.clinic_name,
-          clinic_name: clinic.clinic_name,  // Keep snake_case for compatibility
-          phone: clinic.phone,
-          address: clinic.address,
-          logoUrl: clinic.logo_url,
-          logo_url: clinic.logo_url,  // Keep snake_case for compatibility
-          avatar: clinic.logo_url,  // Map logo_url to avatar
-          isActive: clinic.is_active,
-          is_active: clinic.is_active,  // Keep snake_case for compatibility
-          isActivated: clinic.is_active,  // Legacy compatibility
-          reportsUsed: clinic.reports_used,
-          reportsAllowed: clinic.reports_allowed,
-          subscriptionStatus: clinic.subscription_status,
-          subscription_status: clinic.subscription_status,  // Keep snake_case for compatibility
-          subscriptionTier: clinic.subscription_tier,
-          trialStartDate: clinic.trial_start_date,
-          trialEndDate: clinic.trial_end_date,
-          createdAt: clinic.created_at,
-          updatedAt: clinic.updated_at
+      if (table === 'clinics' && actualTable === 'project_areas') {
+        // Transform project areas data to match expected clinic structure
+        return data.map(area => ({
+          id: area.id,
+          name: area.name,
+          code: area.code,
+          // Map engineer email/name to expected clinic fields
+          email: area.primary_engineer_email || area.code + '@aims.com',
+          password: area.password || 'default123',  // Default password for compatibility
+          contactPerson: area.primary_engineer_name,
+          contact_person: area.primary_engineer_name,  // Keep snake_case for compatibility
+          clinicName: area.name,  // Use project area name as clinic name
+          clinic_name: area.name,  // Keep snake_case for compatibility
+          phone: area.phone,
+          address: area.location,
+          logoUrl: area.logo_url,
+          logo_url: area.logo_url,  // Keep snake_case for compatibility
+          avatar: area.logo_url,  // Map logo_url to avatar
+          isActive: area.is_active,
+          is_active: area.is_active,  // Keep snake_case for compatibility
+          isActivated: area.is_active,  // Legacy compatibility
+          // Map subscription fields
+          reportsUsed: area.current_month_uploads,
+          reportsAllowed: area.max_pid_uploads_per_month,
+          subscriptionStatus: area.subscription_type === 'trial' ? 'trial' : 'active',
+          subscription_status: area.subscription_type,  // Keep snake_case for compatibility
+          subscriptionTier: area.subscription_type,
+          trialStartDate: area.subscription_start_date,
+          trialEndDate: area.subscription_end_date,
+          createdAt: area.created_at,
+          updatedAt: area.updated_at
         }));
       }
 
@@ -126,27 +129,42 @@ class DatabaseService {
 
           console.log('REFRESH: Transforming patient:', patient.email);
 
+          // Build full name from first_name and last_name if available (new supervisors table)
+          const fullName = patient.first_name && patient.last_name
+            ? `${patient.first_name} ${patient.last_name}`
+            : patient.full_name || patient.name;
+
           return {
             id: patient.id,
-            name: patient.name,
-            fullName: patient.full_name || patient.name,
-            full_name: patient.full_name || patient.name,  // Keep snake_case for compatibility
+            name: fullName,
+            fullName: fullName,
+            full_name: fullName,  // Keep snake_case for compatibility
+            firstName: patient.first_name,
+            lastName: patient.last_name,
             email: patient.email,
             phone: patient.phone,
             address: patient.address,
             dateOfBirth: patient.date_of_birth,
             date_of_birth: patient.date_of_birth,  // Keep snake_case for compatibility
             gender: patient.gender,
-            clinicId: patient.clinic_id || patient.org_id,
-            clinic_id: patient.clinic_id || patient.org_id,  // Keep snake_case for compatibility
-            orgId: patient.org_id || patient.clinic_id,
-            org_id: patient.org_id || patient.clinic_id,  // Keep snake_case for compatibility
+            // Map project_area_id to clinicId for backward compatibility
+            clinicId: patient.project_area_id || patient.clinic_id || patient.org_id,
+            clinic_id: patient.project_area_id || patient.clinic_id || patient.org_id,  // Keep snake_case for compatibility
+            projectAreaId: patient.project_area_id,
+            project_area_id: patient.project_area_id,  // Keep snake_case for compatibility
+            orgId: patient.org_id || patient.clinic_id || patient.project_area_id,
+            org_id: patient.org_id || patient.clinic_id || patient.project_area_id,  // Keep snake_case for compatibility
             medicalHistory: patient.medical_history,
             medical_history: patient.medical_history,  // Keep snake_case for compatibility
             emergencyContact: patient.emergency_contact,
             emergency_contact: patient.emergency_contact,  // Keep snake_case for compatibility
             improvementFocus: patient.improvement_focus,
             brainFitnessScore: patient.brain_fitness_score,
+            employeeId: patient.employee_id,
+            department: patient.department,
+            specialization: patient.specialization,
+            safetyRating: patient.safety_rating,
+            isActive: patient.is_active,
             createdAt: patient.created_at,
             updatedAt: patient.updated_at
           };
@@ -177,6 +195,11 @@ class DatabaseService {
         return await this.createClinic(item);
       }
 
+      // Handle reports specially - map old field names to new pid_reports schema
+      if (table === 'reports') {
+        item = this.mapReportFields(item);
+      }
+
       // Ensure item has an ID
       if (!item.id) {
         item.id = uuidv4();
@@ -197,10 +220,68 @@ class DatabaseService {
     }
   }
 
+  // Map legacy report fields to pid_reports schema
+  mapReportFields(item) {
+    // Map old status values to new valid values
+    // Valid: 'draft', 'in_review', 'approved', 'issued', 'superseded', 'obsolete'
+    const mapStatus = (oldStatus) => {
+      const statusMap = {
+        'completed': 'issued',
+        'pending': 'draft',
+        'active': 'in_review',
+        'uploaded': 'issued',
+        'processing': 'in_review'
+      };
+      return statusMap[oldStatus?.toLowerCase()] || oldStatus || 'draft';
+    };
+
+    const mapped = {
+      ...item,
+      // Map old field names to new
+      projectAreaId: item.clinicId || item.projectAreaId,
+      project_area_id: item.clinic_id || item.clinicId || item.projectAreaId || item.project_area_id,
+      supervisorId: item.patientId || item.supervisorId,
+      supervisor_id: item.patient_id || item.patientId || item.supervisorId || item.supervisor_id,
+      documentTitle: item.fileName || item.title || item.documentTitle || 'Untitled Document',
+      document_title: item.file_name || item.fileName || item.title || item.documentTitle || 'Untitled Document',
+      documentNumber: item.documentNumber || `DOC-${Date.now()}`,
+      document_number: item.documentNumber || `DOC-${Date.now()}`,
+      filePath: item.filePath || item.storagePath || item.file_path,
+      file_path: item.file_path || item.filePath || item.storagePath,
+      fileUrl: item.fileUrl || item.file_url,
+      file_url: item.file_url || item.fileUrl,
+      status: mapStatus(item.status),
+      documentType: item.reportType || item.documentType || 'pid',
+      document_type: item.report_type || item.reportType || item.documentType || 'pid',
+      revisionNumber: item.revisionNumber || '0',
+      revision_number: item.revision_number || item.revisionNumber || '0'
+    };
+
+    // Only include engineer_id if it's provided, otherwise omit it (will use default or NULL)
+    if (item.engineerId || item.engineer_id || item.uploadedBy || item.uploaded_by || item.createdBy || item.created_by) {
+      mapped.engineerId = item.engineerId || item.uploadedBy || item.createdBy;
+      mapped.engineer_id = item.engineer_id || item.engineerId || item.uploaded_by || item.created_by;
+    }
+
+    return mapped;
+  }
+
   // Filter valid fields for each table
   filterValidFields(table, item) {
     const validFields = {
+      'project_areas': [
+        'id', 'name', 'code', 'description', 'location', 'facility_type', 'region', 'country',
+        'primary_engineer_email', 'primary_engineer_name', 'phone', 'emergency_contact',
+        'industry_type', 'plant_capacity', 'commissioning_date', 'last_turnaround_date',
+        'next_turnaround_date', 'safety_rating', 'iso_certifications', 'compliance_standards',
+        'status', 'operational_since', 'total_pid_count', 'active_pid_count', 'last_pid_update',
+        'subscription_type', 'subscription_start_date', 'subscription_end_date',
+        'max_supervisors', 'max_pid_uploads_per_month', 'current_month_uploads',
+        'created_at', 'updated_at', 'created_by', 'is_active', 'metadata'
+      ],
       'clinics': [
+        // This is for backward compatibility - clinics table doesn't actually exist
+        // It maps to project_areas table now
         'id', 'name', 'clinic_name', 'email', 'contact_person', 'phone', 'address', 'logo_url', 'is_active',
         'reports_used', 'reports_allowed', 'subscription_status', 'subscription_tier',
         'trial_start_date', 'trial_end_date', 'created_at', 'updated_at',
@@ -233,10 +314,20 @@ class DatabaseService {
         'created_at', 'updated_at', 'created_by', 'updated_by'
       ],
       'reports': [
-        // Actual schema from 004_simple_clinic_tables.sql:
+        // Legacy field names (will be mapped to pid_reports)
         'id', 'clinic_id', 'patient_id', 'supervisor_id', 'file_name', 'file_path',
         'report_data', 'status', 'created_at', 'updated_at'
-        // Note: report_type, file_size, etc. should be stored in report_data JSONB
+      ],
+      'pid_reports': [
+        // New P&ID reports schema
+        'id', 'document_number', 'document_title', 'revision_number', 'revision_date',
+        'project_area_id', 'supervisor_id', 'engineer_id', 'document_type', 'drawing_category',
+        'discipline', 'file_path', 'file_url', 'file_size_bytes', 'file_format', 'thumbnail_url',
+        'process_unit', 'equipment_tags', 'instrument_tags', 'status', 'approval_status',
+        'approval_date', 'approved_by', 'safety_classification', 'hazard_level', 'requires_moc',
+        'isa_compliant', 'compliance_notes', 'tag_extraction_status', 'issue_date', 'effective_date',
+        'next_review_date', 'description', 'comments', 'change_summary', 'distribution_list',
+        'created_at', 'updated_at', 'created_by', 'updated_by'
       ],
       'payment_history': [
         'id', 'payment_id', 'order_id', 'signature', 'clinic_id', 'amount', 'currency', 'status',
@@ -472,41 +563,53 @@ class DatabaseService {
     }
   }
 
-  // Project area specific methods (database table 'clinics' retained for compatibility)
+  // Project area specific methods (maps to project_areas table)
   async createClinic(clinicData) {
     try {
       console.log('PROJECT_AREA: Creating project area with data:', clinicData);
 
-      // Create project area record matching the exact schema
-      // Preserve the data passed from authService (including pending approval status)
-      const clinicRecord = {
+      // Generate a unique code for the project area if not provided
+      const projectCode = clinicData.code || `PA-${Date.now().toString(36).toUpperCase()}`;
+
+      // Map clinic data to project_areas table schema
+      const projectAreaRecord = {
         name: clinicData.name || clinicData.clinicName,
-        email: clinicData.email,
+        code: projectCode,
+        description: clinicData.description || `Project Area: ${clinicData.name || clinicData.clinicName}`,
+        location: clinicData.address || clinicData.location || '',
+        facility_type: clinicData.facility_type || 'General',
+        region: clinicData.region || 'Default',
+        country: clinicData.country || 'UAE',
+        primary_engineer_email: clinicData.email || clinicData.primary_engineer_email,
+        primary_engineer_name: clinicData.contact_person || clinicData.contactPerson || clinicData.primary_engineer_name || '',
         phone: clinicData.phone || '',
-        address: clinicData.address || '',
-        logo_url: clinicData.logo_url || clinicData.logoUrl || null,
+        emergency_contact: clinicData.emergency_contact || '',
+        industry_type: clinicData.industry_type || 'Industrial',
+        status: 'active',
         is_active: clinicData.is_active !== undefined ? clinicData.is_active : true,
-        reports_used: clinicData.reports_used || clinicData.reportsUsed || 0,
-        reports_allowed: clinicData.reports_allowed || parseInt(clinicData.reportsAllowed) || 10,
-        subscription_status: clinicData.subscription_status || clinicData.subscriptionStatus || 'trial',
-        subscription_tier: clinicData.subscription_tier || 'free',
-        trial_start_date: clinicData.trial_start_date || new Date().toISOString(),
-        trial_end_date: clinicData.trial_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        // Map subscription fields
+        subscription_type: clinicData.subscription_status || clinicData.subscriptionStatus || 'trial',
+        subscription_start_date: clinicData.trial_start_date || new Date().toISOString(),
+        subscription_end_date: clinicData.trial_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        max_supervisors: clinicData.max_supervisors || 5,
+        max_pid_uploads_per_month: clinicData.reports_allowed || parseInt(clinicData.reportsAllowed) || 10,
+        current_month_uploads: clinicData.reports_used || clinicData.reportsUsed || 0,
+        // Timestamps
         created_at: clinicData.created_at || clinicData.createdAt || new Date().toISOString(),
         updated_at: clinicData.updated_at || new Date().toISOString()
       };
 
-      // IMPORTANT: Preserve the ID if provided (for existing clinic records)
+      // IMPORTANT: Preserve the ID if provided (for existing records)
       if (clinicData.id) {
-        clinicRecord.id = clinicData.id;
+        projectAreaRecord.id = clinicData.id;
       }
 
-      console.log('INFO: Project area data to create:', clinicRecord);
+      console.log('INFO: Project area data to create:', projectAreaRecord);
 
-      // Use direct Supabase insert to clinics table (table name retained for DB compatibility)
-      const { data: clinic, error } = await this.supabaseService.supabase
-        .from('clinics')
-        .insert(clinicRecord)
+      // Insert into project_areas table
+      const { data: projectArea, error } = await this.supabaseService.supabase
+        .from('project_areas')
+        .insert(projectAreaRecord)
         .select()
         .single();
 
@@ -515,26 +618,26 @@ class DatabaseService {
         throw error;
       }
 
-      console.log('SUCCESS: Project area created:', clinic);
+      console.log('SUCCESS: Project area created:', projectArea);
 
-      // Return in camelCase format for consistency
+      // Return in camelCase format for backward compatibility
       return {
-        id: clinic.id,
-        name: clinic.name,
-        email: clinic.email,
-        phone: clinic.phone,
-        address: clinic.address,
-        logoUrl: clinic.logo_url,
-        contactPerson: clinicData.contactPerson,
-        isActive: clinic.is_active,
-        reportsUsed: clinic.reports_used,
-        reportsAllowed: clinic.reports_allowed,
-        subscriptionStatus: clinic.subscription_status,
-        subscriptionTier: clinic.subscription_tier,
-        trialStartDate: clinic.trial_start_date,
-        trialEndDate: clinic.trial_end_date,
-        createdAt: clinic.created_at,
-        updatedAt: clinic.updated_at
+        id: projectArea.id,
+        name: projectArea.name,
+        email: projectArea.primary_engineer_email,
+        phone: projectArea.phone,
+        address: projectArea.location,
+        logoUrl: projectArea.logo_url,
+        contactPerson: projectArea.primary_engineer_name,
+        isActive: projectArea.is_active,
+        reportsUsed: projectArea.current_month_uploads,
+        reportsAllowed: projectArea.max_pid_uploads_per_month,
+        subscriptionStatus: projectArea.subscription_type,
+        subscriptionTier: projectArea.subscription_type,
+        trialStartDate: projectArea.subscription_start_date,
+        trialEndDate: projectArea.subscription_end_date,
+        createdAt: projectArea.created_at,
+        updatedAt: projectArea.updated_at
         // Note: Using single 'password' field for authentication (adminPassword removed)
       };
 
@@ -561,8 +664,8 @@ class DatabaseService {
 
   // Patient/Supervisor specific methods (using old 'patients' table for backward compatibility)
   async getSupervisorsByClinic(clinicId) {
-    // Use old 'patients' table which maps to clinic_id
-    return await this.findBy('patients', 'clinic_id', clinicId);
+    // 'patients' maps to 'supervisors' table which uses project_area_id column
+    return await this.findBy('patients', 'project_area_id', clinicId);
   }
 
   // Reports specific methods

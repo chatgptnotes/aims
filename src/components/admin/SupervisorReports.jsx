@@ -50,9 +50,9 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: {
       clinicId: '',
-      patientId: '',
+      supervisorId: '',
       title: '',
-      reportType: 'EEG',
+      reportType: 'PID',
       notes: ''
     }
   });
@@ -175,14 +175,14 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
       try {
         clinicsData = await DatabaseService.get('clinics') || [];
       } catch (err) {
-        console.error('ERROR: Failed to load clinics:', err);
+        console.error('ERROR: Failed to load project areas:', err);
         clinicsData = [];
       }
 
       try {
         patientsData = await DatabaseService.get('patients') || [];
       } catch (err) {
-        console.error('ERROR: Failed to load patients:', err);
+        console.error('ERROR: Failed to load supervisors:', err);
         patientsData = [];
       }
 
@@ -226,7 +226,7 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
 
         return {
           ...report,
-          clinicName: clinic?.name || 'Unknown Clinic',
+          clinicName: clinic?.name || 'Unknown Project Area',
           patientName: report.patientName || 'Unknown Supervisor',
           // Ensure file path fields are available at top level for easy access
           storagePath: report.storagePath || report.filePath || report.file_path || reportData.storagePath || reportData.filePath,
@@ -402,11 +402,11 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
 
     // Validate required fields
     if (!data.clinicId) {
-      toast.error('Please select a clinic');
+      toast.error('Please select a project area');
       return;
     }
 
-    if (!data.patientId) {
+    if (!data.supervisorId) {
       toast.error('Please select a supervisor');
       return;
     }
@@ -435,7 +435,7 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
       console.log('START: Starting file upload to S3...', {
         file: selectedFile.name,
         clinicId: data.clinicId,
-        patientId: data.patientId
+        supervisorId: data.supervisorId
       });
       
       // Validate file again before upload
@@ -448,12 +448,12 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
 
       // Upload file to S3
       const uploadResult = await StorageService.uploadFile(
-        selectedFile, 
+        selectedFile,
         selectedFile.name,
         {
           clinicId: data.clinicId,
-          patientId: data.patientId,
-          reportType: data.reportType || 'EEG',
+          patientId: data.supervisorId, // Database still uses patientId column
+          reportType: data.reportType || 'PID',
           uploadedBy: 'Super Admin'
         }
       );
@@ -468,7 +468,7 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
       // - clinic_id, patient_id, file_name, file_path, report_data (JSONB), status
       const reportData = {
         clinicId: data.clinicId,
-        patientId: data.patientId,
+        patientId: data.supervisorId, // Database still uses patientId column
         fileName: selectedFile.name,
         filePath: uploadResult.path || uploadResult.key,
         reportData: {
@@ -991,9 +991,9 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
             onChange={(e) => setSelectedClinic(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
-            <option value="">All Clinics</option>
+            <option value="">All Project Areas</option>
             {(clinics || []).map(clinic => (
-              <option key={clinic?.id || Math.random()} value={clinic?.id || ''}>{clinic?.name || 'Unknown Clinic'}</option>
+              <option key={clinic?.id || Math.random()} value={clinic?.id || ''}>{clinic?.name || 'Unknown Project Area'}</option>
             ))}
           </select>
           
@@ -1002,7 +1002,7 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
             onChange={(e) => setSelectedSupervisor(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
-            <option value="">All Patients</option>
+            <option value="">All Supervisors</option>
             {(supervisors || [])
               .filter(supervisor => !selectedClinic || supervisor?.clinicId === selectedClinic)
               .map(supervisor => (
@@ -1191,7 +1191,7 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
               setUploadProgress(0);
             }}
             clinics={clinics || []}
-            patients={patients || []}
+            patients={supervisors || []}
             register={register}
             handleSubmit={handleSubmit}
             reset={reset}
@@ -1241,10 +1241,10 @@ const SupervisorReports = ({ onUpdate, selectedClinic: superAdminSelectedClinic 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
             <h3 className="text-lg font-medium text-green-900 dark:text-green-100">
-              Response Reports Sent to Clinics & Patients ({responseReports.length})
+              Response Reports Sent to Project Areas & Supervisors ({responseReports.length})
             </h3>
             <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-              These response reports have been sent to clinics and are visible to patients
+              These response reports have been sent to project areas and are visible to supervisors
             </p>
           </div>
 
@@ -1424,8 +1424,8 @@ const ResponseUploadModal = ({
         <div className="bg-[#E4EFFF] border border-blue-200 rounded-lg p-4 mb-4">
           <h4 className="text-sm font-medium text-blue-900 mb-2">Original Report</h4>
           <div className="space-y-1 text-sm text-blue-700">
-            <p><strong>Patient:</strong> {originalReport.patientName || 'Unknown Supervisor'}</p>
-            <p><strong>Clinic:</strong> {originalReport.clinicName || 'Unknown Clinic'}</p>
+            <p><strong>Supervisor:</strong> {originalReport.patientName || 'Unknown Supervisor'}</p>
+            <p><strong>Project Area:</strong> {originalReport.clinicName || 'Unknown Project Area'}</p>
             <p><strong>Report:</strong> {originalReport.fileName || 'Unknown Report'}</p>
             <p><strong>Date:</strong> {originalReport.createdAt ? new Date(originalReport.createdAt).toLocaleDateString() : 'Unknown Date'}</p>
           </div>
@@ -1578,9 +1578,9 @@ const UploadReportModal = ({
         try {
           const clinicSupervisors = await DatabaseService.getSupervisorsByClinic(watchedClinic);
           setAvailablePatients(clinicSupervisors || []);
-          console.log('CLINIC: Loaded patients for clinic:', watchedClinic, 'Count:', clinicSupervisors?.length || 0);
+          console.log('PROJECT AREA: Loaded supervisors for project area:', watchedClinic, 'Count:', clinicSupervisors?.length || 0);
         } catch (error) {
-          console.error('ERROR: Error loading patients for clinic:', error);
+          console.error('ERROR: Error loading supervisors for project area:', error);
           setAvailablePatients([]);
         }
       } else {
@@ -1595,7 +1595,7 @@ const UploadReportModal = ({
     try {
       console.log('START: Admin form submitted with data:', data);
       console.log('Form validation errors:', Object.keys(errors).length > 0 ? errors : 'No errors');
-      console.log('Available patients count:', availablePatients.length);
+      console.log('Available supervisors count:', availablePatients.length);
       console.log('Selected file:', selectedFile ? {
         name: selectedFile.name,
         size: selectedFile.size,
@@ -1626,13 +1626,13 @@ const UploadReportModal = ({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Clinic *
+              Select Project Area *
             </label>
             <select
-              {...register('clinicId', { required: 'Please select a clinic' })}
+              {...register('clinicId', { required: 'Please select a project area' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             >
-              <option value="">Choose a clinic...</option>
+              <option value="">Choose a project area...</option>
               {clinics.map(clinic => (
                 <option key={clinic.id} value={clinic.id}>{clinic.name}</option>
               ))}
@@ -1645,18 +1645,18 @@ const UploadReportModal = ({
               Select Supervisor *
             </label>
             <select
-              {...register('patientId', { required: 'Please select a supervisor' })}
+              {...register('supervisorId', { required: 'Please select a supervisor' })}
               disabled={!watchedClinic}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100"
             >
               <option value="">
-                {!watchedClinic ? 'Select clinic first...' : 'Choose a supervisor...'}
+                {!watchedClinic ? 'Select project area first...' : 'Choose a supervisor...'}
               </option>
               {(availablePatients || []).map(supervisor => (
                 <option key={supervisor?.id || Math.random()} value={supervisor?.id || ''}>{supervisor?.name || 'Unnamed Supervisor'}</option>
               ))}
             </select>
-            {errors.patientId && <p className="text-red-500 text-xs mt-1">{errors.patientId.message}</p>}
+            {errors.supervisorId && <p className="text-red-500 text-xs mt-1">{errors.supervisorId.message}</p>}
           </div>
 
           <div>
@@ -1872,8 +1872,8 @@ const ReportViewModal = ({ report, onClose }) => {
         content = `No Content Available
 
 Report: ${report.fileName || 'Unknown'}
-Patient: ${report.patientName || 'Unknown Supervisor'}
-Clinic: ${report.clinicName || 'Unknown Clinic'}
+Supervisor: ${report.patientName || 'Unknown Supervisor'}
+Project Area: ${report.clinicName || 'Unknown Project Area'}
 Upload Date: ${report.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}
 
 Storage Information:
@@ -1968,17 +1968,17 @@ Recommendation: Contact the clinic to re-upload this report.`;
                 </div>
               </div>
 
-              {/* Supervisor & Clinic Information */}
+              {/* Supervisor & Project Area Information */}
               <div className="bg-[#E4EFFF] p-4 rounded-lg">
                 <h4 className="text-md font-semibold text-blue-900 mb-3 flex items-center">
                   <Users className="h-4 w-4 mr-2" />
-                  Supervisor & Clinic Details
+                  Supervisor & Project Area Details
                 </h4>
                 <div className="space-y-2 text-sm text-blue-800">
-                  <div><span className="font-medium">Patient:</span> {report?.patientName || 'Unknown Supervisor'}</div>
-                  <div><span className="font-medium">Clinic:</span> {report?.clinicName || 'Unknown Clinic'}</div>
+                  <div><span className="font-medium">Supervisor:</span> {report?.patientName || 'Unknown Supervisor'}</div>
+                  <div><span className="font-medium">Project Area:</span> {report?.clinicName || 'Unknown Project Area'}</div>
                   <div><span className="font-medium">Supervisor ID:</span> {report?.patientId || 'N/A'}</div>
-                  <div><span className="font-medium">Clinic ID:</span> {report?.clinicId || 'N/A'}</div>
+                  <div><span className="font-medium">Project Area ID:</span> {report?.clinicId || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -2105,8 +2105,8 @@ Recommendation: Contact the clinic to re-upload this report.`;
                          if (reportContent.startsWith('data:application/pdf')) {
                            return `PDF REPORT CONTENT\n\n` +
                              `FILE: File: ${report?.fileName || 'Unknown Report'}\n` +
-                             ` Patient: ${report?.patientName || 'Unknown Supervisor'}\n` +
-                             `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                             ` Supervisor: ${report?.patientName || 'Unknown Supervisor'}\n` +
+                             `PROJECT AREA: Project Area: ${report?.clinicName || 'Unknown Project Area'}\n` +
                              ` Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n` +
                              `DATA: Size: ${reportContent.length} characters (Base64 encoded)\n\n` +
                              `INFO: REPORT TYPE: ${report?.reportType || 'Medical Report'}\n\n` +
@@ -2132,8 +2132,8 @@ Recommendation: Contact the clinic to re-upload this report.`;
                                  const decoded = atob(content);
                                  return `DECODED REPORT CONTENT\n\n` +
                                    `FILE: File: ${report?.fileName || 'Unknown'}\n` +
-                                   ` Patient: ${report?.patientName || 'Unknown Supervisor'}\n` +
-                                   `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                                   ` Supervisor: ${report?.patientName || 'Unknown Supervisor'}\n` +
+                                   `PROJECT AREA: Project Area: ${report?.clinicName || 'Unknown Project Area'}\n` +
                                    `DATA: Content Type: ${contentType}\n` +
                                    ` Size: ${decoded.length} characters\n\n` +
                                    `═══════════════════════════════════════════════════════\n\n` +
@@ -2145,8 +2145,8 @@ Recommendation: Contact the clinic to re-upload this report.`;
                              
                              return `ENCODED REPORT DATA\n\n` +
                                `FILE: File: ${report?.fileName || 'Unknown'}\n` +
-                               ` Patient: ${report?.patientName || 'Unknown Supervisor'}\n` +
-                               `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                               ` Supervisor: ${report?.patientName || 'Unknown Supervisor'}\n` +
+                               `PROJECT AREA: Project Area: ${report?.clinicName || 'Unknown Project Area'}\n` +
                                `DATA: Content Type: ${contentType}\n` +
                                ` Encoded Size: ${content?.length || 0} characters\n\n` +
                                `═══════════════════════════════════════════════════════\n\n` +
@@ -2157,13 +2157,13 @@ Recommendation: Contact the clinic to re-upload this report.`;
                              return reportContent;
                            }
                          } else if (reportContent.startsWith('http')) {
-                           return `URL REFERENCE\n\nFILE: File: ${report?.fileName || 'Unknown'}\n Patient: ${report?.patientName || 'Unknown Supervisor'}\nCLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n URL: ${reportContent}\n\nWARNING:  NOTE: This report is stored as a URL reference.\nThe actual content may be hosted externally.`;
+                           return `URL REFERENCE\n\nFILE: File: ${report?.fileName || 'Unknown'}\n Supervisor: ${report?.patientName || 'Unknown Supervisor'}\nPROJECT AREA: Project Area: ${report?.clinicName || 'Unknown Project Area'}\n URL: ${reportContent}\n\nWARNING:  NOTE: This report is stored as a URL reference.\nThe actual content may be hosted externally.`;
                          } else {
                            // Plain text or other content
                            return `REPORT CONTENT\n\n` +
                              `FILE: File: ${report?.fileName || 'Unknown'}\n` +
-                             ` Patient: ${report?.patientName || 'Unknown Supervisor'}\n` +
-                             `CLINIC: Clinic: ${report?.clinicName || 'Unknown Clinic'}\n` +
+                             ` Supervisor: ${report?.patientName || 'Unknown Supervisor'}\n` +
+                             `PROJECT AREA: Project Area: ${report?.clinicName || 'Unknown Project Area'}\n` +
                              ` Date: ${report?.createdAt ? new Date(report.createdAt).toLocaleDateString() : 'Unknown'}\n\n` +
                              `═══════════════════════════════════════════════════════\n\n` +
                              `INFO: REPORT DATA:\n\n${reportContent}`;

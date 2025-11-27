@@ -4,9 +4,9 @@ import DatabaseService from '../../services/databaseService';
 import toast from 'react-hot-toast';
 
 const AlgorithmDataProcessor = () => {
-  const [supervisors, setPatients] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
   const [clinics, setClinics] = useState([]);
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [showProcessingUI, setShowProcessingUI] = useState(false);
   const [processingHistory, setProcessingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,61 +27,61 @@ const AlgorithmDataProcessor = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    loadPatients();
+    loadSupervisors();
   }, []);
 
   useEffect(() => {
-    if (selectedPatient && showProcessingUI) {
-      loadProcessingHistory(selectedPatient.id);
+    if (selectedSupervisor && showProcessingUI) {
+      loadProcessingHistory(selectedSupervisor.id);
     }
-  }, [selectedPatient, showProcessingUI]);
+  }, [selectedSupervisor, showProcessingUI]);
 
-  const loadPatients = async () => {
+  const loadSupervisors = async () => {
     try {
-      const patientsData = await DatabaseService.get('patients');
-      const clinicsData = await DatabaseService.get('clinics');
+      const patientsData = await DatabaseService.get('patients'); // Backward compatibility: 'patients' table stores supervisors
+      const clinicsData = await DatabaseService.get('clinics'); // Backward compatibility: 'clinics' table stores project areas
       const algorithmResults = await DatabaseService.get('algorithmResults') || [];
 
-      // Enrich patients with clinic names and algorithm status
-      const enrichedPatients = patientsData.map(supervisor => {
-        const patientResults = algorithmResults.filter(r => r.patientId === patient.id);
-        const lastResult = patientResults.length > 0
-          ? patientResults.sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0]
+      // Enrich supervisors with project area names and algorithm status
+      const enrichedSupervisors = patientsData.map(supervisor => {
+        const supervisorResults = algorithmResults.filter(r => r.patientId === supervisor.id);
+        const lastResult = supervisorResults.length > 0
+          ? supervisorResults.sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0]
           : null;
 
         return {
-          ...patient,
-          clinicName: clinicsData.find(c => c.id === patient.clinicId)?.name || 'Unknown Clinic',
+          ...supervisor,
+          clinicName: clinicsData.find(c => c.id === supervisor.clinicId)?.name || 'Unknown Project Area',
           algorithmStatus: lastResult ? 'completed' : 'pending',
           lastProcessed: lastResult?.processedAt,
-          totalScans: patientResults.length
+          totalScans: supervisorResults.length
         };
       });
 
-      setPatients(enrichedPatients);
+      setSupervisors(enrichedSupervisors);
       setClinics(clinicsData);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading patients:', error);
-      toast.error('Failed to load patients');
+      console.error('Error loading supervisors:', error);
+      toast.error('Failed to load supervisors');
       setLoading(false);
     }
   };
 
-  const loadProcessingHistory = async (patientId) => {
+  const loadProcessingHistory = async (supervisorId) => {
     try {
-      // Load algorithm results for this patient
+      // Load algorithm results for this supervisor
       const results = await DatabaseService.get('algorithmResults');
-      const patientResults = results.filter(r => r.patientId === patientId);
-      setProcessingHistory(patientResults);
+      const supervisorResults = results.filter(r => r.patientId === supervisorId);
+      setProcessingHistory(supervisorResults);
     } catch (error) {
       console.error('Error loading processing history:', error);
       setProcessingHistory([]);
     }
   };
 
-  const handleGenerateReport = (patient) => {
-    setSelectedPatient(patient);
+  const handleGenerateReport = (supervisor) => {
+    setSelectedSupervisor(supervisor);
     setShowProcessingUI(true);
     // Reset upload states
     setEyesOpenFile(null);
@@ -95,7 +95,7 @@ const AlgorithmDataProcessor = () => {
 
   const handleBackToList = () => {
     setShowProcessingUI(false);
-    setSelectedPatient(null);
+    setSelectedSupervisor(null);
     setEyesOpenFile(null);
     setEyesClosedFile(null);
     setResults(null);
@@ -104,13 +104,13 @@ const AlgorithmDataProcessor = () => {
     setProcessingHistory([]);
     setIsSaved(false);
     setIsSaving(false);
-    // Reload patients to update status
-    loadPatients();
+    // Reload supervisors to update status
+    loadSupervisors();
   };
 
   // Helper function to get supervisor name (handles different field names)
-  const getPatientName = (patient) => {
-    return patient?.fullName || patient?.full_name || patient?.name || patient?.email || 'Unknown Supervisor';
+  const getSupervisorName = (supervisor) => {
+    return supervisor?.fullName || supervisor?.full_name || supervisor?.name || supervisor?.email || 'Unknown Supervisor';
   };
 
   // Helper function to get status badge
@@ -138,24 +138,24 @@ const AlgorithmDataProcessor = () => {
     );
   };
 
-  // Filter patients based on search and filters
+  // Filter supervisors based on search and filters
   const filteredSupervisors = supervisors.filter(supervisor => {
     const matchesSearch = searchTerm === '' ||
-      getPatientName(patient).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      getSupervisorName(supervisor).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supervisor.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesClinic = selectedClinicFilter === '' || patient.clinicId === selectedClinicFilter;
+    const matchesClinic = selectedClinicFilter === '' || supervisor.clinicId === selectedClinicFilter;
 
     const matchesDate = dateFilter === '' ||
-      (patient.lastProcessed && new Date(patient.lastProcessed).toISOString().split('T')[0] === dateFilter);
+      (supervisor.lastProcessed && new Date(supervisor.lastProcessed).toISOString().split('T')[0] === dateFilter);
 
     return matchesSearch && matchesClinic && matchesDate;
   });
 
-  // Group filtered patients by clinic
-  const groupedPatients = clinics.map(clinic => ({
+  // Group filtered supervisors by project area
+  const groupedSupervisors = clinics.map(clinic => ({
     clinic,
-    patients: filteredSupervisors.filter(p => p.clinicId === clinic.id)
+    supervisors: filteredSupervisors.filter(s => s.clinicId === clinic.id)
   })).filter(group => group.supervisors.length > 0);
 
   const clearFilters = () => {
@@ -196,9 +196,9 @@ const AlgorithmDataProcessor = () => {
       const formData = new FormData();
       formData.append('eyesOpen', eyesOpenFile);
       formData.append('eyesClosed', eyesClosedFile);
-      formData.append('patientId', selectedPatient.id);
-      formData.append('patientName', getPatientName(selectedPatient));
-      formData.append('clinicName', selectedPatient.clinicName);
+      formData.append('patientId', selectedSupervisor.id);
+      formData.append('patientName', getSupervisorName(selectedSupervisor));
+      formData.append('clinicName', selectedSupervisor.clinicName);
 
       setConsoleLog(prev => [...prev, '📤 Uploading files to server...']);
       setProgress(20);
@@ -292,11 +292,11 @@ const AlgorithmDataProcessor = () => {
       setIsSaving(true);
 
       const algorithmResult = {
-        id: `alg_${Date.now()}_${selectedPatient.id}`,
-        patientId: selectedPatient.id,
-        patientName: getPatientName(selectedPatient),
-        clinicId: selectedPatient.clinicId,
-        clinicName: selectedPatient.clinicName,
+        id: `alg_${Date.now()}_${selectedSupervisor.id}`,
+        patientId: selectedSupervisor.id,
+        patientName: getSupervisorName(selectedSupervisor),
+        clinicId: selectedSupervisor.clinicId,
+        clinicName: selectedSupervisor.clinicName,
         results: resultData,
         eyesOpenFile: eyesOpenFile?.name,
         eyesClosedFile: eyesClosedFile?.name,
@@ -313,8 +313,8 @@ const AlgorithmDataProcessor = () => {
       toast.success('✅ Results saved to database successfully!');
 
       // Reload history and supervisor list to update status
-      loadProcessingHistory(selectedPatient.id);
-      loadPatients();
+      loadProcessingHistory(selectedSupervisor.id);
+      loadSupervisors();
     } catch (error) {
       console.error('Error saving results:', error);
       setIsSaving(false);
@@ -377,7 +377,7 @@ const AlgorithmDataProcessor = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading patients...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading supervisors...</p>
         </div>
       </div>
     );
@@ -399,7 +399,7 @@ const AlgorithmDataProcessor = () => {
             {/* Supervisor Search */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Search Patient
+                Search Supervisor
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -416,7 +416,7 @@ const AlgorithmDataProcessor = () => {
             {/* Clinic Filter */}
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Filter by Clinic
+                Filter by Project Area
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
@@ -425,7 +425,7 @@ const AlgorithmDataProcessor = () => {
                   onChange={(e) => setSelectedClinicFilter(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                 >
-                  <option value="">All Clinics</option>
+                  <option value="">All Project Areas</option>
                   {clinics.map(clinic => (
                     <option key={clinic.id} value={clinic.id}>
                       {clinic.name}
@@ -475,7 +475,7 @@ const AlgorithmDataProcessor = () => {
               )}
               {selectedClinicFilter && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                  Clinic: {clinics.find(c => c.id === selectedClinicFilter)?.name}
+                  Project Area: {clinics.find(c => c.id === selectedClinicFilter)?.name}
                 </span>
               )}
               {dateFilter && (
@@ -484,18 +484,18 @@ const AlgorithmDataProcessor = () => {
                 </span>
               )}
               <span className="text-xs text-gray-500 dark:text-gray-400 self-center">
-                ({filteredSupervisors.length} {filteredSupervisors.length === 1 ? 'patient' : 'patients'} found)
+                ({filteredSupervisors.length} {filteredSupervisors.length === 1 ? 'supervisor' : 'supervisors'} found)
               </span>
             </div>
           )}
         </div>
 
-        {/* Supervisor List - Clinic-wise */}
+        {/* Supervisor List - Project Area-wise */}
         <div className="space-y-4">
-          {groupedPatients.length > 0 ? (
-            groupedPatients.map(({ clinic, patients: clinicPatients }) => (
+          {groupedSupervisors.length > 0 ? (
+            groupedSupervisors.map(({ clinic, supervisors: clinicSupervisors }) => (
             <div key={clinic.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-              {/* Clinic Header */}
+              {/* Project Area Header */}
               <div className="bg-accent-light dark:bg-primary/20 border-b border-primary-light dark:border-primary px-6 py-3">
                 <div className="flex items-center">
                   <Building2 className="h-5 w-5 text-primary mr-2" />
@@ -503,7 +503,7 @@ const AlgorithmDataProcessor = () => {
                     {clinic.name}
                   </h3>
                   <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                    ({clinicPatients.length} {clinicPatients.length === 1 ? 'patient' : 'patients'})
+                    ({clinicSupervisors.length} {clinicSupervisors.length === 1 ? 'supervisor' : 'supervisors'})
                   </span>
                 </div>
               </div>
@@ -531,35 +531,35 @@ const AlgorithmDataProcessor = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {clinicPatients.map(supervisor => (
-                      <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    {clinicSupervisors.map(supervisor => (
+                      <tr key={supervisor.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <User className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
                             <span className="text-sm font-medium text-gray-900 dark:text-white">
-                              {getPatientName(patient)}
+                              {getSupervisorName(supervisor)}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                          {patient.email || 'N/A'}
+                          {supervisor.email || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                           <span className="flex items-center">
                             <History className="h-4 w-4 mr-1" />
-                            {patient.totalScans || 0} {patient.totalScans === 1 ? 'scan' : 'scans'}
+                            {supervisor.totalScans || 0} {supervisor.totalScans === 1 ? 'scan' : 'scans'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(patient.algorithmStatus, patient.lastProcessed)}
+                          {getStatusBadge(supervisor.algorithmStatus, supervisor.lastProcessed)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <button
-                            onClick={() => handleGenerateReport(patient)}
+                            onClick={() => handleGenerateReport(supervisor)}
                             className="bg-primary hover:bg-navy-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md flex items-center ml-auto"
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            {patient.algorithmStatus === 'completed' ? 'View/Generate' : 'Generate Report'}
+                            {supervisor.algorithmStatus === 'completed' ? 'View/Generate' : 'Generate Report'}
                           </button>
                         </td>
                       </tr>
@@ -574,14 +574,14 @@ const AlgorithmDataProcessor = () => {
               <Filter className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400 font-medium">
                 {searchTerm || selectedClinicFilter || dateFilter
-                  ? 'No patients match your filters'
-                  : 'No patients found'
+                  ? 'No supervisors match your filters'
+                  : 'No supervisors found'
                 }
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                 {searchTerm || selectedClinicFilter || dateFilter
                   ? 'Try adjusting your search criteria or clear filters'
-                  : 'Patients will appear here once they are registered in the system'
+                  : 'Supervisors will appear here once they are registered in the system'
                 }
               </p>
               {(searchTerm || selectedClinicFilter || dateFilter) && (
@@ -613,7 +613,7 @@ const AlgorithmDataProcessor = () => {
         </button>
         <h1 className="text-2xl font-bold">AIMS - Algorithm 1 Data Processor</h1>
         <p className="text-primary-light mt-2">
-          Processing for: <span className="font-semibold">{getPatientName(selectedPatient)}</span> | {selectedPatient?.clinicName}
+          Processing for: <span className="font-semibold">{getSupervisorName(selectedSupervisor)}</span> | {selectedSupervisor?.clinicName}
         </p>
       </div>
 
@@ -874,11 +874,11 @@ const AlgorithmDataProcessor = () => {
       </div>
 
       {/* Processing History */}
-      {selectedPatient && processingHistory.length > 0 && (
+      {selectedSupervisor && processingHistory.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <History className="h-5 w-5 mr-2" />
-            Processing History for {getPatientName(selectedPatient)}
+            Processing History for {getSupervisorName(selectedSupervisor)}
           </h2>
           <div className="space-y-3">
             {processingHistory.map((record, index) => (
