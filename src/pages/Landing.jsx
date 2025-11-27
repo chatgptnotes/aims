@@ -1001,61 +1001,6 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Ask Ashok Interactive (AI) Section */}
-          <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
-            <div className="relative">
-
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#00897B] mb-4 bg-white relative z-20">
-                Ask Dr Sweta Interactive (AI)
-              </h2>
-
-              {/* Content Box with 3D Animation */}
-              <div className="group" style={{ transformStyle: 'preserve-3d' }}>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-[#00796B]/20 rounded-3xl blur-2xl group-hover:blur-3xl opacity-50 transition-all duration-700"
-                       style={{ transform: 'translateZ(-30px)' }}></div>
-                  <div className="bg-white rounded-3xl p-8 sm:p-10 md:p-12 mx-auto max-w-4xl shadow-lg border border-gray-200 relative z-20 transition-all duration-700 group-hover:shadow-[0_25px_50px_-12px_rgba(0,137,123,0.4)]"
-                       style={{
-                         transformStyle: 'preserve-3d',
-                         animation: 'float 4s ease-in-out infinite 0.5s',
-                         transform: 'translateZ(20px)'
-                       }}>
-                <p className="text-base sm:text-lg text-gray-900 leading-relaxed mb-6">
-                  Ask AI trained about your condition and how AIMS can help, in any language.
-                </p>
-
-                <p className="text-sm text-gray-600 leading-relaxed mb-8">
-                  This would be reworded for dr sweta the Ai, "AI generated content may contain errors or inaccuracies, and is not a substitute for professional advice, treatment or therapy. Please check with your Doctor or Therapist before following any advice given. By using this Ai, you agree to the terms and conditions on the website, are over 18, and agree that you are solely responsible. All conversations are anonymous and never shared."
-                </p>
-
-                {/* AI Avatar and Name */}
-                <div className="flex flex-col items-center mb-6">
-                  <div className="w-24 h-24 bg-gray-200 rounded-full mb-4 flex items-center justify-center overflow-hidden">
-                    <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Dr Sweta Adatia - Free Version 🤖</h3>
-                  <p className="text-sm text-gray-600">Neurologist with a specialization in stroke and migraine - Premium Version</p>
-
-                  {/* Social Buttons */}
-                  <div className="flex gap-3 mt-4">
-                    <button className="bg-[#1DA1F2] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#1a8cd8] transition-colors">
-                      Tweet
-                    </button>
-                    <button className="bg-[#25D366] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#20BA5A] transition-colors">
-                      Call
-                    </button>
-                    <button className="bg-[#0866FF] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#0658e3] transition-colors">
-                      Share
-                    </button>
-                  </div>
-                </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* How Does AIMS's Frequency Modulation Work Section */}
           <div className="text-center mb-16 animate-fade-in-up relative z-10" style={{ perspective: '1500px' }}>
