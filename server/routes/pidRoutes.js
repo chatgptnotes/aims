@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const PIDParser = require('../services/pidParser');
 const AlgorithmCalculator = require('../services/algorithmCalculator');
+const PIDTagExtractor = require('../services/pidTagExtractor');
 
 const router = express.Router();
 
@@ -148,6 +149,99 @@ router.post('/process', upload.fields([
 });
 
 /**
+ * POST /api/pid/extract-tags
+ * Extract equipment, instrument, and piping tags from P&ID PDF
+ * Returns Excel-ready tag data
+ */
+router.post('/extract-tags', upload.single('pdf'), async (req, res) => {
+  let uploadedFile = null;
+
+  try {
+    console.log('\n🏷️  === P&ID Tag Extraction Started ===\n');
+
+    // Get uploaded PDF file
+    if (!req.file) {
+      return res.status(400).json({
+        error: true,
+        message: 'PDF file is required'
+      });
+    }
+
+    uploadedFile = req.file;
+
+    console.log('📁 PDF received:', uploadedFile.originalname, `(${(uploadedFile.size / 1024).toFixed(2)} KB)`);
+
+    // Get supervisor info from request body
+    const { supervisorId, supervisorName, projectArea } = req.body;
+
+    console.log('\n👤 Supervisor Information:');
+    console.log('  - Supervisor ID:', supervisorId || 'N/A');
+    console.log('  - Supervisor Name:', supervisorName || 'N/A');
+    console.log('  - Project Area:', projectArea || 'N/A');
+
+    // Initialize tag extractor
+    const extractor = new PIDTagExtractor();
+
+    // Extract tags using OpenAI Vision
+    const result = await extractor.extractTags(uploadedFile.path);
+
+    // Convert to Excel-compatible format
+    const excelData = extractor.convertToExcelFormat(result.tags);
+
+    console.log('\n✅ Tag extraction completed successfully!');
+    console.log('📊 Extracted Tags Summary:');
+    Object.entries(result.categoryCounts).forEach(([category, count]) => {
+      console.log(`  - ${category}: ${count} tags`);
+    });
+    console.log(`  - Total: ${result.totalCount} tags`);
+
+    // Clean up uploaded file
+    try {
+      fs.unlinkSync(uploadedFile.path);
+      console.log('\n🗑️  Temporary PDF file cleaned up');
+    } catch (cleanupError) {
+      console.error('⚠️  Error cleaning up PDF:', cleanupError.message);
+    }
+
+    console.log('\n🏁 === P&ID Tag Extraction Completed ===\n');
+
+    // Send response
+    res.json({
+      success: true,
+      data: {
+        supervisorId,
+        supervisorName,
+        projectArea,
+        processedAt: new Date().toISOString(),
+        tags: excelData,
+        totalTags: result.totalCount,
+        categoryCounts: result.categoryCounts
+      }
+    });
+
+  } catch (error) {
+    console.error('\n❌ === P&ID Tag Extraction Failed ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+
+    // Clean up file on error
+    if (uploadedFile && fs.existsSync(uploadedFile.path)) {
+      try {
+        fs.unlinkSync(uploadedFile.path);
+      } catch (e) {
+        console.error('Error deleting PDF file:', e.message);
+      }
+    }
+
+    res.status(500).json({
+      error: true,
+      message: error.message || 'Failed to extract tags from P&ID',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+/**
  * GET /api/pid/test
  * Test endpoint to verify API is working
  */
@@ -156,7 +250,8 @@ router.get('/test', (req, res) => {
     success: true,
     message: 'P&ID Processing API is working',
     endpoints: {
-      process: 'POST /api/pid/process - Upload and process P&ID files'
+      process: 'POST /api/pid/process - Upload and process P&ID files',
+      extractTags: 'POST /api/pid/extract-tags - Extract tags from P&ID PDF'
     }
   });
 });

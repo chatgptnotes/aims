@@ -1,0 +1,63 @@
+===== COPY THIS PROMPT WHEN UPLOADING P&ID TO AI =====
+
+You are a P&ID tag extraction expert. Analyze this engineering drawing and extract ALL equipment, instruments, and piping line tags into ADNOC Tag Creation Excel format.
+
+EXTRACTION REQUIREMENTS:
+1. Equipment Tags: K-, P-, V-, C-, E-, T-, H-, F-, R-, TK- (e.g., K-2801, P-3709)
+2. Instrument Tags per ISA 5.1: PA, PT, PI, HS, HV, PSV, XOV, etc. (e.g., PA-3221, PT-3211)
+3. Piping Lines: SIZE-SERVICE-NUMBER-LOCATION format (e.g., 8"-FW-0491-018100-X)
+
+EXCEL OUTPUT - 17 COLUMNS:
+1. S/N (sequential: 1, 2, 3...)
+2. Functional Location (format: 11.31.{TAG})
+3. Functional Location Description (equipment name or instrument function)
+4. Functional Location Long Description (Optional) (same as #3)
+5. Location Label (format: 11.31-{TAG})
+6. Site (always: 11)
+7. Unit Code (always: A-OK-1131)
+8. Parent (Superior functional location) (always: A-OK-1131)
+9. Work Center (CRAFT) (empty)
+10. HSECES or Not (on HSE or empty)
+11. ABC Indicator (Criticality) (empty)
+12. Hazardous Area (empty)
+13. Ex-Equipment (H1 for some equipment, else empty)
+14. Manufacturer Model No (Optional) (empty)
+15. Manufacturer serial number (Optional) (empty)
+16. Base Tag (tag without 11.31 prefix, e.g., K-2801)
+17. Category (Equipment, Instrument, Line, or Other)
+
+DESCRIPTION RULES:
+- Equipment: Use name from drawing (e.g., "HC GAS COMPRESSOR")
+- Instruments: Format as "{TAG} {Function}" (e.g., "PA-3221 Pressure Alarm", "PT-3211 Pressure Transmitter", "HS-7205 Hand Switch")
+- Lines: Format as "{SIZE} {SERVICE_NAME} line {NUMBER}-{LOCATION}" (e.g., "8\" Firewater line 0491-018100-X")
+
+ISA 5.1 INSTRUMENT DECODING:
+First Letter (Variable): P=Pressure, T=Temperature, F=Flow, L=Level, A=Analysis, H=Hand, etc.
+Second Letter (Function): A=Alarm, T=Transmitter, I=Indicator, S=Switch, V=Valve, C=Control
+Examples:
+- PA = Pressure Alarm
+- PT = Pressure Transmitter
+- PI = Pressure Indicator
+- HS = Hand Switch
+- HV = Hand Valve (or Hydraulic Valve)
+- PSV = Pressure Safety Valve
+- XOV = Solenoid Operated Valve
+
+SERVICE CODES FOR LINES:
+FW=Firewater, IA=Instrument Air, PA=Plant Air, SW=Service Water, ST=Steam, FG=Fuel Gas, N2=Nitrogen
+
+SORTING ORDER:
+1. Equipment (alphabetically)
+2. Instruments (alphabetically)
+3. Lines (by size, then service)
+4. Other (alphabetically)
+
+OUTPUT FORMAT:
+Generate as pipe-delimited table with all 17 columns. Include header row.
+
+EXAMPLE ROW:
+1 | 11.31.K-2801 | HC GAS COMPRESSOR | HC GAS COMPRESSOR | 11.31-K-2801 | 11 | A-OK-1131 | A-OK-1131 | | on HSE | | | H1 | | | K-2801 | Equipment
+
+Be thorough - extract EVERY tag from the drawing. Missing tags means incomplete asset data.
+
+===== END OF PROMPT =====

@@ -7,17 +7,25 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": ["aims", "pid", "backend", "openai"],
+  "keywords": [
+    "aims",
+    "pid",
+    "backend",
+    "openai"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "openai": "^4.20.0",
-    "multer": "^1.4.5-lts.1",
-    "pdf-parse": "^1.1.1",
-    "xlsx": "^0.18.5",
+    "canvas": "^3.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.20.0",
+    "pdf-parse": "^1.1.1",
+    "pdf2pic": "^3.2.0",
+    "pdfjs-dist": "^5.4.394",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

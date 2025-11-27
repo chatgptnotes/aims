@@ -16,13 +16,12 @@ const AlgorithmDataProcessor = () => {
   const [selectedClinicFilter, setSelectedClinicFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
-  const [eyesOpenFile, setEyesOpenFile] = useState(null);
-  const [eyesClosedFile, setEyesClosedFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
   const [consoleLog, setConsoleLog] = useState([]);
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState(null);
+  const [excelData, setExcelData] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,28 +37,47 @@ const AlgorithmDataProcessor = () => {
 
   const loadSupervisors = async () => {
     try {
-      const patientsData = await DatabaseService.get('patients'); // Backward compatibility: 'patients' table stores supervisors
-      const clinicsData = await DatabaseService.get('clinics'); // Backward compatibility: 'clinics' table stores project areas
+      // Fetch data from both old and new tables
+      const supervisorsData = await DatabaseService.get('supervisors'); // New table
+      const projectAreasData = await DatabaseService.get('project_areas'); // New table
+      const pidReportsData = await DatabaseService.get('pid_reports') || []; // Uploaded P&ID documents
       const algorithmResults = await DatabaseService.get('algorithmResults') || [];
 
-      // Enrich supervisors with project area names and algorithm status
-      const enrichedSupervisors = patientsData.map(supervisor => {
-        const supervisorResults = algorithmResults.filter(r => r.patientId === supervisor.id);
-        const lastResult = supervisorResults.length > 0
-          ? supervisorResults.sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0]
+      // Map uploaded P&ID reports by supervisor_id
+      const reportsBySupervisor = pidReportsData.reduce((acc, report) => {
+        const supervisorId = report.supervisor_id;
+        if (!acc[supervisorId]) {
+          acc[supervisorId] = [];
+        }
+        acc[supervisorId].push(report);
+        return acc;
+      }, {});
+
+      // Enrich supervisors with project area names and upload status
+      const enrichedSupervisors = supervisorsData.map(supervisor => {
+        const supervisorReports = reportsBySupervisor[supervisor.id] || [];
+        const algorithmResultsForSupervisor = algorithmResults.filter(r => r.patientId === supervisor.id);
+
+        const lastReport = supervisorReports.length > 0
+          ? supervisorReports.sort((a, b) => new Date(b.created_at || b.uploaded_at) - new Date(a.created_at || a.uploaded_at))[0]
+          : null;
+
+        const lastAlgorithmResult = algorithmResultsForSupervisor.length > 0
+          ? algorithmResultsForSupervisor.sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt))[0]
           : null;
 
         return {
           ...supervisor,
-          clinicName: clinicsData.find(c => c.id === supervisor.clinicId)?.name || 'Unknown Project Area',
-          algorithmStatus: lastResult ? 'completed' : 'pending',
-          lastProcessed: lastResult?.processedAt,
-          totalScans: supervisorResults.length
+          clinicId: supervisor.project_area_id, // Map to old field name for compatibility
+          clinicName: projectAreasData.find(pa => pa.id === supervisor.project_area_id)?.name || 'Unknown Project Area',
+          algorithmStatus: (lastReport || lastAlgorithmResult) ? 'completed' : 'pending',
+          lastProcessed: lastReport?.created_at || lastReport?.uploaded_at || lastAlgorithmResult?.processedAt,
+          totalScans: supervisorReports.length + algorithmResultsForSupervisor.length
         };
       });
 
       setSupervisors(enrichedSupervisors);
-      setClinics(clinicsData);
+      setClinics(projectAreasData);
       setLoading(false);
     } catch (error) {
       console.error('Error loading supervisors:', error);
@@ -70,10 +88,28 @@ const AlgorithmDataProcessor = () => {
 
   const loadProcessingHistory = async (supervisorId) => {
     try {
-      // Load algorithm results for this supervisor
-      const results = await DatabaseService.get('algorithmResults');
-      const supervisorResults = results.filter(r => r.patientId === supervisorId);
-      setProcessingHistory(supervisorResults);
+      // Load P&ID reports for this supervisor
+      const pidReports = await DatabaseService.get('pid_reports') || [];
+      const algorithmResults = await DatabaseService.get('algorithmResults') || [];
+
+      const supervisorPidReports = pidReports.filter(r => r.supervisor_id === supervisorId);
+      const supervisorAlgorithmResults = algorithmResults.filter(r => r.patientId === supervisorId);
+
+      // Combine both types of reports
+      const combinedHistory = [
+        ...supervisorPidReports.map(report => ({
+          id: report.id,
+          type: 'pid_report',
+          processedAt: report.created_at || report.uploaded_at,
+          eyesOpenFile: report.file_name || report.title,
+          eyesClosedFile: '',
+          processedBy: report.uploaded_by || 'system',
+          results: []
+        })),
+        ...supervisorAlgorithmResults
+      ].sort((a, b) => new Date(b.processedAt) - new Date(a.processedAt));
+
+      setProcessingHistory(combinedHistory);
     } catch (error) {
       console.error('Error loading processing history:', error);
       setProcessingHistory([]);
@@ -84,9 +120,8 @@ const AlgorithmDataProcessor = () => {
     setSelectedSupervisor(supervisor);
     setShowProcessingUI(true);
     // Reset upload states
-    setEyesOpenFile(null);
-    setEyesClosedFile(null);
-    setResults(null);
+    setPdfFile(null);
+    setExcelData(null);
     setProcessingComplete(false);
     setConsoleLog([]);
     setIsSaved(false);
@@ -96,9 +131,8 @@ const AlgorithmDataProcessor = () => {
   const handleBackToList = () => {
     setShowProcessingUI(false);
     setSelectedSupervisor(null);
-    setEyesOpenFile(null);
-    setEyesClosedFile(null);
-    setResults(null);
+    setPdfFile(null);
+    setExcelData(null);
     setProcessingComplete(false);
     setConsoleLog([]);
     setProcessingHistory([]);
@@ -110,7 +144,17 @@ const AlgorithmDataProcessor = () => {
 
   // Helper function to get supervisor name (handles different field names)
   const getSupervisorName = (supervisor) => {
-    return supervisor?.fullName || supervisor?.full_name || supervisor?.name || supervisor?.email || 'Unknown Supervisor';
+    const name = supervisor?.fullName || supervisor?.full_name || supervisor?.name;
+
+    // Handle special cases for unknown/test supervisors
+    if (!name && supervisor?.email) {
+      return supervisor.email;
+    }
+    if (!name && supervisor?.id === '00000000-0000-0000-0000-000000000000') {
+      return 'Unknown Supervisor';
+    }
+
+    return name || 'Unknown Supervisor';
   };
 
   // Helper function to get status badge
@@ -140,9 +184,16 @@ const AlgorithmDataProcessor = () => {
 
   // Filter supervisors based on search and filters
   const filteredSupervisors = supervisors.filter(supervisor => {
+    const supervisorName = getSupervisorName(supervisor);
+    const searchLower = searchTerm.toLowerCase();
+
     const matchesSearch = searchTerm === '' ||
-      getSupervisorName(supervisor).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supervisor.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      supervisorName.toLowerCase().includes(searchLower) ||
+      supervisor.email?.toLowerCase().includes(searchLower) ||
+      supervisor.full_name?.toLowerCase().includes(searchLower) ||
+      supervisor.name?.toLowerCase().includes(searchLower) ||
+      // Special case: search for "unknown" to find Unknown Supervisor entries
+      (searchLower.includes('unknown') && supervisorName.toLowerCase().includes('unknown'));
 
     const matchesClinic = selectedClinicFilter === '' || supervisor.clinicId === selectedClinicFilter;
 
@@ -164,17 +215,18 @@ const AlgorithmDataProcessor = () => {
     setDateFilter('');
   };
 
-  const handleFileUpload = (type, event) => {
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      if (type === 'eo') {
-        setEyesOpenFile(file);
-      } else {
-        setEyesClosedFile(file);
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        toast.error('Please upload a PDF file');
+        return;
       }
-      // Reset processing state when new files are uploaded
+      setPdfFile(file);
+      // Reset processing state when new file is uploaded
       setProcessingComplete(false);
-      setResults(null);
+      setExcelData(null);
       setConsoleLog([]);
       setProgress(0);
       setIsSaved(false);
@@ -182,103 +234,84 @@ const AlgorithmDataProcessor = () => {
     }
   };
 
-  const processPIDFiles = async () => {
+  const processPIDFile = async () => {
     setIsProcessing(true);
     setConsoleLog([]);
     setProgress(0);
 
     try {
       // Console log: Starting process
-      setConsoleLog(prev => [...prev, '🚀 Starting P&ID analysis...']);
+      setConsoleLog(prev => [...prev, '🚀 Starting P&ID tag extraction...']);
       setProgress(10);
 
-      // Create FormData to send files
+      // Create FormData to send PDF
       const formData = new FormData();
-      formData.append('eyesOpen', eyesOpenFile);
-      formData.append('eyesClosed', eyesClosedFile);
-      formData.append('patientId', selectedSupervisor.id);
-      formData.append('patientName', getSupervisorName(selectedSupervisor));
-      formData.append('clinicName', selectedSupervisor.clinicName);
+      formData.append('pdf', pdfFile);
+      formData.append('supervisorId', selectedSupervisor.id);
+      formData.append('supervisorName', getSupervisorName(selectedSupervisor));
+      formData.append('projectArea', selectedSupervisor.clinicName);
 
-      setConsoleLog(prev => [...prev, '📤 Uploading files to server...']);
+      setConsoleLog(prev => [...prev, '📤 Uploading PDF to AI processor...']);
       setProgress(20);
 
-      // Call backend API
+      // Call backend API for AI processing
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${apiUrl}/pid/process`, {
+      const response = await fetch(`${apiUrl}/pid/extract-tags`, {
         method: 'POST',
         body: formData
       });
 
-      setConsoleLog(prev => [...prev, '📊 Parsing P&ID data tables...']);
+      setConsoleLog(prev => [...prev, '🤖 AI analyzing P&ID drawing...']);
       setProgress(40);
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to process P&ID files');
+        throw new Error(errorData.message || 'Failed to process P&ID file');
       }
 
       const data = await response.json();
 
-      setConsoleLog(prev => [...prev, '🧮 Calculating 7 brain health parameters...']);
+      setConsoleLog(prev => [...prev, '📊 Extracting equipment tags...']);
       setProgress(60);
 
-      // Simulate calculation steps for better UX
       await new Promise(resolve => setTimeout(resolve, 500));
-      setConsoleLog(prev => [...prev, '  ✓ Cognition parameter calculated']);
-      setProgress(65);
-
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Stress parameter calculated']);
+      setConsoleLog(prev => [...prev, '  ✓ Identified instrument tags']);
       setProgress(70);
 
       await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Focus & Attention parameter calculated']);
-      setProgress(75);
-
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Burnout & Fatigue parameter calculated']);
+      setConsoleLog(prev => [...prev, '  ✓ Extracted tag descriptions']);
       setProgress(80);
 
       await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Emotional Regulation parameter calculated']);
-      setProgress(85);
-
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Learning parameter calculated']);
+      setConsoleLog(prev => [...prev, '  ✓ Classified per ISA 5.1 standard']);
       setProgress(90);
 
       await new Promise(resolve => setTimeout(resolve, 400));
-      setConsoleLog(prev => [...prev, '  ✓ Creativity parameter calculated']);
+      setConsoleLog(prev => [...prev, '  ✓ Generated Tag Creation Excel']);
       setProgress(95);
 
-      // Convert API results to display format
-      const finalResults = data.data.results.map(param => ({
-        parameter: param.name,
-        score: Math.round((param.score / param.maxScore) * 100), // Convert to percentage
-        rawScore: `${param.score}/${param.maxScore}`,
-        status: param.classification,
-        color: param.classification === 'High' ? 'green' :
-               param.classification === 'Medium' ? 'blue' : 'orange',
-        metrics: param.metrics
-      }));
-
-      setConsoleLog(prev => [...prev, '✅ Analysis complete!']);
-      setConsoleLog(prev => [...prev, `📈 Overall Score: ${data.data.overallScore}/${data.data.maxScore}`]);
+      setConsoleLog(prev => [...prev, '✅ Tag extraction complete!']);
+      setConsoleLog(prev => [...prev, `📈 Total Tags Extracted: ${data.data?.tags?.length || 0}`]);
+      if (data.data?.categoryCounts) {
+        Object.entries(data.data.categoryCounts).forEach(([category, count]) => {
+          setConsoleLog(prev => [...prev, `  - ${category}: ${count} tags`]);
+        });
+      }
       setProgress(100);
 
-      setResults(finalResults);
+      // Set Excel data
+      setExcelData(data.data?.tags || []);
       setIsProcessing(false);
       setProcessingComplete(true);
-      setIsSaved(false); // Mark as not saved yet
+      setIsSaved(false);
 
-      toast.success('P&ID analysis completed successfully!');
+      toast.success('P&ID tag extraction completed successfully!');
 
     } catch (error) {
-      console.error('Error processing P&ID files:', error);
+      console.error('Error processing P&ID file:', error);
       setConsoleLog(prev => [...prev, `❌ Error: ${error.message}`]);
       setIsProcessing(false);
-      toast.error(error.message || 'Failed to process P&ID files');
+      toast.error(error.message || 'Failed to process P&ID file');
     }
   };
 
@@ -291,26 +324,25 @@ const AlgorithmDataProcessor = () => {
     try {
       setIsSaving(true);
 
-      const algorithmResult = {
-        id: `alg_${Date.now()}_${selectedSupervisor.id}`,
+      const tagExtractionResult = {
+        id: `tag_${Date.now()}_${selectedSupervisor.id}`,
         patientId: selectedSupervisor.id,
         patientName: getSupervisorName(selectedSupervisor),
         clinicId: selectedSupervisor.clinicId,
         clinicName: selectedSupervisor.clinicName,
-        results: resultData,
-        eyesOpenFile: eyesOpenFile?.name,
-        eyesClosedFile: eyesClosedFile?.name,
+        tags: resultData,
+        pdfFile: pdfFile?.name,
         processedAt: new Date().toISOString(),
-        processedBy: 'super_admin' // Could be dynamic based on logged-in user
+        processedBy: 'super_admin'
       };
 
-      console.log('💾 Saving to database...', algorithmResult);
+      console.log('💾 Saving tag extraction results to database...', tagExtractionResult);
 
-      await DatabaseService.add('algorithmResults', algorithmResult);
+      await DatabaseService.add('algorithmResults', tagExtractionResult);
 
       setIsSaved(true);
       setIsSaving(false);
-      toast.success('✅ Results saved to database successfully!');
+      toast.success('✅ Tag extraction results saved successfully!');
 
       // Reload history and supervisor list to update status
       loadProcessingHistory(selectedSupervisor.id);
@@ -318,40 +350,49 @@ const AlgorithmDataProcessor = () => {
     } catch (error) {
       console.error('Error saving results:', error);
       setIsSaving(false);
-      toast.error('❌ Failed to save results to database: ' + error.message);
+      toast.error('❌ Failed to save results: ' + error.message);
     }
   };
 
   const handleSaveResults = () => {
-    if (results) {
-      saveResultsToDatabase(results);
+    if (excelData) {
+      saveResultsToDatabase(excelData);
     }
   };
 
   const handleExecuteCalculation = () => {
-    if (eyesOpenFile && eyesClosedFile) {
-      processPIDFiles();
+    if (pdfFile) {
+      processPIDFile();
     } else {
-      toast.error('Please upload both P&ID data files');
+      toast.error('Please upload a P&ID PDF file');
     }
   };
 
-  const handleExportResults = () => {
-    if (results) {
-      // Create CSV content
-      const csvContent = [
-        ['Parameter', 'Score (%)', 'Status'],
-        ...results.map(r => [r.parameter, r.score, r.status])
-      ].map(row => row.join(',')).join('\n');
+  const handleExportToExcel = async () => {
+    if (!excelData || excelData.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
 
-      // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'aims-algorithm-results.csv';
-      a.click();
-      window.URL.revokeObjectURL(url);
+    try {
+      // Dynamically import XLSX
+      const XLSX = await import('xlsx');
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Tag Creation');
+
+      // Generate Excel file
+      const fileName = `Tag_Creation_${getSupervisorName(selectedSupervisor)}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      toast.success('Excel file downloaded successfully!');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export Excel file');
     }
   };
 
@@ -619,88 +660,85 @@ const AlgorithmDataProcessor = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Panel - P&ID Data Input */}
+        {/* Left Panel - PDF Upload */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            P&ID Data Input (Pages 13 & 24)
+            P&ID Document Upload
           </h2>
 
-          {/* Eyes Open Upload */}
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Upload your P&ID drawing in PDF format for AI-powered tag extraction
+          </p>
+
+          {/* PDF Upload */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Page 13 (EO - Eyes Open)
-            </label>
-            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary-light transition-colors">
+            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-primary dark:hover:border-primary-light transition-colors">
               <input
                 type="file"
-                accept=".csv,.txt,.dat,.pdf"
-                onChange={(e) => handleFileUpload('eo', e)}
+                accept=".pdf"
+                onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <Upload className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {eyesOpenFile ? eyesOpenFile.name : 'Drag & Drop or Click to Upload'}
+              <Upload className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {pdfFile ? pdfFile.name : 'Drag & Drop PDF or Click to Upload'}
               </p>
-              {eyesOpenFile && (
-                <CheckCircle className="h-6 w-6 text-green-500 mx-auto mt-2" />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Max file size: 100MB
+              </p>
+              {pdfFile && (
+                <div className="mt-3">
+                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    File ready for processing
+                  </p>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Eyes Closed Upload */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Page 24 (EC - Eyes Closed)
-            </label>
-            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary-light transition-colors">
-              <input
-                type="file"
-                accept=".csv,.txt,.dat,.pdf"
-                onChange={(e) => handleFileUpload('ec', e)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              <Upload className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {eyesClosedFile ? eyesClosedFile.name : 'Drag & Drop or Click to Upload'}
-              </p>
-              {eyesClosedFile && (
-                <CheckCircle className="h-6 w-6 text-green-500 mx-auto mt-2" />
-              )}
+          {/* File Info */}
+          {pdfFile && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-4">
+              <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">File Details</h3>
+              <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                <p>Name: {pdfFile.name}</p>
+                <p>Size: {(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p>Type: {pdfFile.type}</p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Data Loaded Progress */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Data Loaded
-            </label>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-              <div
-                className="bg-green-500 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${eyesOpenFile && eyesClosedFile ? 100 : eyesOpenFile || eyesClosedFile ? 50 : 0}%` }}
-              ></div>
-            </div>
+          {/* Instructions */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <h3 className="text-xs font-medium text-blue-800 dark:text-blue-400 mb-2">Instructions</h3>
+            <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+              <li>Upload P&ID drawing in PDF format</li>
+              <li>Ensure drawing is clear and readable</li>
+              <li>Click "Extract Tags" to start AI processing</li>
+              <li>Download Excel sheet with extracted tags</li>
+            </ul>
           </div>
         </div>
 
-        {/* Middle Panel - Algorithm Processing */}
+        {/* Middle Panel - AI Processing */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Algorithm 1 Processing
+            AI Tag Extraction
           </h2>
 
           {/* Execute Button */}
           <button
             onClick={handleExecuteCalculation}
-            disabled={!eyesOpenFile || !eyesClosedFile || isProcessing}
+            disabled={!pdfFile || isProcessing}
             className={`w-full mb-6 py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors shadow-md ${
-              eyesOpenFile && eyesClosedFile && !isProcessing
+              pdfFile && !isProcessing
                 ? 'bg-primary hover:bg-navy-700 text-white'
                 : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
             }`}
           >
             <Play className="h-5 w-5" />
-            <span>Execute Calculation</span>
+            <span>Extract Tags</span>
           </button>
 
           {/* Processing Animation */}
@@ -712,8 +750,8 @@ const AlgorithmDataProcessor = () => {
                   <div className="w-20 h-20 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                 </div>
               </div>
-              <p className="text-white font-medium mt-4">Processing...</p>
-              <p className="text-primary-light text-sm">{consoleLog.length} actions done</p>
+              <p className="text-white font-medium mt-4">Processing with AI...</p>
+              <p className="text-primary-light text-sm">{progress}% Complete</p>
             </div>
           )}
 
@@ -721,14 +759,17 @@ const AlgorithmDataProcessor = () => {
           {processingComplete && (
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center mb-6">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-              <p className="text-green-800 dark:text-green-400 font-medium">Processing Complete!</p>
+              <p className="text-green-800 dark:text-green-400 font-medium">Tag Extraction Complete!</p>
+              <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                {excelData?.length || 0} tags extracted
+              </p>
             </div>
           )}
 
           {/* Console */}
-          <div className="bg-gray-900 dark:bg-black rounded-lg p-4 min-h-[200px] max-h-[300px] overflow-y-auto">
+          <div className="bg-gray-900 dark:bg-black rounded-lg p-4 min-h-[280px] max-h-[380px] overflow-y-auto">
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
-              <h3 className="text-sm font-medium text-gray-300">Console</h3>
+              <h3 className="text-sm font-medium text-gray-300">AI Processing Log</h3>
               <button
                 onClick={() => setConsoleLog([])}
                 className="text-xs text-gray-400 hover:text-gray-200"
@@ -744,129 +785,103 @@ const AlgorithmDataProcessor = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-gray-500 italic">Console output will appear here...</div>
+                <div className="text-gray-500 italic">AI processing logs will appear here...</div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Panel - Final 7 Parameter Scores */}
+        {/* Right Panel - Excel Preview */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Final 7 Parameter Scores
+            Tag Creation Excel
           </h2>
 
-          {results ? (
+          {excelData && excelData.length > 0 ? (
             <>
-              <div className="space-y-4 mb-6">
-                {results.map((result, index) => (
-                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                    {/* Main Parameter */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                        {result.parameter}
-                      </span>
-                      <div className="flex items-center space-x-3">
-                        <span className={`text-base font-bold ${getStatusColor(result.color)}`}>
-                          {result.rawScore}
-                        </span>
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getStatusBgColor(result.status)}`}>
-                          {result.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
-                      <div
-                        className={`h-2 rounded-full ${
-                          result.color === 'green' ? 'bg-green-500' :
-                          result.color === 'blue' ? 'bg-primary' :
-                          result.color === 'orange' ? 'bg-orange-500' :
-                          'bg-red-500'
-                        }`}
-                        style={{ width: `${result.score}%` }}
-                      ></div>
-                    </div>
-
-                    {/* Sub-Parameters */}
-                    {result.metrics && result.metrics.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                          Sub-Parameters:
-                        </div>
-                        <div className="space-y-2">
-                          {result.metrics.map((metric, mIndex) => (
-                            <div key={mIndex} className="flex items-center justify-between text-xs pl-2">
-                              <span className="text-gray-600 dark:text-gray-400 flex-1">
-                                {metric.name}
-                              </span>
-                              <div className="flex items-center space-x-2">
-                                {metric.score === 1 ? (
-                                  <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                                ) : (
-                                  <X className="h-3.5 w-3.5 text-red-500" />
-                                )}
-                                <span className={`font-medium ${metric.score === 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                  {metric.score}/1
-                                </span>
-                              </div>
-                            </div>
+              {/* Excel Preview Table */}
+              <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="max-h-[400px] overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                      <tr>
+                        {Object.keys(excelData[0] || {}).map((header, idx) => (
+                          <th key={idx} className="px-2 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {excelData.slice(0, 10).map((row, rowIdx) => (
+                        <tr key={rowIdx} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                          {Object.values(row).map((cell, cellIdx) => (
+                            <td key={cellIdx} className="px-2 py-2 text-gray-600 dark:text-gray-400">
+                              {String(cell)}
+                            </td>
                           ))}
-                        </div>
-                      </div>
-                    )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {excelData.length > 10 && (
+                  <div className="bg-gray-50 dark:bg-gray-700 px-3 py-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                    Showing 10 of {excelData.length} rows
                   </div>
-                ))}
+                )}
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2">
+                {/* Download Excel Button */}
+                <button
+                  onClick={handleExportToExcel}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors shadow-md"
+                >
+                  <Download className="h-5 w-5" />
+                  <span>Download Excel</span>
+                </button>
+
                 {/* Save to Database Button */}
                 <button
                   onClick={handleSaveResults}
                   disabled={isSaving || isSaved}
-                  className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors shadow-md ${
+                  className={`w-full py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm ${
                     isSaved
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 cursor-not-allowed'
                       : isSaving
                       ? 'bg-blue-400 text-white cursor-wait'
-                      : 'bg-primary hover:bg-navy-700 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {isSaving ? (
                     <>
-                      <Activity className="h-5 w-5 animate-spin" />
-                      <span>Saving to Database...</span>
+                      <Activity className="h-4 w-4 animate-spin" />
+                      <span>Saving...</span>
                     </>
                   ) : isSaved ? (
                     <>
-                      <CheckCircle className="h-5 w-5" />
-                      <span>Saved to Database ✓</span>
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Saved ✓</span>
                     </>
                   ) : (
                     <>
-                      <Upload className="h-5 w-5" />
+                      <Upload className="h-4 w-4" />
                       <span>Save to Database</span>
                     </>
                   )}
                 </button>
-
-                {/* Export Button */}
-                <button
-                  onClick={handleExportResults}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors shadow-md"
-                >
-                  <Download className="h-5 w-5" />
-                  <span>Export Results</span>
-                </button>
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="h-16 w-16 text-gray-400 dark:text-gray-500 mb-4" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Upload data files and execute calculation to see results
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <FileText className="h-20 w-20 text-gray-400 dark:text-gray-500 mb-4" />
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                No Tags Extracted Yet
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Upload a P&ID PDF and click Extract Tags to see results
               </p>
             </div>
           )}
@@ -901,12 +916,22 @@ const AlgorithmDataProcessor = () => {
                       </span>
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-3">
-                      <p>📁 Files: {record.eyesOpenFile}, {record.eyesClosedFile}</p>
+                      <p>📁 File: {record.eyesOpenFile || record.pdfFile || 'N/A'}</p>
                       <p>👤 Processed by: {record.processedBy}</p>
+                      {record.type === 'pid_report' && (
+                        <p className="text-blue-600 dark:text-blue-400">Type: P&ID Report</p>
+                      )}
                     </div>
 
-                    {/* Quick Summary of Results */}
-                    {record.results && record.results.length > 0 && (
+                    {/* Quick Summary - Tags or Results */}
+                    {record.tags && record.tags.length > 0 && (
+                      <div className="mt-3 bg-green-50 dark:bg-green-900/20 rounded-lg p-2">
+                        <p className="text-xs font-medium text-green-800 dark:text-green-400">
+                          Tags Extracted: {record.tags.length}
+                        </p>
+                      </div>
+                    )}
+                    {record.results && record.results.length > 0 && !record.tags && (
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         {record.results.slice(0, 4).map((result, idx) => (
                           <div key={idx} className="text-xs bg-gray-50 dark:bg-gray-700 rounded p-2">
@@ -925,7 +950,11 @@ const AlgorithmDataProcessor = () => {
                   </div>
                   <button
                     onClick={() => {
-                      setResults(record.results);
+                      if (record.tags) {
+                        setExcelData(record.tags);
+                      } else if (record.results) {
+                        setExcelData(record.results);
+                      }
                       setProcessingComplete(true);
                       setIsSaved(true);
                       toast.success('Previous results loaded');
@@ -933,23 +962,9 @@ const AlgorithmDataProcessor = () => {
                     className="px-3 py-2 text-sm bg-primary hover:bg-navy-700 text-white rounded-lg transition-colors flex items-center space-x-1"
                   >
                     <FileText className="h-4 w-4" />
-                    <span>View Full Results</span>
+                    <span>Load Results</span>
                   </button>
                 </div>
-
-                {/* Expandable Details */}
-                {record.results && record.results.length > 4 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs">
-                    <div className="grid grid-cols-3 gap-2">
-                      {record.results.slice(4).map((result, idx) => (
-                        <div key={idx} className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">{result.parameter}:</span>
-                          <span className="font-semibold">{result.rawScore}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -959,11 +974,12 @@ const AlgorithmDataProcessor = () => {
       {/* Info Section */}
       <div className="bg-accent-light dark:bg-primary/20 border border-primary-light dark:border-primary rounded-lg p-4 shadow-sm">
         <h3 className="text-sm font-medium text-primary dark:text-primary-light mb-2">
-          About Algorithm 1 Processing
+          About AI Tag Extraction
         </h3>
         <p className="text-sm text-navy-800 dark:text-gray-300">
-          This processor analyzes P&ID data files (Eyes Open and Eyes Closed) and generates 7 key parameters using proprietary
-          binary scoring logic. The algorithm evaluates brain activity patterns to assess cognitive and emotional health markers.
+          This AI-powered processor analyzes P&ID engineering drawings and automatically extracts equipment and instrument tags
+          per ISA 5.1 standard. The system identifies tags, descriptions, and classifications, then generates a Tag Creation
+          Excel sheet ready for ADNOC integration.
         </p>
       </div>
     </div>
